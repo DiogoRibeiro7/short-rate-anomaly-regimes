@@ -98,7 +98,6 @@ Most commands are scaffolded and fail with an explicit `NotImplementedError` unt
 - `tests/`: focused unit tests for currently implemented behavior.
 - `configs/`: declarative baseline, source-registry, regime, extension, and reporting configuration.
 - `research/`: research design, assumption map, data-access matrix, milestones, and replication protocol.
-- `prompts/`: milestone implementation contracts for coding agents and reviewers.
 - `data/`, `artifacts/`, `reports/generated/`, and `paper/build/`: ignored output locations with tracked placeholders only.
 - `paper/`: manuscript and bibliography scaffold.
 
@@ -108,7 +107,6 @@ Most commands are scaffolded and fail with an explicit `NotImplementedError` unt
 2. `research/claim_assumption_map.md`
 3. `research/milestones.md`
 4. `research/replication_protocol.md`
-5. `prompts/00_MASTER_EXECUTION_PROMPT.md`
 
 ## Expected outputs
 
