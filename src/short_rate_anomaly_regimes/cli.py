@@ -188,8 +188,22 @@ def estimate_rate_innovation(
     config: ConfigPathOption,
 ) -> None:
     """Run the approved short-rate innovation estimator."""
-    del config
-    raise NotImplementedError("Complete Milestones 2 and 3 first")
+    validated = load_baseline_config(config)
+    registry = load_registry(Path("configs/data_sources.yaml"))
+    source_ids = [validated.short_rate.primary_series, *validated.short_rate.alternatives]
+    missing_paths: list[str] = []
+    for source_id in source_ids:
+        source = registry.by_id(source_id)
+        if source.raw_path is None or not Path(source.raw_path).is_file():
+            missing_paths.append(source.raw_path or source_id)
+    if missing_paths:
+        raise ReplicationBlockError(
+            "Cannot build short-rate factors until raw rate inputs are registered: "
+            f"{', '.join(missing_paths)}"
+        )
+    raise ReplicationBlockError(
+        "Raw rate files exist, but their exact parser contract is not frozen in the repository"
+    )
 
 
 @app.command("run-baseline")

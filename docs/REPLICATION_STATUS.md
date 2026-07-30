@@ -7,6 +7,7 @@ This project has not produced empirical replication results yet. The current rep
 - Code scaffolding is present for configuration, source registry loading, monthly panel validation, provenance, rate innovations, first-pass regressions, cross-sectional OLS, portfolio loading, and audit writing.
 - Repository-foundation checks now validate every project YAML file and the source registry through typed CLI commands.
 - Data-provenance commands exist for dry-run acquisition planning, manual source registration, and DuckDB catalog creation, but live acquisition is blocked until exact article source definitions are frozen.
+- Short-rate factor construction code is implemented for baseline AR(1) innovations, alternate namespaces, diagnostics, and artifact writing; actual factor output generation is blocked until raw rate inputs are registered.
 - Unverified empirical steps are deliberately gated with `NotImplementedError`.
 - Strict replication is blocked until exact source definitions and required data inputs are legally obtained and recorded. The final article PDF and publisher supplement ZIP are present locally and hashed.
 - The current article extraction status is documented in `research/article_method_extraction.md`.

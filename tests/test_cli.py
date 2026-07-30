@@ -1,4 +1,5 @@
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -243,6 +244,38 @@ def test_environment_manifest_command_writes_manifest(tmp_path: Path) -> None:
     assert "Wrote environment manifest" in result.stdout
 
 
+def test_estimate_rate_innovation_reports_missing_raw_inputs() -> None:
+    runner = CliRunner()
+
+    result = runner.invoke(app, ["estimate-rate-innovation", "--config", "configs/baseline.yaml"])
+
+    assert result.exit_code == 1
+    assert "raw rate inputs are registered" in str(result.exception)
+
+
+def test_estimate_rate_innovation_blocks_unfrozen_parser_contract(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    raw_path = tmp_path / "rate.csv"
+    raw_path.write_text("date,rate\n2020-01-31,1\n", encoding="utf-8")
+
+    config = SimpleNamespace(
+        short_rate=SimpleNamespace(primary_series="federal_funds_rate", alternatives=[])
+    )
+    registry = SimpleNamespace(by_id=lambda source_id: SimpleNamespace(raw_path=str(raw_path)))
+    monkeypatch.setattr("short_rate_anomaly_regimes.cli.load_baseline_config", lambda _: config)
+    monkeypatch.setattr("short_rate_anomaly_regimes.cli.load_registry", lambda _: registry)
+
+    result = CliRunner().invoke(
+        app,
+        ["estimate-rate-innovation", "--config", "configs/baseline.yaml"],
+    )
+
+    assert result.exit_code == 1
+    assert "parser contract is not frozen" in str(result.exception)
+
+
 def test_show_milestones_command_lists_release_gate() -> None:
     runner = CliRunner()
 
@@ -256,7 +289,6 @@ def test_show_milestones_command_lists_release_gate() -> None:
 def test_milestone_gated_cli_commands_report_not_implemented() -> None:
     runner = CliRunner()
     command_arguments = [
-        ["estimate-rate-innovation", "--config", "configs/baseline.yaml"],
         ["run-baseline", "--config", "configs/baseline.yaml"],
         ["run-regimes", "--config", "configs/regimes.yaml"],
         ["build-report", "--config", "configs/reporting.yaml"],
