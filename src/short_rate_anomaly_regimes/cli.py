@@ -19,11 +19,19 @@ from short_rate_anomaly_regimes.data.catalog import build_catalog, load_registry
 from short_rate_anomaly_regimes.environment import write_environment_manifest
 from short_rate_anomaly_regimes.exceptions import ReplicationBlockError
 from short_rate_anomaly_regimes.portfolios.construction import write_construction_manifest
+from short_rate_anomaly_regimes.reporting.audit import (
+    build_missing_input_audit,
+    load_table_targets,
+    write_audit,
+    write_audit_json,
+    write_replication_report,
+)
 
 app = typer.Typer(no_args_is_help=True)
 console = Console()
 ConfigPathOption = Annotated[Path, typer.Option(exists=True, dir_okay=False)]
 OutputPathOption = Annotated[Path, typer.Option(dir_okay=False)]
+InputPathOption = Annotated[Path, typer.Option(exists=True, dir_okay=False)]
 ConfigPathsOption = Annotated[list[Path], typer.Option("--config", exists=True, dir_okay=False)]
 RegistryPathOption = Annotated[Path, typer.Option(exists=True, dir_okay=False)]
 OptionalSourceIdOption = Annotated[str | None, typer.Option("--source-id")]
@@ -282,6 +290,42 @@ def estimate_cross_section(
         )
     raise ReplicationBlockError(
         "Required first-pass artifacts exist, but the cross-section run contract is not frozen"
+    )
+
+
+@app.command("audit-replication")
+def audit_replication(
+    targets: InputPathOption = Path("research/table_target_manifest.csv"),
+    output: OutputPathOption = Path("artifacts/audit/table_replication.csv"),
+    json_output: OutputPathOption = Path("artifacts/audit/table_replication.json"),
+    report: OutputPathOption = Path("reports/generated/replication_report.md"),
+) -> None:
+    """Build the baseline replication audit without extension or regime results."""
+    loaded_targets = load_table_targets(targets)
+    required_paths = [
+        Path("artifacts/estimates/time_series"),
+        Path("artifacts/estimates/cross_section"),
+        Path("data/processed/factors/short_rate_factors.parquet"),
+    ]
+    missing_paths = [str(path) for path in required_paths if not path.exists()]
+    if missing_paths:
+        records = build_missing_input_audit(
+            loaded_targets,
+            missing_reason=(
+                "Empirical audit is blocked until baseline generated artifacts exist: "
+                f"{', '.join(missing_paths)}"
+            ),
+        )
+        write_audit(records, output)
+        write_audit_json(records, json_output)
+        write_replication_report(records, report)
+        raise ReplicationBlockError(
+            "Wrote missing-input audit; empirical replication verdict is blocked by: "
+            f"{', '.join(missing_paths)}"
+        )
+    raise ReplicationBlockError(
+        "Baseline artifacts exist, but statistic-level published targets are not linked to "
+        "generated cells yet"
     )
 
 

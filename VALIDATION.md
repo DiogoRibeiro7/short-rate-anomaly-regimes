@@ -19,7 +19,7 @@ Latest validation was performed on 30 July 2026 from the repository checkout on 
 - `poetry run pytest` with `--cov-fail-under=95`
 - `poetry run pre-commit run --all-files`
 
-The current test suite contains 151 tests. All 151 passed. The measured scaffold coverage is 95.93 percent because milestone-specific estimators and data clients are intentionally represented by explicit gates until their evidence inputs are completed.
+The current test suite contains 161 tests. All 161 passed. The measured scaffold coverage is 95.59 percent because milestone-specific estimators and data clients are intentionally represented by explicit gates until their evidence inputs are completed.
 
 ## Current quality status
 
@@ -35,6 +35,7 @@ The current test suite contains 151 tests. All 151 passed. The measured scaffold
 - Portfolio parser, validation, manifest, and synthetic reconstruction tests cover the Milestone 4 test-asset assembly layer.
 - First-pass time-series tests cover excess-return construction, date alignment accounting, Newey-West OLS inference, independent matrix-HAC verification, diagnostics, and artifact writers.
 - Cross-sectional pricing tests cover OLS, GLS, Fama-MacBeth, Shanken-style corrected uncertainty, weak-factor warnings, leave-one-group systems, GRS diagnostics, simulation recovery, model evaluation tables, and artifact writers.
+- Replication-audit tests cover table-target loading, frozen tolerance comparison, allowed status labels, missing-input audit rows, JSON/CSV outputs, and the generated replication report.
 
 ## Scientific status
 

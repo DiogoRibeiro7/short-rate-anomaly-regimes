@@ -347,6 +347,40 @@ def test_estimate_cross_section_blocks_unfrozen_run_contract(
     assert "cross-section run contract is not frozen" in str(result.exception)
 
 
+def test_audit_replication_writes_missing_input_audit(tmp_path: Path) -> None:
+    target_path = tmp_path / "targets.csv"
+    audit_path = tmp_path / "audit.csv"
+    json_path = tmp_path / "audit.json"
+    report_path = tmp_path / "replication_report.md"
+    target_path.write_text(
+        "target_id,source_location,description,portfolio_set,model,estimator,tolerance_rule,status\n"
+        "TBL_001,article_pdf:p.936:Table 1,Target,set,model,est,"
+        "published_rounding,article_extracted\n",
+        encoding="utf-8",
+    )
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "audit-replication",
+            "--targets",
+            str(target_path),
+            "--output",
+            str(audit_path),
+            "--json-output",
+            str(json_path),
+            "--report",
+            str(report_path),
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert audit_path.is_file()
+    assert json_path.is_file()
+    assert report_path.is_file()
+    assert "missing-input audit" in str(result.exception)
+
+
 def test_show_milestones_command_lists_release_gate() -> None:
     runner = CliRunner()
 

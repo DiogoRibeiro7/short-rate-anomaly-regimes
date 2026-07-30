@@ -23,6 +23,10 @@ SECURITY.md
 VALIDATION.md
 artifacts/
 artifacts/.gitkeep
+artifacts/audit/
+artifacts/audit/.gitkeep
+artifacts/audit/table_replication.csv
+artifacts/audit/table_replication.json
 artifacts/data_quality/
 artifacts/data_quality/.gitkeep
 artifacts/diagnostics/
@@ -95,6 +99,7 @@ reports/
 reports/README.md
 reports/generated/
 reports/generated/.gitkeep
+reports/generated/replication_report.md
 research/
 research/article_method_extraction.md
 research/claim_assumption_map.md

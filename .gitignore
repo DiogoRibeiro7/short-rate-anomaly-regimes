@@ -34,6 +34,10 @@ artifacts/**
 !artifacts/provenance/.gitkeep
 !artifacts/data_quality/
 !artifacts/data_quality/.gitkeep
+!artifacts/audit/
+!artifacts/audit/.gitkeep
+!artifacts/audit/table_replication.csv
+!artifacts/audit/table_replication.json
 !artifacts/estimates/
 !artifacts/estimates/.gitkeep
 !artifacts/estimates/time_series/
@@ -66,6 +70,7 @@ artifacts/**
 !artifacts/tables/portfolio_descriptives/.gitkeep
 reports/generated/**
 !reports/generated/.gitkeep
+!reports/generated/replication_report.md
 paper/build/**
 !paper/build/.gitkeep
 data/catalog.duckdb
