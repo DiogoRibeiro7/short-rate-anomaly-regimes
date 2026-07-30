@@ -312,6 +312,41 @@ def test_estimate_first_pass_blocks_unfrozen_run_contract(
     assert "first-pass run contract is not frozen" in str(result.exception)
 
 
+def test_estimate_cross_section_reports_missing_required_artifacts() -> None:
+    runner = CliRunner()
+
+    result = runner.invoke(app, ["estimate-cross-section", "--config", "configs/baseline.yaml"])
+
+    assert result.exit_code == 1
+    assert "first-pass artifacts" in str(result.exception)
+
+
+def test_estimate_cross_section_blocks_unfrozen_run_contract(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    time_series_dir = tmp_path / "artifacts" / "estimates" / "time_series"
+    portfolio_path = tmp_path / "data" / "processed" / "portfolios" / "test_set.parquet"
+    time_series_dir.mkdir(parents=True, exist_ok=True)
+    portfolio_path.parent.mkdir(parents=True, exist_ok=True)
+    portfolio_path.write_text("placeholder", encoding="utf-8")
+    config_path = tmp_path / "baseline.yaml"
+    config_path.write_text("project: test\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        "short_rate_anomaly_regimes.cli.load_baseline_config",
+        lambda _: SimpleNamespace(portfolio_sets=["test_set"]),
+    )
+
+    result = CliRunner().invoke(
+        app,
+        ["estimate-cross-section", "--config", str(config_path)],
+    )
+
+    assert result.exit_code == 1
+    assert "cross-section run contract is not frozen" in str(result.exception)
+
+
 def test_show_milestones_command_lists_release_gate() -> None:
     runner = CliRunner()
 

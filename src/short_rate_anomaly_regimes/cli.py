@@ -263,6 +263,28 @@ def estimate_first_pass(
     )
 
 
+@app.command("estimate-cross-section")
+def estimate_cross_section(
+    config: ConfigPathOption,
+) -> None:
+    """Run second-pass cross-sectional pricing after first-pass outputs exist."""
+    validated = load_baseline_config(config)
+    required_paths = [Path("artifacts/estimates/time_series")]
+    required_paths.extend(
+        Path("data/processed/portfolios") / f"{portfolio_set}.parquet"
+        for portfolio_set in validated.portfolio_sets
+    )
+    missing_paths = [str(path) for path in required_paths if not path.exists()]
+    if missing_paths:
+        raise ReplicationBlockError(
+            "Cannot estimate cross-sectional prices until first-pass artifacts and "
+            f"portfolio panels exist: {', '.join(missing_paths)}"
+        )
+    raise ReplicationBlockError(
+        "Required first-pass artifacts exist, but the cross-section run contract is not frozen"
+    )
+
+
 @app.command("run-baseline")
 def run_baseline(config: ConfigPathOption) -> None:
     """Run the strict replication pipeline."""
