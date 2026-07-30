@@ -18,6 +18,7 @@ from short_rate_anomaly_regimes.data.acquisition import (
 from short_rate_anomaly_regimes.data.catalog import build_catalog, load_registry
 from short_rate_anomaly_regimes.environment import write_environment_manifest
 from short_rate_anomaly_regimes.exceptions import ReplicationBlockError
+from short_rate_anomaly_regimes.portfolios.construction import write_construction_manifest
 
 app = typer.Typer(no_args_is_help=True)
 console = Console()
@@ -203,6 +204,37 @@ def estimate_rate_innovation(
         )
     raise ReplicationBlockError(
         "Raw rate files exist, but their exact parser contract is not frozen in the repository"
+    )
+
+
+@app.command("assemble-test-assets")
+def assemble_test_assets(
+    registry: RegistryPathOption,
+    manifest: OutputPathOption = Path("artifacts/portfolios/construction_manifest.json"),
+) -> None:
+    """Assemble the approved 25-portfolio test-asset panels."""
+    validated = load_registry(registry)
+    portfolio_sources = [
+        source for source in validated.sources if source.category == "portfolio_returns"
+    ]
+    write_construction_manifest(manifest)
+
+    blockers: list[str] = []
+    for source in portfolio_sources:
+        if source.provider == "Kenneth French Data Library":
+            dataset_name = source.model_extra.get("dataset_name") if source.model_extra else None
+            if not isinstance(dataset_name, str):
+                blockers.append(f"{source.id}: exact Kenneth French archive name is not frozen")
+                continue
+        if source.raw_path is None or not Path(source.raw_path).is_file():
+            blockers.append(f"{source.id}: missing raw portfolio file")
+    if blockers:
+        raise ReplicationBlockError(
+            "Cannot assemble test assets until portfolio sources are registered: "
+            f"{'; '.join(blockers)}"
+        )
+    raise ReplicationBlockError(
+        "Raw portfolio files exist, but source-specific output contracts are not frozen"
     )
 
 

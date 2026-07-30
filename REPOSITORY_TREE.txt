@@ -32,6 +32,9 @@ artifacts/diagnostics/rates/.gitkeep
 artifacts/evidence/
 artifacts/evidence/.gitkeep
 artifacts/evidence/article_manifest.json
+artifacts/portfolios/
+artifacts/portfolios/.gitkeep
+artifacts/portfolios/construction_manifest.json
 artifacts/environment/
 artifacts/environment/.gitkeep
 artifacts/provenance/
@@ -40,6 +43,8 @@ artifacts/tables/
 artifacts/tables/.gitkeep
 artifacts/tables/factors/
 artifacts/tables/factors/.gitkeep
+artifacts/tables/portfolio_descriptives/
+artifacts/tables/portfolio_descriptives/.gitkeep
 configs/
 configs/baseline.yaml
 configs/data_sources.yaml
@@ -53,6 +58,8 @@ data/processed/
 data/processed/.gitkeep
 data/processed/factors/
 data/processed/factors/.gitkeep
+data/processed/portfolios/
+data/processed/portfolios/.gitkeep
 data/raw/
 data/raw/.gitkeep
 docs/

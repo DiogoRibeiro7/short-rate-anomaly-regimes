@@ -19,7 +19,7 @@ Latest validation was performed on 30 July 2026 from the repository checkout on 
 - `poetry run pytest` with `--cov-fail-under=95`
 - `poetry run pre-commit run --all-files`
 
-The current test suite contains 111 tests. All 111 passed. The measured scaffold coverage is 97.85 percent because milestone-specific estimators and data clients are intentionally represented by explicit stubs until their evidence gates are completed.
+The current test suite contains 124 tests. All 124 passed. The measured scaffold coverage is 96.23 percent because milestone-specific estimators and data clients are intentionally represented by explicit gates until their evidence inputs are completed.
 
 ## Current quality status
 
@@ -32,7 +32,8 @@ The current test suite contains 111 tests. All 111 passed. The measured scaffold
 - `make check` now includes YAML project-config validation and source-registry validation.
 - `make check` now exercises data-acquisition dry-run planning and DuckDB catalog creation.
 - `make env-manifest` writes `artifacts/environment/manifest.json` with Python, OS, package, BLAS, Git, and config-hash metadata.
+- Portfolio parser, validation, manifest, and synthetic reconstruction tests cover the Milestone 4 test-asset assembly layer.
 
 ## Scientific status
 
-No empirical replication result has been produced. Strict replication remains blocked until the final article and supplement are obtained legally, hashed, and extracted under Milestone 0. The codebase must use the documented reconstruction label whenever an original input cannot be obtained.
+No empirical replication result has been produced. The final article and supplement are present locally and hashed, but strict replication remains blocked until exact source versions and required raw inputs are legally obtained and registered. The codebase must use the documented reconstruction label whenever an original input cannot be obtained.

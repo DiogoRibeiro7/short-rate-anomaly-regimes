@@ -1,0 +1,118 @@
+{
+  "portfolio_sets": [
+    {
+      "breakpoint_rule": "Use the exact Kenneth French archive once its filename/version is frozen.",
+      "formula": "Monthly value-weighted 5 by 5 returns sorted on size and book-to-market.",
+      "notes": "Parser implemented; source registry still lacks the exact archive name.",
+      "output_label": "missing_source_definition",
+      "required_inputs": [
+        "Kenneth French exact monthly 25 Size-BM archive"
+      ],
+      "source_id": "french_size_bm_25",
+      "source_type": "public_kenneth_french",
+      "status": "missing",
+      "weighting": "provider_value_weighted"
+    },
+    {
+      "breakpoint_rule": "Use the exact Kenneth French archive once its filename/version is frozen.",
+      "formula": "Monthly value-weighted 5 by 5 returns sorted on size and long-term reversal.",
+      "notes": "Parser implemented; source registry still lacks the exact archive name.",
+      "output_label": "missing_source_definition",
+      "required_inputs": [
+        "Kenneth French exact monthly 25 Size-Reversal archive"
+      ],
+      "source_id": "french_size_long_term_reversal_25",
+      "source_type": "public_kenneth_french",
+      "status": "missing",
+      "weighting": "provider_value_weighted"
+    },
+    {
+      "breakpoint_rule": "Freeze CRSP/Compustat filters, accounting lag, breakpoint universe, and rebalancing month before any WRDS reconstruction.",
+      "formula": "Monthly value-weighted 5 by 5 returns sorted on size and asset growth.",
+      "notes": "Prefer author data; reconstructed output must be labelled approximately_reproduced.",
+      "output_label": "not_reproducible_missing_input",
+      "required_inputs": [
+        "author portfolio returns",
+        "CRSP monthly returns",
+        "Compustat annuals"
+      ],
+      "source_id": "size_asset_growth_25",
+      "source_type": "author_or_wrds",
+      "status": "missing",
+      "weighting": "value_weighted_market_equity"
+    },
+    {
+      "breakpoint_rule": "Freeze source-paper duration formula, CRSP/Compustat filters, lags, breakpoints, and rebalancing month before reconstruction.",
+      "formula": "Monthly value-weighted 5 by 5 returns sorted on size and equity duration.",
+      "notes": "Prefer author data; reconstructed output must be labelled approximately_reproduced.",
+      "output_label": "not_reproducible_missing_input",
+      "required_inputs": [
+        "author portfolio returns",
+        "CRSP monthly returns",
+        "Compustat annuals"
+      ],
+      "source_id": "size_equity_duration_25",
+      "source_type": "author_or_wrds",
+      "status": "missing",
+      "weighting": "value_weighted_market_equity"
+    },
+    {
+      "breakpoint_rule": "Freeze inventory-growth formula, CRSP/Compustat filters, lags, breakpoints, and rebalancing month before reconstruction.",
+      "formula": "Monthly value-weighted 5 by 5 returns sorted on size and inventory growth.",
+      "notes": "Prefer author data; reconstructed output must be labelled approximately_reproduced.",
+      "output_label": "not_reproducible_missing_input",
+      "required_inputs": [
+        "author portfolio returns",
+        "CRSP monthly returns",
+        "Compustat annuals"
+      ],
+      "source_id": "size_inventory_growth_25",
+      "source_type": "author_or_wrds",
+      "status": "missing",
+      "weighting": "value_weighted_market_equity"
+    }
+  ],
+  "status_matrix": [
+    {
+      "author_provided": false,
+      "exact": false,
+      "missing": true,
+      "output_label": "missing_source_definition",
+      "reconstructed": false,
+      "source_id": "french_size_bm_25"
+    },
+    {
+      "author_provided": false,
+      "exact": false,
+      "missing": true,
+      "output_label": "missing_source_definition",
+      "reconstructed": false,
+      "source_id": "french_size_long_term_reversal_25"
+    },
+    {
+      "author_provided": false,
+      "exact": false,
+      "missing": true,
+      "output_label": "not_reproducible_missing_input",
+      "reconstructed": false,
+      "source_id": "size_asset_growth_25"
+    },
+    {
+      "author_provided": false,
+      "exact": false,
+      "missing": true,
+      "output_label": "not_reproducible_missing_input",
+      "reconstructed": false,
+      "source_id": "size_equity_duration_25"
+    },
+    {
+      "author_provided": false,
+      "exact": false,
+      "missing": true,
+      "output_label": "not_reproducible_missing_input",
+      "reconstructed": false,
+      "source_id": "size_inventory_growth_25"
+    }
+  ],
+  "version": 1
+}

@@ -24,6 +24,8 @@ data/processed/**
 !data/processed/.gitkeep
 !data/processed/factors/
 !data/processed/factors/.gitkeep
+!data/processed/portfolios/
+!data/processed/portfolios/.gitkeep
 artifacts/**
 !artifacts/.gitkeep
 !artifacts/environment/
@@ -35,6 +37,9 @@ artifacts/**
 !artifacts/evidence/
 !artifacts/evidence/.gitkeep
 !artifacts/evidence/article_manifest.json
+!artifacts/portfolios/
+!artifacts/portfolios/.gitkeep
+!artifacts/portfolios/construction_manifest.json
 !artifacts/diagnostics/
 !artifacts/diagnostics/.gitkeep
 !artifacts/diagnostics/rates/
@@ -43,6 +48,8 @@ artifacts/**
 !artifacts/tables/.gitkeep
 !artifacts/tables/factors/
 !artifacts/tables/factors/.gitkeep
+!artifacts/tables/portfolio_descriptives/
+!artifacts/tables/portfolio_descriptives/.gitkeep
 reports/generated/**
 !reports/generated/.gitkeep
 paper/build/**
