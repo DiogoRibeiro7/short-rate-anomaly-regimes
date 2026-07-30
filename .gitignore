@@ -24,6 +24,8 @@ data/processed/**
 !data/processed/.gitkeep
 artifacts/**
 !artifacts/.gitkeep
+!artifacts/environment/
+!artifacts/environment/.gitkeep
 reports/generated/**
 !reports/generated/.gitkeep
 paper/build/**

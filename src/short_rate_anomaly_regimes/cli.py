@@ -9,21 +9,28 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from short_rate_anomaly_regimes.config import load_baseline_config
+from short_rate_anomaly_regimes.config import load_baseline_config, load_project_config
 from short_rate_anomaly_regimes.data.catalog import load_registry
+from short_rate_anomaly_regimes.environment import write_environment_manifest
 
 app = typer.Typer(no_args_is_help=True)
 console = Console()
 ConfigPathOption = Annotated[Path, typer.Option(exists=True, dir_okay=False)]
+OutputPathOption = Annotated[Path, typer.Option(dir_okay=False)]
+ConfigPathsOption = Annotated[list[Path], typer.Option("--config", exists=True, dir_okay=False)]
 
 
 @app.command("validate-config")
 def validate_config(config: ConfigPathOption) -> None:
-    """Validate the baseline YAML configuration."""
-    validated = load_baseline_config(config)
-    console.print(
-        f"Validated {validated.project.name} in {validated.project.replication_mode} mode"
-    )
+    """Validate a known project YAML configuration."""
+    validated = load_project_config(config)
+    if hasattr(validated, "project"):
+        baseline = load_baseline_config(config)
+        console.print(
+            f"Validated {baseline.project.name} in {baseline.project.replication_mode} mode"
+        )
+    else:
+        console.print(f"Validated {config}")
 
 
 @app.command("validate-data")
@@ -31,6 +38,16 @@ def validate_data(registry: ConfigPathOption) -> None:
     """Validate the source registry without downloading data."""
     validated = load_registry(registry)
     console.print(f"Validated {len(validated.sources)} registered sources")
+
+
+@app.command("environment-manifest")
+def environment_manifest(
+    config: ConfigPathsOption,
+    output: OutputPathOption = Path("artifacts/environment/manifest.json"),
+) -> None:
+    """Write the Python, package, Git, BLAS, and config-hash manifest."""
+    write_environment_manifest(output_path=output, config_paths=tuple(config))
+    console.print(f"Wrote environment manifest to {output}")
 
 
 @app.command("show-milestones")

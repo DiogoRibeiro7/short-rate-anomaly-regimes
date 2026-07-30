@@ -23,6 +23,8 @@ SECURITY.md
 VALIDATION.md
 artifacts/
 artifacts/.gitkeep
+artifacts/environment/
+artifacts/environment/.gitkeep
 configs/
 configs/baseline.yaml
 configs/data_sources.yaml
@@ -81,6 +83,8 @@ src/short_rate_anomaly_regimes/data/__init__.py
 src/short_rate_anomaly_regimes/data/acquisition.py
 src/short_rate_anomaly_regimes/data/catalog.py
 src/short_rate_anomaly_regimes/data/validation.py
+src/short_rate_anomaly_regimes/environment.py
+src/short_rate_anomaly_regimes/exceptions.py
 src/short_rate_anomaly_regimes/evidence.py
 src/short_rate_anomaly_regimes/models/
 src/short_rate_anomaly_regimes/models/__init__.py
@@ -103,6 +107,8 @@ src/short_rate_anomaly_regimes/regimes/stability.py
 src/short_rate_anomaly_regimes/reporting/
 src/short_rate_anomaly_regimes/reporting/__init__.py
 src/short_rate_anomaly_regimes/reporting/audit.py
+src/short_rate_anomaly_regimes/run_logging.py
+src/short_rate_anomaly_regimes/seed.py
 src/short_rate_anomaly_regimes/shocks/
 src/short_rate_anomaly_regimes/shocks/__init__.py
 src/short_rate_anomaly_regimes/shocks/decomposition.py
@@ -110,6 +116,7 @@ src/short_rate_anomaly_regimes/types.py
 tests/
 tests/test_config.py
 tests/test_evidence.py
+tests/test_foundation.py
 tests/test_rate_innovations.py
 tests/test_regimes.py
 tests/test_validation.py
