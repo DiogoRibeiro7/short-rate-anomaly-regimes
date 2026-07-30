@@ -27,6 +27,8 @@ def test_all_project_configs_load() -> None:
     regime_config = load_regime_config(Path("configs/regimes.yaml"))
     reporting_config = load_reporting_config(Path("configs/reporting.yaml"))
 
+    assert extension_config.data_freeze.latest_common_month == "2026-06"
+    assert extension_config.data_freeze.revision_policy == "audit_separately"
     assert extension_config.shock_decomposition.enabled is True
     assert regime_config.minimum_regime_observations == 36
     assert reporting_config.include_environment_manifest is True

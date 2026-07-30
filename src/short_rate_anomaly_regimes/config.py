@@ -148,6 +148,22 @@ class ShockIdentificationConfig(BaseModel):
     alternatives: list[str]
 
 
+class TemporalDataFreezeConfig(BaseModel):
+    """Temporal-extension vintage and cutoff metadata."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    baseline_start: str
+    baseline_end: str
+    extension_start: str
+    latest_common_month: str
+    retrieval_date: str
+    baseline_vintage_label: str
+    extension_vintage_label: str
+    revision_policy: str = Field(pattern="^audit_separately$")
+    compatible_portfolio_sets: list[str]
+
+
 class ShockDecompositionConfig(BaseModel):
     """High-frequency shock decomposition settings."""
 
@@ -187,6 +203,7 @@ class ExtensionConfig(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    data_freeze: TemporalDataFreezeConfig
     shock_decomposition: ShockDecompositionConfig
     out_of_sample: OutOfSampleConfig
     robustness: RobustnessConfig

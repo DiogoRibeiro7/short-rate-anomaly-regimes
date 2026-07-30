@@ -19,7 +19,7 @@ Latest validation was performed on 31 July 2026 from the repository checkout on 
 - `poetry run pytest` with `--cov-fail-under=95`
 - `poetry run pre-commit run --all-files`
 
-The current test suite contains 172 tests. All 172 passed. The measured scaffold coverage is 95.64 percent because milestone-specific estimators and data clients are intentionally represented by explicit gates until their evidence inputs are completed.
+The current test suite contains 185 tests. All 185 passed. The measured scaffold coverage is 96.11 percent because milestone-specific estimators and data clients are intentionally represented by explicit gates until their evidence inputs are completed.
 
 ## Current quality status
 
@@ -37,6 +37,7 @@ The current test suite contains 172 tests. All 172 passed. The measured scaffold
 - Cross-sectional pricing tests cover OLS, GLS, Fama-MacBeth, Shanken-style corrected uncertainty, weak-factor warnings, leave-one-group systems, GRS diagnostics, simulation recovery, model evaluation tables, and artifact writers.
 - Replication-audit tests cover table-target loading, frozen tolerance comparison, allowed status labels, missing-input audit rows, JSON/CSV outputs, and the generated replication report.
 - Robustness tests cover weak-factor rank and singular-value diagnostics, beta dispersion, factor spanning, irrelevant-factor flags, Holm correction within robustness families, economic-change flags, predeclared robustness classification, and blocked report generation.
+- Temporal-extension tests cover locked-vintage panel assembly, revised-history audits, reduced extension universes, December 2013 frozen-parameter pricing errors, pre/post pattern diagnostics, expanding and rolling window schedules, boundary figures, and blocked report generation.
 
 ## Scientific status
 

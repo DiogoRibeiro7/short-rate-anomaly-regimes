@@ -26,6 +26,8 @@ data/processed/**
 !data/processed/factors/.gitkeep
 !data/processed/portfolios/
 !data/processed/portfolios/.gitkeep
+!data/processed/extension/
+!data/processed/extension/.gitkeep
 artifacts/**
 !artifacts/.gitkeep
 !artifacts/environment/
@@ -60,6 +62,10 @@ artifacts/**
 !artifacts/diagnostics/cross_section/.gitkeep
 !artifacts/diagnostics/weak_factor/
 !artifacts/diagnostics/weak_factor/.gitkeep
+!artifacts/figures/
+!artifacts/figures/.gitkeep
+!artifacts/figures/extension/
+!artifacts/figures/extension/.gitkeep
 !artifacts/tables/
 !artifacts/tables/.gitkeep
 !artifacts/tables/factors/
@@ -70,12 +76,15 @@ artifacts/**
 !artifacts/tables/cross_section/.gitkeep
 !artifacts/tables/robustness/
 !artifacts/tables/robustness/.gitkeep
+!artifacts/tables/extension/
+!artifacts/tables/extension/.gitkeep
 !artifacts/tables/portfolio_descriptives/
 !artifacts/tables/portfolio_descriptives/.gitkeep
 reports/generated/**
 !reports/generated/.gitkeep
 !reports/generated/replication_report.md
 !reports/generated/robustness_report.md
+!reports/generated/temporal_extension_report.md
 paper/build/**
 !paper/build/.gitkeep
 data/catalog.duckdb

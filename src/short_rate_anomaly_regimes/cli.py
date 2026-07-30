@@ -9,7 +9,12 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from short_rate_anomaly_regimes.config import load_baseline_config, load_project_config
+from short_rate_anomaly_regimes.config import (
+    ExtensionConfig,
+    load_baseline_config,
+    load_extension_config,
+    load_project_config,
+)
 from short_rate_anomaly_regimes.data.acquisition import (
     download_fred_series,
     download_kenneth_french_dataset,
@@ -18,6 +23,10 @@ from short_rate_anomaly_regimes.data.acquisition import (
 from short_rate_anomaly_regimes.data.catalog import build_catalog, load_registry
 from short_rate_anomaly_regimes.environment import write_environment_manifest
 from short_rate_anomaly_regimes.exceptions import ReplicationBlockError
+from short_rate_anomaly_regimes.extensions.temporal import (
+    TemporalFreeze,
+    write_blocked_temporal_report,
+)
 from short_rate_anomaly_regimes.portfolios.construction import write_construction_manifest
 from short_rate_anomaly_regimes.reporting.audit import (
     build_missing_input_audit,
@@ -369,6 +378,43 @@ def robustness_diagnostics(
     )
 
 
+@app.command("temporal-extension")
+def temporal_extension(
+    config: ConfigPathOption = Path("configs/extensions.yaml"),
+    baseline_config: ConfigPathOption = Path("configs/baseline.yaml"),
+    output: OutputPathOption = Path("reports/generated/temporal_extension_report.md"),
+) -> None:
+    """Run the post-2013 temporal-extension gate with frozen vintage metadata."""
+    extension = load_extension_config(config)
+    baseline = load_baseline_config(baseline_config)
+    required_paths = [
+        Path("data/processed/factors/short_rate_factors.parquet"),
+        Path("artifacts/estimates/time_series"),
+        Path("artifacts/estimates/cross_section"),
+    ]
+    portfolio_sets = _compatible_extension_portfolio_sets(extension, tuple(baseline.portfolio_sets))
+    required_paths.extend(
+        Path("data/processed/portfolios") / f"{portfolio_set}.parquet"
+        for portfolio_set in portfolio_sets
+    )
+    missing_paths = tuple(path for path in required_paths if not path.exists())
+    freeze = _temporal_freeze_from_config(extension)
+    if missing_paths:
+        write_blocked_temporal_report(
+            output_path=output,
+            freeze=freeze,
+            missing_inputs=missing_paths,
+        )
+        raise ReplicationBlockError(
+            "Wrote blocked temporal extension report; extension requires baseline and "
+            f"post-2013 compatible panels: {', '.join(str(path) for path in missing_paths)}"
+        )
+    raise ReplicationBlockError(
+        "Baseline artifacts exist, but temporal-extension panel assembly is not linked to "
+        "source-specific compatible vintages yet"
+    )
+
+
 @app.command("run-baseline")
 def run_baseline(config: ConfigPathOption) -> None:
     """Run the strict replication pipeline."""
@@ -388,6 +434,32 @@ def build_report(config: ConfigPathOption) -> None:
     """Build tables, figures, and the replication report."""
     del config
     raise NotImplementedError("Complete the relevant empirical milestones first")
+
+
+def _temporal_freeze_from_config(config: ExtensionConfig) -> TemporalFreeze:
+    freeze = config.data_freeze
+    return TemporalFreeze(
+        baseline_start=freeze.baseline_start,
+        baseline_end=freeze.baseline_end,
+        extension_start=freeze.extension_start,
+        latest_common_month=freeze.latest_common_month,
+        retrieval_date=freeze.retrieval_date,
+        baseline_vintage_label=freeze.baseline_vintage_label,
+        extension_vintage_label=freeze.extension_vintage_label,
+        revision_policy=freeze.revision_policy,
+    )
+
+
+def _compatible_extension_portfolio_sets(
+    config: ExtensionConfig,
+    baseline_portfolio_sets: tuple[str, ...],
+) -> tuple[str, ...]:
+    baseline = set(baseline_portfolio_sets)
+    return tuple(
+        portfolio_set
+        for portfolio_set in config.data_freeze.compatible_portfolio_sets
+        if portfolio_set in baseline
+    )
 
 
 if __name__ == "__main__":

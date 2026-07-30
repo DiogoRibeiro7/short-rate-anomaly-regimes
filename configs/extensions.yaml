@@ -1,3 +1,19 @@
+data_freeze:
+  baseline_start: "1972-01"
+  baseline_end: "2013-12"
+  extension_start: "2014-01"
+  latest_common_month: "2026-06"
+  retrieval_date: "2026-07-31"
+  baseline_vintage_label: locked_original_1972_2013
+  extension_vintage_label: extension_retrieved_2026_07_31
+  revision_policy: audit_separately
+  compatible_portfolio_sets:
+    - size_book_to_market_25
+    - size_long_term_reversal_25
+    - size_asset_growth_25
+    - size_equity_duration_25
+    - size_inventory_growth_25
+
 shock_decomposition:
   enabled: true
   identification:

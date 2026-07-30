@@ -395,6 +395,22 @@ def test_robustness_diagnostics_writes_blocked_report(tmp_path: Path) -> None:
     assert "Verdict: `unidentified`" in report_path.read_text(encoding="utf-8")
 
 
+def test_temporal_extension_writes_blocked_report(tmp_path: Path) -> None:
+    report_path = tmp_path / "temporal_extension_report.md"
+
+    result = CliRunner().invoke(
+        app,
+        ["temporal-extension", "--output", str(report_path)],
+    )
+
+    assert result.exit_code == 1
+    assert report_path.is_file()
+    assert "blocked temporal extension report" in str(result.exception)
+    report = report_path.read_text(encoding="utf-8")
+    assert "Verdict: `blocked_missing_input`" in report
+    assert "Latest common month: `2026-06`" in report
+
+
 def test_show_milestones_command_lists_release_gate() -> None:
     runner = CliRunner()
 
