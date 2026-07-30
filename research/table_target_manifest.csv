@@ -1,0 +1,6 @@
+target_id,source_location,description,portfolio_set,model,estimator,tolerance_rule,status
+TBD_001,article_to_extract,Factor descriptive statistics,all,na,descriptive,published_rounding,not_attempted
+TBD_002,article_to_extract,Baseline two-factor risk prices,size_book_to_market_25,market_plus_fed_funds,verify,coefficient_rounding,not_attempted
+TBD_003,article_to_extract,Joint anomaly pricing results,joint_sets,market_plus_fed_funds,verify,coefficient_rounding,not_attempted
+TBD_004,article_to_extract,Alternative T-bill factor results,joint_sets,market_plus_tbill,verify,coefficient_rounding,not_attempted
+TBD_005,article_to_extract,Comparator model performance,joint_sets,comparators,verify,metric_rounding,not_attempted

@@ -1,0 +1,38 @@
+shock_decomposition:
+  enabled: true
+  identification:
+    primary: high_frequency_rate_equity_sign_decomposition
+    alternatives:
+      - futures_surprise_only
+      - external_instrument_svar
+  event_window_minutes: 30
+  aggregation: monthly_sum
+  preserve_policy_and_information_components: true
+
+out_of_sample:
+  initial_train_end: "1999-12"
+  expanding_window: true
+  refit_frequency_months: 12
+  evaluation:
+    - cross_sectional_rmse
+    - mean_absolute_pricing_error
+    - maximum_absolute_alpha
+    - out_of_sample_r2
+    - directional_rank_accuracy
+
+robustness:
+  rate_innovation_models:
+    - ar1_with_intercept
+    - ar2_with_intercept
+    - local_level_state_space
+    - survey_or_futures_surprise
+  covariance_estimators:
+    - newey_west
+    - stationary_bootstrap
+  portfolio_weightings:
+    - value_weighted
+    - equal_weighted
+  influential_observation_methods:
+    - leave_one_crisis_out
+    - leave_one_year_out
+    - dfbeta

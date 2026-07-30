@@ -1,0 +1,7 @@
+id,family,hypothesis,primary_outcome,direction,status
+H1,replication,The two-factor model reduces pricing errors relative to CAPM,cross_sectional_rmse,lower,confirmatory
+H2,extension,The short-rate factor remains priced after 2013,short_rate_risk_price,nonzero,confirmatory
+H3,stability,Short-rate betas and risk prices are invariant across monetary regimes,joint_regime_wald,fail_to_reject,confirmatory
+H4,identification,The aggregate short-rate innovation spans policy and information components,incremental_pricing_rmse,no_improvement,confirmatory
+H5,weak_factor,The short-rate beta has sufficient cross-sectional dispersion,beta_strength_diagnostic,passes,confirmatory
+E1,exploratory,Unknown structural breaks align with policy regime boundaries,bai_perron_break_dates,alignment,exploratory

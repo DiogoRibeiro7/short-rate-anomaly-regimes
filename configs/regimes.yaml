@@ -1,0 +1,44 @@
+base_config: configs/baseline.yaml
+sample:
+  start: "1972-01"
+  end: latest_available
+
+regime_definition:
+  primary: deterministic_calendar
+  regimes:
+    - id: conventional_pre_elb
+      start: "1972-01"
+      end: "2008-11"
+    - id: effective_lower_bound_and_qe
+      start: "2008-12"
+      end: "2015-11"
+    - id: first_normalisation
+      start: "2015-12"
+      end: "2020-02"
+    - id: pandemic_elb_and_qe
+      start: "2020-03"
+      end: "2022-02"
+    - id: inflation_tightening
+      start: "2022-03"
+      end: latest_available
+  sensitivity:
+    boundary_shifts_months: [-3, 3]
+    alternative_rules:
+      - policy_rate_threshold
+      - balance_sheet_growth
+      - nber_cycle_interaction
+
+models:
+  - pooled_constant_beta
+  - interacted_regime_beta
+  - split_sample_two_pass
+  - rolling_beta
+
+structural_break_tests:
+  - chow_known_breaks
+  - quandt_andrews_unknown_break
+  - bai_perron_multiple_breaks
+  - cusum
+
+minimum_regime_observations: 36
+multiple_testing_adjustment: holm

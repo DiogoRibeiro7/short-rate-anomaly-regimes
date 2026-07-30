@@ -1,0 +1,8 @@
+input_config: configs/baseline.yaml
+output_directory: reports/generated
+formats: [csv, parquet, tex, markdown]
+figures: [pdf, png]
+include_environment_manifest: true
+include_data_checksums: true
+include_replication_status: true
+forbid_unlabelled_substitutions: true

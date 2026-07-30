@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+title: Short Rate Anomaly Regimes
+message: Please cite this repository and the replicated article.
+type: software
+authors:
+  - family-names: Diogo
+year: 2026
+license: MIT
+repository-code: https://github.com/REPLACE_ME/short-rate-anomaly-regimes
+preferred-citation:
+  type: article
+  title: Short Term Interest Rate Innovations Across Monetary Regimes
+  authors:
+    - family-names: Diogo
+  year: 2026

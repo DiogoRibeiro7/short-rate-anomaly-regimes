@@ -1,0 +1,98 @@
+version: 1
+sources:
+  - id: article_pdf
+    category: reference
+    access: user_or_institution
+    required_for_strict_replication: true
+    expected_path: references/private/article.pdf
+    licence_note: Do not redistribute copyrighted material.
+
+  - id: article_supplement
+    category: reference
+    access: publisher_or_author
+    required_for_strict_replication: true
+    expected_path: references/private/supplement.pdf
+    licence_note: Record terms before storing or redistributing.
+
+  - id: french_mkt_rf
+    category: factor_returns
+    provider: Kenneth French Data Library
+    access: public
+    frequency: monthly
+    required_for_strict_replication: true
+    raw_path: data/raw/kenneth_french/mkt_rf.csv
+
+  - id: french_size_bm_25
+    category: portfolio_returns
+    provider: Kenneth French Data Library
+    access: public
+    frequency: monthly
+    required_for_strict_replication: true
+    raw_path: data/raw/kenneth_french/size_bm_25.csv
+
+  - id: french_size_long_term_reversal_25
+    category: portfolio_returns
+    provider: Kenneth French Data Library
+    access: public
+    frequency: monthly
+    required_for_strict_replication: true
+    raw_path: data/raw/kenneth_french/size_long_term_reversal_25.csv
+
+  - id: federal_funds_rate
+    category: short_rate
+    provider: Federal Reserve Economic Data
+    access: public
+    frequency: monthly
+    series_candidates: [FEDFUNDS]
+    exact_series_status: verify_against_article
+    raw_path: data/raw/fred/federal_funds_rate.csv
+
+  - id: treasury_bill_rate
+    category: short_rate
+    provider: Federal Reserve Economic Data or original author source
+    access: public_or_author
+    frequency: monthly
+    series_candidates: [TB3MS, DTB3]
+    exact_series_status: verify_against_article
+    raw_path: data/raw/rates/treasury_bill_rate.csv
+
+  - id: one_month_tbill_return
+    category: risk_free_return
+    provider: Kenneth French Data Library
+    access: public
+    frequency: monthly
+    exact_series_status: verify_against_article
+    raw_path: data/raw/kenneth_french/rf.csv
+
+  - id: size_asset_growth_25
+    category: portfolio_returns
+    provider: author_data_or_reconstruction
+    access: author_or_wrds
+    frequency: monthly
+    required_for_strict_replication: true
+    raw_path: data/raw/portfolios/size_asset_growth_25.csv
+
+  - id: size_equity_duration_25
+    category: portfolio_returns
+    provider: author_data_or_reconstruction
+    access: author_or_wrds
+    frequency: monthly
+    required_for_strict_replication: true
+    raw_path: data/raw/portfolios/size_equity_duration_25.csv
+
+  - id: size_inventory_growth_25
+    category: portfolio_returns
+    provider: author_data_or_reconstruction
+    access: author_or_wrds
+    frequency: monthly
+    required_for_strict_replication: true
+    raw_path: data/raw/portfolios/size_inventory_growth_25.csv
+
+  - id: high_frequency_monetary_surprises
+    category: extension_shocks
+    provider: documented_research_dataset
+    access: public_or_author
+    frequency: event
+    required_for_strict_replication: false
+    exact_series_status: select_during_milestone_11
+    raw_path: data/raw/monetary_shocks/high_frequency_surprises.csv

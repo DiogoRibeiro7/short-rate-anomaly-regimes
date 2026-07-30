@@ -1,0 +1,62 @@
+project:
+  name: short-rate-anomaly-regimes
+  replication_mode: strict
+  random_seed: 20260727
+
+sample:
+  frequency: monthly
+  start: "1972-01"
+  end: "2013-12"
+  date_alignment: month_end
+
+returns:
+  units: percent_per_month
+  excess_return_definition: portfolio_return_minus_one_month_tbill_return
+  weighting: value_weighted
+
+market_factor:
+  source_id: french_mkt_rf
+  column: Mkt-RF
+
+short_rate:
+  primary_series: federal_funds_rate
+  alternatives:
+    - treasury_bill_rate
+  innovation:
+    model: ar1_with_intercept
+    estimation: full_sample
+    residual_timing: contemporaneous
+    standardize: false
+
+portfolio_sets:
+  - size_book_to_market_25
+  - size_asset_growth_25
+  - size_long_term_reversal_25
+  - size_equity_duration_25
+  - size_inventory_growth_25
+
+asset_pricing:
+  time_series:
+    include_intercept: true
+    covariance: newey_west
+    nw_lags: automatic
+  cross_section:
+    estimators:
+      - ols_two_pass
+      - gls_two_pass
+      - fama_macbeth
+    include_zero_beta_intercept: true
+    shanken_correction: true
+    weak_factor_diagnostics: true
+
+comparators:
+  - capm
+  - fama_french_3
+  - carhart_4
+  - fama_french_5
+  - q_factor
+
+reporting:
+  decimals: 4
+  t_stat_decimals: 2
+  significance_levels: [0.10, 0.05, 0.01]

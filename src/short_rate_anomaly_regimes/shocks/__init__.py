@@ -1,0 +1,1 @@
+"""Monetary-policy shock decomposition."""
