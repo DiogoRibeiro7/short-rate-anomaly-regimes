@@ -11,16 +11,20 @@
       "role": "article_pdf",
       "sha256": "2666ea25fb1cb2dde9d7e613c088a649757422e0ed44384008143e5424f72fda",
       "title": "Final article PDF"
+    },
+    {
+      "access_note": "Publisher supplementary ZIP supplied locally; do not redistribute.",
+      "local_path": "references/private/urn_cambridge.org_id_binary_20170615115101719-0272_S002210901700028X_S002210901700028Xsup001.zip",
+      "role": "supplement",
+      "sha256": "576bad1d91202338729804b2dad86e2dfb6309fae6e9605c31f49c3d1e0f6e10",
+      "title": "Publisher supplementary material ZIP"
     }
   ],
   "issue": "3",
   "journal": "Journal of Financial and Quantitative Analysis",
-  "missing_roles": [
-    "supplement"
-  ],
   "pages": "927-961",
   "publication_date": "2017-06",
-  "status": "blocked_missing_supplement",
+  "status": "complete",
   "title": "Short-Term Interest Rates and Stock Market Anomalies",
   "volume": "52"
 }

@@ -118,14 +118,17 @@ def test_article_manifest_allows_blocked_article_only_manifest() -> None:
     assert manifest.status == "blocked_missing_supplement"
 
 
-def test_committed_article_manifest_records_local_article_blocker() -> None:
+def test_committed_article_manifest_records_publication_evidence() -> None:
     manifest = load_article_manifest(Path("artifacts/evidence/article_manifest.json"))
 
-    assert manifest.status == "blocked_missing_supplement"
-    assert manifest.file_roles == {"article_pdf"}
-    assert manifest.files[0].sha256 == (
-        "2666ea25fb1cb2dde9d7e613c088a649757422e0ed44384008143e5424f72fda"
-    )
+    checksums = {file.role: file.sha256 for file in manifest.files}
+
+    assert manifest.status == "complete"
+    assert manifest.file_roles == {"article_pdf", "supplement"}
+    assert checksums == {
+        "article_pdf": "2666ea25fb1cb2dde9d7e613c088a649757422e0ed44384008143e5424f72fda",
+        "supplement": "576bad1d91202338729804b2dad86e2dfb6309fae6e9605c31f49c3d1e0f6e10",
+    }
 
 
 def test_table_targets_remain_unique_and_located() -> None:
@@ -147,4 +150,7 @@ def test_table_targets_have_article_frozen_ids() -> None:
 
     assert rows
     assert all(not row["target_id"].startswith("TBD") for row in rows)
-    assert all(row["source_location"].startswith("article_pdf:") for row in rows)
+    assert all(
+        row["source_location"].startswith(("article_pdf:", "supplement_zip:")) for row in rows
+    )
+    assert any(row["target_id"] == "APP_TBL_A14" for row in rows)

@@ -11,7 +11,7 @@ sources:
     category: reference
     access: publisher_or_author
     required_for_strict_replication: true
-    expected_path: references/private/supplement.pdf
+    expected_path: references/private/urn_cambridge.org_id_binary_20170615115101719-0272_S002210901700028X_S002210901700028Xsup001.zip
     licence_note: Record terms before storing or redistributing.
 
   - id: french_mkt_rf
