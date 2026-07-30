@@ -30,3 +30,46 @@ def test_duplicate_month_is_rejected() -> None:
     )
     with pytest.raises(ValueError, match="calendar month"):
         validate_monthly_panel(frame)
+
+
+def test_missing_date_column_is_rejected() -> None:
+    frame = pd.DataFrame({"asset": [1.0]})
+
+    with pytest.raises(ValueError, match="Missing date column"):
+        validate_monthly_panel(frame)
+
+
+def test_duplicate_exact_date_is_rejected() -> None:
+    frame = pd.DataFrame(
+        {
+            "date": ["2020-01-31", "2020-01-31"],
+            "asset": [1.0, 2.0],
+        }
+    )
+
+    with pytest.raises(ValueError, match="duplicate monthly dates"):
+        validate_monthly_panel(frame)
+
+
+def test_unsorted_dates_are_rejected() -> None:
+    frame = pd.DataFrame(
+        {
+            "date": ["2020-02-29", "2020-01-31"],
+            "asset": [1.0, 2.0],
+        }
+    )
+
+    with pytest.raises(ValueError, match="ascending order"):
+        validate_monthly_panel(frame)
+
+
+def test_infinite_numeric_values_are_rejected() -> None:
+    frame = pd.DataFrame(
+        {
+            "date": ["2020-01-31", "2020-02-29"],
+            "asset": [1.0, float("inf")],
+        }
+    )
+
+    with pytest.raises(ValueError, match="infinite values"):
+        validate_monthly_panel(frame)

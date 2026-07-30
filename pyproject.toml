@@ -87,7 +87,7 @@ mypy_path = "src"
 plugins = ["pydantic.mypy"]
 
 [tool.pytest.ini_options]
-addopts = "--strict-markers --strict-config --cov=short_rate_anomaly_regimes --cov-report=term-missing --cov-fail-under=90"
+addopts = "--strict-markers --strict-config --cov=short_rate_anomaly_regimes --cov-report=term-missing --cov-fail-under=95"
 testpaths = ["tests"]
 pythonpath = ["src"]
 markers = [
@@ -105,7 +105,7 @@ branch = true
 source = ["short_rate_anomaly_regimes"]
 
 [tool.coverage.report]
-fail_under = 90
+fail_under = 95
 show_missing = true
 skip_empty = true
 exclude_also = [

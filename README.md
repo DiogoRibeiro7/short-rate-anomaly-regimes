@@ -77,7 +77,7 @@ poetry run mypy src tests
 poetry run pytest
 ```
 
-The test command enforces a minimum 90 percent coverage floor. The GitHub Actions workflow runs the same gates on pushes and pull requests to `main` and `develop`.
+The test command enforces a minimum 95 percent coverage floor. The GitHub Actions workflow runs the same gates on pushes and pull requests to `main` and `develop`.
 
 ## Main commands
 

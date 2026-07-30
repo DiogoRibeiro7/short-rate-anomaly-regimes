@@ -49,3 +49,11 @@ def test_ar_innovation_standardizes_residuals() -> None:
     result = estimate_ar_innovation(rate, config=ARInnovationConfig(standardize=True))
 
     assert float(result.innovations.std(ddof=1)) == pytest.approx(1.0)
+
+
+def test_ar_innovation_rejects_zero_variance_standardization() -> None:
+    dates = pd.date_range("2020-01-31", periods=6, freq="ME")
+    rate = pd.Series([2.0, 2.0, 2.0, 2.0, 2.0, 2.0], index=dates)
+
+    with pytest.raises(ValueError, match="zero-variance"):
+        estimate_ar_innovation(rate, config=ARInnovationConfig(standardize=True))

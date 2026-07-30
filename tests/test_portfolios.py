@@ -23,6 +23,21 @@ def test_load_monthly_portfolios_reads_csv_with_datetime_index(tmp_path: Path) -
     assert frame.loc[pd.Timestamp("2020-01-31"), "asset_a"] == pytest.approx(0.01)
 
 
+def test_load_monthly_portfolios_reads_parquet(tmp_path: Path) -> None:
+    portfolio_path = tmp_path / "portfolios.parquet"
+    pd.DataFrame(
+        {
+            "date": ["2020-01-31", "2020-02-29"],
+            "asset": [0.01, 0.02],
+        }
+    ).to_parquet(portfolio_path)
+
+    frame = load_monthly_portfolios(portfolio_path)
+
+    assert frame.index.tolist() == [pd.Timestamp("2020-01-31"), pd.Timestamp("2020-02-29")]
+    assert frame.loc[pd.Timestamp("2020-02-29"), "asset"] == pytest.approx(0.02)
+
+
 def test_load_monthly_portfolios_rejects_unsupported_extension(tmp_path: Path) -> None:
     portfolio_path = tmp_path / "portfolios.txt"
     portfolio_path.write_text("date,asset\n2020-01-31,0.01\n", encoding="utf-8")
