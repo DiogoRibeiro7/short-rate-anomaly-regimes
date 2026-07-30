@@ -26,7 +26,7 @@ dependencies = [
   "statsmodels>=0.14,<0.15",
   "linearmodels>=6.1,<7.0",
   "arch>=7.2,<8.0",
-  "pyarrow>=18.0,<19.0",
+  "pyarrow>=23.0.1,<24.0",
   "duckdb>=1.1,<2.0",
   "pydantic>=2.10,<3.0",
   "pydantic-settings>=2.7,<3.0",
@@ -52,7 +52,7 @@ packages = [{ include = "short_rate_anomaly_regimes", from = "src" }]
 include = ["src/short_rate_anomaly_regimes/py.typed"]
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.3"
+pytest = ">=9.0.3,<10.0"
 pytest-cov = "^6.0"
 hypothesis = "^6.123"
 ruff = "^0.9"
