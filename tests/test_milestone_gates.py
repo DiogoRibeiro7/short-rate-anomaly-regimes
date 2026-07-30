@@ -1,7 +1,6 @@
 import pandas as pd
 import pytest
 
-from short_rate_anomaly_regimes.models.diagnostics import weak_factor_diagnostics
 from short_rate_anomaly_regimes.portfolios.construction import construct_double_sorted_portfolios
 from short_rate_anomaly_regimes.regimes.stability import (
     bai_perron_breaks,
@@ -26,13 +25,6 @@ def test_shock_decomposition_is_identification_gated() -> None:
             rate_surprise_column="rate",
             equity_surprise_column="equity",
         )
-
-
-def test_diagnostics_are_milestone_gated() -> None:
-    betas = pd.DataFrame({"mkt": [1.0]})
-
-    with pytest.raises(NotImplementedError, match="Milestone 8"):
-        weak_factor_diagnostics(betas=betas, factors=pd.DataFrame({"mkt": [0.01]}))
 
 
 def test_regime_stability_estimators_are_milestone_gated() -> None:

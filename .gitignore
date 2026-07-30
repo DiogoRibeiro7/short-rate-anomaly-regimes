@@ -58,6 +58,8 @@ artifacts/**
 !artifacts/diagnostics/time_series/.gitkeep
 !artifacts/diagnostics/cross_section/
 !artifacts/diagnostics/cross_section/.gitkeep
+!artifacts/diagnostics/weak_factor/
+!artifacts/diagnostics/weak_factor/.gitkeep
 !artifacts/tables/
 !artifacts/tables/.gitkeep
 !artifacts/tables/factors/
@@ -66,11 +68,14 @@ artifacts/**
 !artifacts/tables/time_series/.gitkeep
 !artifacts/tables/cross_section/
 !artifacts/tables/cross_section/.gitkeep
+!artifacts/tables/robustness/
+!artifacts/tables/robustness/.gitkeep
 !artifacts/tables/portfolio_descriptives/
 !artifacts/tables/portfolio_descriptives/.gitkeep
 reports/generated/**
 !reports/generated/.gitkeep
 !reports/generated/replication_report.md
+!reports/generated/robustness_report.md
 paper/build/**
 !paper/build/.gitkeep
 data/catalog.duckdb

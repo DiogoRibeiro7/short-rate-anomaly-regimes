@@ -12,6 +12,7 @@ This project has not produced empirical replication results yet. The current rep
 - First-pass time-series estimation code is implemented for excess-return construction, explicit date intersection accounting, OLS with intercept, Newey-West inference, independent matrix-HAC verification, residual/influence diagnostics, and artifact writing; actual first-pass output generation is blocked until factor, risk-free, and portfolio panels exist.
 - Cross-sectional pricing code is implemented for OLS, GLS, fixed-beta Fama-MacBeth, Shanken-style corrected uncertainty, weak-factor warnings, leave-one-group systems, GRS diagnostics, simulation checks, model-evaluation tables, and artifact writing; actual second-pass output generation is blocked until first-pass artifacts and portfolio panels exist.
 - Replication-audit code is implemented for frozen table-target loading, tolerance-based statistic comparison, allowed status assignment, missing-input audit rows, CSV/JSON output, and a baseline replication report. The current committed audit marks all 23 frozen table targets as `not_reproducible_missing_input` because baseline generated artifacts are absent.
+- Robustness and weak-factor diagnostics are implemented for beta-matrix rank, singular values, beta dispersion, factor spanning, irrelevant-factor flags, Holm correction within registered robustness families, economic-change flags, and predeclared classification as `robust`, `conditionally_robust`, `fragile`, or `unidentified`. The current robustness report is `unidentified` because baseline generated artifacts are absent.
 - Unverified empirical steps are deliberately gated with explicit exceptions.
 - Strict replication is blocked until exact source definitions and required data inputs are legally obtained and recorded. The final article PDF and publisher supplement ZIP are present locally and hashed.
 - The current article extraction status is documented in `research/article_method_extraction.md`.
@@ -27,6 +28,7 @@ The following inputs are still marked as missing or pending in `research/data_ac
 - processed short-rate factors, risk-free returns, and portfolio panels required for first-pass regressions.
 - first-pass coefficient, residual, and covariance artifacts required for cross-sectional pricing.
 - generated baseline statistic cells required to move audit rows from missing-input status to reproduced, approximate, or contradicted labels.
+- generated baseline and robustness specification cells required to classify empirical robustness beyond `unidentified`.
 
 ## Status Labels
 

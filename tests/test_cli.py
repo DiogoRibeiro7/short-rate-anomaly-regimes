@@ -381,6 +381,20 @@ def test_audit_replication_writes_missing_input_audit(tmp_path: Path) -> None:
     assert "missing-input audit" in str(result.exception)
 
 
+def test_robustness_diagnostics_writes_blocked_report(tmp_path: Path) -> None:
+    report_path = tmp_path / "robustness_report.md"
+
+    result = CliRunner().invoke(
+        app,
+        ["robustness-diagnostics", "--output", str(report_path)],
+    )
+
+    assert result.exit_code == 1
+    assert report_path.is_file()
+    assert "blocked robustness report" in str(result.exception)
+    assert "Verdict: `unidentified`" in report_path.read_text(encoding="utf-8")
+
+
 def test_show_milestones_command_lists_release_gate() -> None:
     runner = CliRunner()
 

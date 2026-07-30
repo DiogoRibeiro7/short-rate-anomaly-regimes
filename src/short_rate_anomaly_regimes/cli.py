@@ -329,6 +329,46 @@ def audit_replication(
     )
 
 
+@app.command("robustness-diagnostics")
+def robustness_diagnostics(
+    output: OutputPathOption = Path("reports/generated/robustness_report.md"),
+) -> None:
+    """Run registered robustness and weak-factor diagnostics after baseline outputs exist."""
+    required_paths = [
+        Path("artifacts/estimates/time_series"),
+        Path("artifacts/estimates/cross_section"),
+        Path("data/processed/factors/short_rate_factors.parquet"),
+        Path("artifacts/audit/table_replication.csv"),
+    ]
+    missing_paths = [str(path) for path in required_paths if not path.exists()]
+    if missing_paths:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(
+            "\n".join(
+                [
+                    "# Robustness Report",
+                    "",
+                    "Verdict: `unidentified`",
+                    "",
+                    "Robustness diagnostics are blocked until baseline generated artifacts exist.",
+                    "",
+                    "Missing inputs:",
+                    *[f"- `{path}`" for path in missing_paths],
+                    "",
+                    "No significant-only robustness reporting has been performed.",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        raise ReplicationBlockError(
+            "Wrote blocked robustness report; diagnostics require baseline artifacts: "
+            f"{', '.join(missing_paths)}"
+        )
+    raise ReplicationBlockError(
+        "Baseline artifacts exist, but registered robustness specification mapping is not frozen"
+    )
+
+
 @app.command("run-baseline")
 def run_baseline(config: ConfigPathOption) -> None:
     """Run the strict replication pipeline."""

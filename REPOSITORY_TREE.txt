@@ -37,6 +37,8 @@ artifacts/diagnostics/time_series/
 artifacts/diagnostics/time_series/.gitkeep
 artifacts/diagnostics/cross_section/
 artifacts/diagnostics/cross_section/.gitkeep
+artifacts/diagnostics/weak_factor/
+artifacts/diagnostics/weak_factor/.gitkeep
 artifacts/estimates/
 artifacts/estimates/.gitkeep
 artifacts/estimates/time_series/
@@ -61,6 +63,8 @@ artifacts/tables/time_series/
 artifacts/tables/time_series/.gitkeep
 artifacts/tables/cross_section/
 artifacts/tables/cross_section/.gitkeep
+artifacts/tables/robustness/
+artifacts/tables/robustness/.gitkeep
 artifacts/tables/portfolio_descriptives/
 artifacts/tables/portfolio_descriptives/.gitkeep
 configs/
@@ -100,6 +104,7 @@ reports/README.md
 reports/generated/
 reports/generated/.gitkeep
 reports/generated/replication_report.md
+reports/generated/robustness_report.md
 research/
 research/article_method_extraction.md
 research/claim_assumption_map.md
