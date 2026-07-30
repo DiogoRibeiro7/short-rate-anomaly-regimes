@@ -29,6 +29,12 @@ artifacts/diagnostics/
 artifacts/diagnostics/.gitkeep
 artifacts/diagnostics/rates/
 artifacts/diagnostics/rates/.gitkeep
+artifacts/diagnostics/time_series/
+artifacts/diagnostics/time_series/.gitkeep
+artifacts/estimates/
+artifacts/estimates/.gitkeep
+artifacts/estimates/time_series/
+artifacts/estimates/time_series/.gitkeep
 artifacts/evidence/
 artifacts/evidence/.gitkeep
 artifacts/evidence/article_manifest.json
@@ -43,6 +49,8 @@ artifacts/tables/
 artifacts/tables/.gitkeep
 artifacts/tables/factors/
 artifacts/tables/factors/.gitkeep
+artifacts/tables/time_series/
+artifacts/tables/time_series/.gitkeep
 artifacts/tables/portfolio_descriptives/
 artifacts/tables/portfolio_descriptives/.gitkeep
 configs/

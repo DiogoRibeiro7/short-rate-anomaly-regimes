@@ -276,6 +276,42 @@ def test_estimate_rate_innovation_blocks_unfrozen_parser_contract(
     assert "parser contract is not frozen" in str(result.exception)
 
 
+def test_estimate_first_pass_reports_missing_required_panels() -> None:
+    runner = CliRunner()
+
+    result = runner.invoke(app, ["estimate-first-pass", "--config", "configs/baseline.yaml"])
+
+    assert result.exit_code == 1
+    assert "required panels are registered" in str(result.exception)
+
+
+def test_estimate_first_pass_blocks_unfrozen_run_contract(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    factor_path = tmp_path / "data" / "processed" / "factors" / "short_rate_factors.parquet"
+    rf_path = tmp_path / "data" / "raw" / "kenneth_french" / "rf.csv"
+    portfolio_path = tmp_path / "data" / "processed" / "portfolios" / "test_set.parquet"
+    for path in (factor_path, rf_path, portfolio_path):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("placeholder", encoding="utf-8")
+    config_path = tmp_path / "baseline.yaml"
+    config_path.write_text("project: test\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        "short_rate_anomaly_regimes.cli.load_baseline_config",
+        lambda _: SimpleNamespace(portfolio_sets=["test_set"]),
+    )
+
+    result = CliRunner().invoke(
+        app,
+        ["estimate-first-pass", "--config", str(config_path)],
+    )
+
+    assert result.exit_code == 1
+    assert "first-pass run contract is not frozen" in str(result.exception)
+
+
 def test_show_milestones_command_lists_release_gate() -> None:
     runner = CliRunner()
 

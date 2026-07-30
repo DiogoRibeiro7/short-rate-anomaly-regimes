@@ -238,6 +238,31 @@ def assemble_test_assets(
     )
 
 
+@app.command("estimate-first-pass")
+def estimate_first_pass(
+    config: ConfigPathOption,
+) -> None:
+    """Run first-pass time-series regressions after required panels exist."""
+    validated = load_baseline_config(config)
+    required_paths = [
+        Path("data/processed/factors/short_rate_factors.parquet"),
+        Path("data/raw/kenneth_french/rf.csv"),
+    ]
+    required_paths.extend(
+        Path("data/processed/portfolios") / f"{portfolio_set}.parquet"
+        for portfolio_set in validated.portfolio_sets
+    )
+    missing_paths = [str(path) for path in required_paths if not path.is_file()]
+    if missing_paths:
+        raise ReplicationBlockError(
+            "Cannot estimate first-pass regressions until required panels are registered: "
+            f"{', '.join(missing_paths)}"
+        )
+    raise ReplicationBlockError(
+        "Required panels exist, but the source-specific first-pass run contract is not frozen"
+    )
+
+
 @app.command("run-baseline")
 def run_baseline(config: ConfigPathOption) -> None:
     """Run the strict replication pipeline."""
