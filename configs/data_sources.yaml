@@ -4,7 +4,7 @@ sources:
     category: reference
     access: user_or_institution
     required_for_strict_replication: true
-    expected_path: references/private/article.pdf
+    expected_path: references/private/maio2017.pdf
     licence_note: Do not redistribute copyrighted material.
 
   - id: article_supplement
@@ -44,7 +44,7 @@ sources:
     access: public
     frequency: monthly
     series_candidates: [FEDFUNDS]
-    exact_series_status: verify_against_article
+    exact_series_status: article_confirms_source_not_series_id
     raw_path: data/raw/fred/federal_funds_rate.csv
 
   - id: treasury_bill_rate
@@ -53,7 +53,7 @@ sources:
     access: public_or_author
     frequency: monthly
     series_candidates: [TB3MS, DTB3]
-    exact_series_status: verify_against_article
+    exact_series_status: article_confirms_source_series_ambiguous
     raw_path: data/raw/rates/treasury_bill_rate.csv
 
   - id: one_month_tbill_return
@@ -61,7 +61,7 @@ sources:
     provider: Kenneth French Data Library
     access: public
     frequency: monthly
-    exact_series_status: verify_against_article
+    exact_series_status: article_confirms_kenneth_french_one_month_tbill_return
     raw_path: data/raw/kenneth_french/rf.csv
 
   - id: size_asset_growth_25

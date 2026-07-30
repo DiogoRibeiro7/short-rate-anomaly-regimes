@@ -1,12 +1,12 @@
 source_id,exact_definition_verified,access_status,licence_checked,strict_replication_role,substitute_allowed,substitute_label,owner,notes
-article_pdf,false,missing_private_file,false,required,false,,research_lead,Cambridge Core page located; legal local PDF not present under references/private
+article_pdf,true,present_private_file,false,required,false,,research_lead,Local private article PDF present at references/private/maio2017.pdf with SHA-256 recorded in artifacts/evidence/article_manifest.json
 article_supplement,false,missing_private_file,false,required,false,,research_lead,Cambridge Core lists supplementary material; legal local supplement not present under references/private
-french_mkt_rf,false,blocked_exact_definition,false,required,true,reconstruction,data_engineer,Exact archive and risk-free convention must be frozen from article evidence before download
-french_size_bm_25,false,blocked_exact_definition,false,required,true,reconstruction,data_engineer,Exact archive version and value-weighted monthly definition must be frozen before download
-french_size_long_term_reversal_25,false,blocked_exact_definition,false,required,true,reconstruction,data_engineer,Exact prior 13 to 60 month definition must be frozen before download
-federal_funds_rate,false,blocked_exact_definition,false,required,true,reconstruction,data_engineer,Exact series identifier and monthly aggregation must be frozen before download
-treasury_bill_rate,false,blocked_exact_definition,false,required,true,reconstruction,data_engineer,Exact maturity source and monthly aggregation must be frozen before download
-size_asset_growth_25,false,missing_author_or_wrds_input,false,required,true,reconstruction,research_lead,Manual author file or WRDS reconstruction contract required before ingestion
-size_equity_duration_25,false,missing_author_or_wrds_input,false,required,true,reconstruction,research_lead,Manual author file or WRDS reconstruction contract required before ingestion
-size_inventory_growth_25,false,missing_author_or_wrds_input,false,required,true,reconstruction,research_lead,Manual author file or WRDS reconstruction contract required before ingestion
+french_mkt_rf,false,article_source_located,false,required,true,reconstruction,data_engineer,Article identifies Kenneth French online data library for RM and comparator factors; exact archive names still need supplement or source freeze
+french_size_bm_25,false,article_source_located,false,required,true,reconstruction,data_engineer,Article main decile portfolios are from Lu Zhang; double-sorted size-BM robustness mentioned but supplement details remain missing
+french_size_long_term_reversal_25,false,article_source_located,false,required,true,reconstruction,data_engineer,Article main decile portfolios are from Lu Zhang; double-sorted size-reversal robustness mentioned but supplement details remain missing
+federal_funds_rate,false,article_source_located,false,required,true,reconstruction,data_engineer,Article identifies St. Louis Federal Reserve Bank federal funds rate but does not state a FRED series id
+treasury_bill_rate,false,article_source_located,false,required,true,reconstruction,data_engineer,Article identifies St. Louis Federal Reserve Bank 3-month Treasury-bill rate but exact series remains ambiguous
+size_asset_growth_25,false,missing_author_or_wrds_input,false,required,true,reconstruction,research_lead,Main decile portfolios are from Lu Zhang; manual author file or reconstruction contract required before ingestion
+size_equity_duration_25,false,missing_author_or_wrds_input,false,required,true,reconstruction,research_lead,Main decile portfolios are from Lu Zhang; manual author file or reconstruction contract required before ingestion
+size_inventory_growth_25,false,missing_author_or_wrds_input,false,required,true,reconstruction,research_lead,Main decile portfolios are from Lu Zhang; manual author file or reconstruction contract required before ingestion
 high_frequency_monetary_surprises,false,extension_not_selected,false,extension,true,extension,extension_lead,Select only after baseline replication and shock-decomposition identification are frozen

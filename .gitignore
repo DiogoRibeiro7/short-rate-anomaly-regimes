@@ -30,6 +30,9 @@ artifacts/**
 !artifacts/provenance/.gitkeep
 !artifacts/data_quality/
 !artifacts/data_quality/.gitkeep
+!artifacts/evidence/
+!artifacts/evidence/.gitkeep
+!artifacts/evidence/article_manifest.json
 reports/generated/**
 !reports/generated/.gitkeep
 paper/build/**

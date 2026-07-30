@@ -1,6 +1,10 @@
 target_id,source_location,description,portfolio_set,model,estimator,tolerance_rule,status
-TBD_001,article_to_extract,Factor descriptive statistics,all,na,descriptive,published_rounding,not_attempted
-TBD_002,article_to_extract,Baseline two-factor risk prices,size_book_to_market_25,market_plus_fed_funds,verify,coefficient_rounding,not_attempted
-TBD_003,article_to_extract,Joint anomaly pricing results,joint_sets,market_plus_fed_funds,verify,coefficient_rounding,not_attempted
-TBD_004,article_to_extract,Alternative T-bill factor results,joint_sets,market_plus_tbill,verify,coefficient_rounding,not_attempted
-TBD_005,article_to_extract,Comparator model performance,joint_sets,comparators,verify,metric_rounding,not_attempted
+TBL_001,article_pdf:p.936-p.937:Table 1,Factor descriptive statistics and correlations,all_factors,icapm_and_comparators,descriptive,published_rounding,article_extracted
+TBL_002,article_pdf:p.937:Table 2,High-minus-low spread descriptive statistics,seven_decile_anomalies,na,descriptive,published_rounding,article_extracted
+TBL_003,article_pdf:p.938:Table 3,CAPM risk premia and model-fit results,seven_decile_anomalies,market_only,two_pass_ols_shanken,coefficient_rounding,article_extracted
+TBL_004,article_pdf:p.939-p.942:Table 4,Two-factor ICAPM risk premia using federal funds innovations,seven_decile_anomalies,market_plus_fed_funds,two_pass_ols_shanken,coefficient_rounding,article_extracted
+TBL_005,article_pdf:p.944-p.948:Table 5,Factor risk-premium decomposition for first and last anomaly deciles,seven_decile_anomalies,market_plus_fed_funds,risk_premium_decomposition,coefficient_rounding,article_extracted
+TBL_006,article_pdf:p.949:Table 6,Alternative multifactor model risk premia and fit,seven_decile_anomalies,comparator_models,two_pass_ols_shanken,coefficient_rounding,article_extracted
+TBL_007,article_pdf:p.950-p.951:Table 7,Two-factor ICAPM risk premia using equal-weighted portfolios,seven_decile_anomalies_equal_weighted,market_plus_fed_funds,two_pass_ols_shanken,coefficient_rounding,article_extracted
+TBL_008,article_pdf:p.954:Table 8,Long-horizon predictive regressions for excess market return and output growth,predictive_regressions,federal_funds_state_variable,newey_west_and_hodrick,published_rounding,article_extracted
+TBL_009,article_pdf:p.956:Table 9,Alternative two-factor ICAPM specifications,seven_decile_anomalies,alternative_state_variable_innovations,two_pass_ols_shanken,coefficient_rounding,article_extracted

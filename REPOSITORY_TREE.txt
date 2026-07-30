@@ -25,6 +25,9 @@ artifacts/
 artifacts/.gitkeep
 artifacts/data_quality/
 artifacts/data_quality/.gitkeep
+artifacts/evidence/
+artifacts/evidence/.gitkeep
+artifacts/evidence/article_manifest.json
 artifacts/environment/
 artifacts/environment/.gitkeep
 artifacts/provenance/
