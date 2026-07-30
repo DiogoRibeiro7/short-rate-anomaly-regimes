@@ -6,9 +6,11 @@ A reproducible research repository for replicating and extending Maio and Santa-
 
 ## Status
 
-This repository is an evidence-gated research scaffold. It currently contains configuration, typed pipeline interfaces, validation utilities, tests, and milestone contracts. It does not yet contain raw data, licensed data extracts, or empirical replication results.
+This repository is an evidence-gated research scaffold. It currently contains configuration, typed pipeline interfaces, validation utilities, tests, and tracked milestone documents. It does not yet contain raw data, licensed data extracts, or empirical replication results.
 
 Strict replication remains blocked until the final article, supplement, source definitions, and required licensed data inputs are legally obtained, hashed, and recorded in `research/data_access_matrix.csv`.
+
+See `docs/REPLICATION_STATUS.md` for the current replication state and `docs/DATA_POLICY.md` for source and artifact handling rules.
 
 The repository has two deliberately separate tracks.
 
@@ -98,6 +100,7 @@ Most commands are scaffolded and fail with an explicit `NotImplementedError` unt
 - `src/short_rate_anomaly_regimes/`: typed Python package for configuration, data validation, factor construction, estimators, provenance, and reporting.
 - `tests/`: focused unit tests for currently implemented behavior.
 - `configs/`: declarative baseline, source-registry, regime, extension, and reporting configuration.
+- `docs/`: reviewer-facing data policy and replication status.
 - `research/`: research design, assumption map, data-access matrix, milestones, and replication protocol.
 - `data/`, `artifacts/`, `reports/generated/`, and `paper/build/`: ignored output locations with tracked placeholders only.
 - `paper/`: manuscript and bibliography scaffold.

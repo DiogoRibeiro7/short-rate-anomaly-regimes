@@ -36,6 +36,9 @@ data/processed/
 data/processed/.gitkeep
 data/raw/
 data/raw/.gitkeep
+docs/
+docs/DATA_POLICY.md
+docs/REPLICATION_STATUS.md
 notebooks/
 notebooks/.gitkeep
 notebooks/README.md
