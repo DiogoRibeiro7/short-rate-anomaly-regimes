@@ -1,12 +1,12 @@
 source_id,exact_definition_verified,access_status,licence_checked,strict_replication_role,substitute_allowed,substitute_label,owner,notes
-article_pdf,false,located_access_required,false,required,false,,research_lead,Cambridge Core page located; legal local PDF not present under references/private
-article_supplement,false,located_pending_ingestion,false,required,false,,research_lead,Cambridge Core lists supplementary material; legal local supplement not present under references/private
-french_mkt_rf,false,public_pending,false,required,true,reconstruction,data_engineer,Verify exact archive and risk-free convention
-french_size_bm_25,false,public_pending,false,required,true,reconstruction,data_engineer,Verify value-weighted monthly file
-french_size_long_term_reversal_25,false,public_pending,false,required,true,reconstruction,data_engineer,Verify prior 13 to 60 month definition
-federal_funds_rate,false,public_pending,false,required,true,reconstruction,data_engineer,Verify series and monthly aggregation
-treasury_bill_rate,false,public_pending,false,required,true,reconstruction,data_engineer,Verify maturity and source
-size_asset_growth_25,false,missing,false,required,true,approximately_reproduced,research_lead,Prefer author data then WRDS reconstruction
-size_equity_duration_25,false,missing,false,required,true,approximately_reproduced,research_lead,Extract exact duration construction
-size_inventory_growth_25,false,missing,false,required,true,approximately_reproduced,research_lead,Extract exact inventory definition
-high_frequency_monetary_surprises,false,not_selected,false,extension,true,extension,extension_lead,Select only after identification audit
+article_pdf,false,missing_private_file,false,required,false,,research_lead,Cambridge Core page located; legal local PDF not present under references/private
+article_supplement,false,missing_private_file,false,required,false,,research_lead,Cambridge Core lists supplementary material; legal local supplement not present under references/private
+french_mkt_rf,false,blocked_exact_definition,false,required,true,reconstruction,data_engineer,Exact archive and risk-free convention must be frozen from article evidence before download
+french_size_bm_25,false,blocked_exact_definition,false,required,true,reconstruction,data_engineer,Exact archive version and value-weighted monthly definition must be frozen before download
+french_size_long_term_reversal_25,false,blocked_exact_definition,false,required,true,reconstruction,data_engineer,Exact prior 13 to 60 month definition must be frozen before download
+federal_funds_rate,false,blocked_exact_definition,false,required,true,reconstruction,data_engineer,Exact series identifier and monthly aggregation must be frozen before download
+treasury_bill_rate,false,blocked_exact_definition,false,required,true,reconstruction,data_engineer,Exact maturity source and monthly aggregation must be frozen before download
+size_asset_growth_25,false,missing_author_or_wrds_input,false,required,true,reconstruction,research_lead,Manual author file or WRDS reconstruction contract required before ingestion
+size_equity_duration_25,false,missing_author_or_wrds_input,false,required,true,reconstruction,research_lead,Manual author file or WRDS reconstruction contract required before ingestion
+size_inventory_growth_25,false,missing_author_or_wrds_input,false,required,true,reconstruction,research_lead,Manual author file or WRDS reconstruction contract required before ingestion
+high_frequency_monetary_surprises,false,extension_not_selected,false,extension,true,extension,extension_lead,Select only after baseline replication and shock-decomposition identification are frozen

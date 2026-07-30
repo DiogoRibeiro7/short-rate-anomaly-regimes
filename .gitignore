@@ -26,10 +26,15 @@ artifacts/**
 !artifacts/.gitkeep
 !artifacts/environment/
 !artifacts/environment/.gitkeep
+!artifacts/provenance/
+!artifacts/provenance/.gitkeep
+!artifacts/data_quality/
+!artifacts/data_quality/.gitkeep
 reports/generated/**
 !reports/generated/.gitkeep
 paper/build/**
 !paper/build/.gitkeep
+data/catalog.duckdb
 
 # Never commit restricted source files or copyrighted articles
 references/private/**

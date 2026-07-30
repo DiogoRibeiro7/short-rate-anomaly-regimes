@@ -1,8 +1,9 @@
 from pathlib import Path
 
+import duckdb
 import pytest
 
-from short_rate_anomaly_regimes.data.catalog import load_registry
+from short_rate_anomaly_regimes.data.catalog import build_catalog, load_registry
 
 
 def test_source_registry_loads_known_source() -> None:
@@ -41,3 +42,30 @@ sources:
 
     with pytest.raises(ValueError, match="duplicate source ids"):
         load_registry(registry_path)
+
+
+def test_build_catalog_creates_duckdb_tables(tmp_path: Path) -> None:
+    registry = load_registry(Path("configs/data_sources.yaml"))
+    catalog_path = tmp_path / "catalog.duckdb"
+
+    build_catalog(catalog_path, registry)
+    build_catalog(catalog_path, registry)
+
+    with duckdb.connect(str(catalog_path)) as connection:
+        source_count = connection.execute("select count(*) from sources").fetchone()
+        table_names = {
+            row[0]
+            for row in connection.execute(
+                "select table_name from information_schema.tables"
+            ).fetchall()
+        }
+
+    assert source_count == (12,)
+    assert {
+        "sources",
+        "raw_files",
+        "transformations",
+        "schemas",
+        "validation_results",
+        "run_artifacts",
+    }.issubset(table_names)

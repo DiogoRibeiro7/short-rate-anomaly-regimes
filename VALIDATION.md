@@ -5,7 +5,6 @@ Latest validation was performed on 30 July 2026 from the repository checkout on 
 ## Passed checks
 
 - `poetry check`
-- `poetry lock`
 - `poetry run ruff check .`
 - `poetry run ruff format --check .`
 - `poetry run mypy src tests scripts`
@@ -15,10 +14,12 @@ Latest validation was performed on 30 July 2026 from the repository checkout on 
 - `poetry run srar validate-config --config configs/regimes.yaml`
 - `poetry run srar validate-config --config configs/reporting.yaml`
 - `poetry run srar validate-data --registry configs/data_sources.yaml`
+- `poetry run srar acquire-data --registry configs/data_sources.yaml`
+- `poetry run srar build-catalog --registry configs/data_sources.yaml`
 - `poetry run pytest` with `--cov-fail-under=95`
-- `python -m pytest`
+- `poetry run pre-commit run --all-files`
 
-The current test suite contains 64 tests. All 64 passed. The measured scaffold coverage is 99.56 percent because milestone-specific estimators and data clients are intentionally represented by explicit stubs until their evidence gates are completed.
+The current test suite contains 89 tests. All 89 passed. The measured scaffold coverage is 97.75 percent because milestone-specific estimators and data clients are intentionally represented by explicit stubs until their evidence gates are completed.
 
 ## Current quality status
 
@@ -29,6 +30,7 @@ The current test suite contains 64 tests. All 64 passed. The measured scaffold c
 - Pytest imports from the `src` layout without requiring a manual `PYTHONPATH`.
 - GitHub Actions runs the same metadata, lint, format, type-check, and test gates on `main` and `develop`.
 - `make check` now includes YAML project-config validation and source-registry validation.
+- `make check` now exercises data-acquisition dry-run planning and DuckDB catalog creation.
 - `make env-manifest` writes `artifacts/environment/manifest.json` with Python, OS, package, BLAS, Git, and config-hash metadata.
 
 ## Scientific status

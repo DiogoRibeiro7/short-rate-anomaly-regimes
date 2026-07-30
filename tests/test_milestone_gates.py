@@ -1,12 +1,6 @@
-from pathlib import Path
-
 import pandas as pd
 import pytest
 
-from short_rate_anomaly_regimes.data.acquisition import (
-    download_fred_series,
-    download_kenneth_french_dataset,
-)
 from short_rate_anomaly_regimes.models.diagnostics import grs_test, weak_factor_diagnostics
 from short_rate_anomaly_regimes.portfolios.construction import construct_double_sorted_portfolios
 from short_rate_anomaly_regimes.regimes.stability import (
@@ -14,19 +8,6 @@ from short_rate_anomaly_regimes.regimes.stability import (
     estimate_regime_interactions,
 )
 from short_rate_anomaly_regimes.shocks.decomposition import decompose_high_frequency_surprises
-
-
-def test_download_fred_series_is_milestone_gated(tmp_path: Path) -> None:
-    with pytest.raises(NotImplementedError, match="Milestone 2"):
-        download_fred_series(series_id="FEDFUNDS", output_path=tmp_path / "fedfunds.csv")
-
-
-def test_download_kenneth_french_dataset_is_milestone_gated(tmp_path: Path) -> None:
-    with pytest.raises(NotImplementedError, match="Milestone 2"):
-        download_kenneth_french_dataset(
-            dataset_name="F-F_Research_Data_Factors",
-            output_path=tmp_path / "french.csv",
-        )
 
 
 def test_portfolio_construction_is_contract_gated() -> None:
