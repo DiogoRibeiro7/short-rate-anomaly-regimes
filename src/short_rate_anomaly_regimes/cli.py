@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Annotated
 
 import typer
 from rich.console import Console
@@ -13,17 +14,20 @@ from short_rate_anomaly_regimes.data.catalog import load_registry
 
 app = typer.Typer(no_args_is_help=True)
 console = Console()
+ConfigPathOption = Annotated[Path, typer.Option(exists=True, dir_okay=False)]
 
 
 @app.command("validate-config")
-def validate_config(config: Path = typer.Option(..., exists=True, dir_okay=False)) -> None:
+def validate_config(config: ConfigPathOption) -> None:
     """Validate the baseline YAML configuration."""
     validated = load_baseline_config(config)
-    console.print(f"Validated {validated.project.name} in {validated.project.replication_mode} mode")
+    console.print(
+        f"Validated {validated.project.name} in {validated.project.replication_mode} mode"
+    )
 
 
 @app.command("validate-data")
-def validate_data(registry: Path = typer.Option(..., exists=True, dir_okay=False)) -> None:
+def validate_data(registry: ConfigPathOption) -> None:
     """Validate the source registry without downloading data."""
     validated = load_registry(registry)
     console.print(f"Validated {len(validated.sources)} registered sources")
@@ -57,7 +61,7 @@ def show_milestones() -> None:
 
 @app.command("estimate-rate-innovation")
 def estimate_rate_innovation(
-    config: Path = typer.Option(..., exists=True, dir_okay=False),
+    config: ConfigPathOption,
 ) -> None:
     """Run the approved short-rate innovation estimator."""
     del config
@@ -65,21 +69,21 @@ def estimate_rate_innovation(
 
 
 @app.command("run-baseline")
-def run_baseline(config: Path = typer.Option(..., exists=True, dir_okay=False)) -> None:
+def run_baseline(config: ConfigPathOption) -> None:
     """Run the strict replication pipeline."""
     del config
     raise NotImplementedError("Complete Milestones 0 through 7 first")
 
 
 @app.command("run-regimes")
-def run_regimes(config: Path = typer.Option(..., exists=True, dir_okay=False)) -> None:
+def run_regimes(config: ConfigPathOption) -> None:
     """Run the regime-stability extension."""
     del config
     raise NotImplementedError("Complete Milestones 9 and 10 first")
 
 
 @app.command("build-report")
-def build_report(config: Path = typer.Option(..., exists=True, dir_okay=False)) -> None:
+def build_report(config: ConfigPathOption) -> None:
     """Build tables, figures, and the replication report."""
     del config
     raise NotImplementedError("Complete the relevant empirical milestones first")

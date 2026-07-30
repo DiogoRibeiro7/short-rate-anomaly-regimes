@@ -1,0 +1,33 @@
+name: Research Task
+description: Track replication, reconstruction, or extension work.
+title: "[Research]: "
+labels: ["replication"]
+body:
+  - type: dropdown
+    id: track
+    attributes:
+      label: Track
+      options:
+        - strict replication
+        - documented reconstruction
+        - extension
+        - infrastructure
+    validations:
+      required: true
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: State the table, dataset, method, or manuscript section affected.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence Gate
+      description: What source, checksum, validation, or acceptance condition must be satisfied?
+  - type: textarea
+    id: outputs
+    attributes:
+      label: Expected Outputs
+      description: Code, tests, data manifests, tables, or documentation expected from the task.

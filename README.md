@@ -1,6 +1,14 @@
 # Short Rate Anomaly Regimes
 
+[![CI](https://github.com/DiogoRibeiro7/short-rate-anomaly-regimes/actions/workflows/ci.yml/badge.svg)](https://github.com/DiogoRibeiro7/short-rate-anomaly-regimes/actions/workflows/ci.yml)
+
 A reproducible research repository for replicating and extending Maio and Santa-Clara's study of short-term interest-rate innovations and stock-market anomalies.
+
+## Status
+
+This repository is an evidence-gated research scaffold. It currently contains configuration, typed pipeline interfaces, validation utilities, tests, and milestone contracts. It does not yet contain raw data, licensed data extracts, or empirical replication results.
+
+Strict replication remains blocked until the final article, supplement, source definitions, and required licensed data inputs are legally obtained, hashed, and recorded in `research/data_access_matrix.csv`.
 
 The repository has two deliberately separate tracks.
 
@@ -51,7 +59,24 @@ poetry run srar validate-config --config configs/baseline.yaml
 poetry run pytest
 ```
 
+The test suite also runs from an uninstalled source checkout:
+
+```bash
+python -m pytest
+```
+
 Data acquisition is intentionally disabled until the source licence and exact variable definition have been recorded in `research/data_access_matrix.csv`.
+
+## Quality gates
+
+```bash
+poetry run ruff check .
+poetry run ruff format --check .
+poetry run mypy src tests
+poetry run pytest
+```
+
+The GitHub Actions workflow runs the same gates on pushes and pull requests to `main` and `develop`.
 
 ## Main commands
 
@@ -66,6 +91,16 @@ poetry run srar build-report --config configs/reporting.yaml
 ```
 
 Most commands are scaffolded and fail with an explicit `NotImplementedError` until the corresponding milestone prompt has been completed.
+
+## Repository map
+
+- `src/short_rate_anomaly_regimes/`: typed Python package for configuration, data validation, factor construction, estimators, provenance, and reporting.
+- `tests/`: focused unit tests for currently implemented behavior.
+- `configs/`: declarative baseline, source-registry, regime, extension, and reporting configuration.
+- `research/`: research design, assumption map, data-access matrix, milestones, and replication protocol.
+- `prompts/`: milestone implementation contracts for coding agents and reviewers.
+- `data/`, `artifacts/`, `reports/generated/`, and `paper/build/`: ignored output locations with tracked placeholders only.
+- `paper/`: manuscript and bibliography scaffold.
 
 ## Required reading order
 
@@ -94,3 +129,7 @@ The baseline paper is
 Maio, Paulo F., and Pedro Santa-Clara. 2017. Short-Term Interest Rates and Stock Market Anomalies. *Journal of Financial and Quantitative Analysis* 52(3), 927–961. DOI 10.1017/S002210901700028X.
 
 See `CITATION.cff` for repository citation metadata.
+
+## Contributing and security
+
+See `CONTRIBUTING.md` for development rules and `SECURITY.md` for private reporting and restricted-data handling.

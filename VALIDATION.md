@@ -1,24 +1,27 @@
-# Scaffold Validation
+# Validation
 
-Validation was performed on 27 July 2026 in the artifact runtime.
+Latest validation was performed on 30 July 2026 from the repository checkout on Windows with Python 3.13.5.
 
 ## Passed checks
 
-- `python scripts/verify_title.py`
-- `python -m compileall -q src tests scripts`
-- `PYTHONPATH=src pytest -q`
+- `poetry check`
+- `poetry lock`
+- `poetry run ruff check .`
+- `poetry run ruff format --check .`
+- `poetry run mypy src tests`
+- `poetry run pytest`
+- `python -m pytest`
 
 The initial test suite contains four tests. All four passed. The measured scaffold coverage was 34 percent because milestone-specific estimators and data clients are intentionally represented by explicit stubs until their evidence gates are completed.
 
-## Checks not executed in the artifact runtime
+## Current quality status
 
-- Poetry lock generation
-- Ruff lint and format checks
-- mypy strict checks
-- pre-commit execution
-- the Python 3.12 CI matrix
-
-These tools were not available in the artifact runtime. Milestone 1 requires all of them to pass from a clean clone before empirical implementation proceeds.
+- The package metadata passes `poetry check`.
+- The dependency graph is locked in `poetry.lock`.
+- Ruff linting and formatting pass under the repository configuration.
+- Strict mypy passes for `src` and `tests`, with an explicit override for untyped `statsmodels` imports.
+- Pytest imports from the `src` layout without requiring a manual `PYTHONPATH`.
+- GitHub Actions runs the same lint, format, type-check, and test gates on `main` and `develop`.
 
 ## Scientific status
 

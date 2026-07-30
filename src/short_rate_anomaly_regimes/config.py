@@ -20,7 +20,7 @@ class SampleConfig(BaseModel):
     date_alignment: str = "month_end"
 
     @model_validator(mode="after")
-    def validate_frequency(self) -> "SampleConfig":
+    def validate_frequency(self) -> SampleConfig:
         """Reject unsupported frequencies in the baseline pipeline."""
         if self.frequency != "monthly":
             raise ValueError("The baseline replication currently requires monthly data")

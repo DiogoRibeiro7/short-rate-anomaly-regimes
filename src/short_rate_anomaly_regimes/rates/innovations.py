@@ -19,10 +19,13 @@ class ARInnovationConfig:
     standardize: bool = False
 
 
+DEFAULT_AR_INNOVATION_CONFIG = ARInnovationConfig()
+
+
 def estimate_ar_innovation(
     rate: pd.Series,
     *,
-    config: ARInnovationConfig = ARInnovationConfig(),
+    config: ARInnovationConfig = DEFAULT_AR_INNOVATION_CONFIG,
 ) -> RateInnovationResult:
     """Estimate innovations from a finite-order autoregression.
 
