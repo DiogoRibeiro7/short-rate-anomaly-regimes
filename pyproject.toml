@@ -89,7 +89,7 @@ plugins = ["pydantic.mypy"]
 [tool.pytest.ini_options]
 addopts = "--strict-markers --strict-config --cov=short_rate_anomaly_regimes --cov-report=term-missing --cov-fail-under=95"
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "."]
 markers = [
   "integration: tests requiring downloaded public data",
   "restricted: tests requiring licensed or author-provided data",

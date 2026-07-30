@@ -75,7 +75,8 @@ Data acquisition is intentionally disabled until the source licence and exact va
 poetry check
 poetry run ruff check .
 poetry run ruff format --check .
-poetry run mypy src tests
+poetry run mypy src tests scripts
+poetry run python scripts/verify_title.py
 poetry run pytest
 ```
 

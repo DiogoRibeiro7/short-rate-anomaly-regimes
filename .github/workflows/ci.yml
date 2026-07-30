@@ -39,5 +39,6 @@ jobs:
       - run: poetry check
       - run: poetry run ruff check .
       - run: poetry run ruff format --check .
-      - run: poetry run mypy src tests
+      - run: poetry run mypy src tests scripts
+      - run: poetry run python scripts/verify_title.py
       - run: poetry run pytest
