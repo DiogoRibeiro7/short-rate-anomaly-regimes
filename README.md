@@ -90,7 +90,7 @@ poetry run srar run-regimes --config configs/regimes.yaml
 poetry run srar build-report --config configs/reporting.yaml
 ```
 
-Most commands are scaffolded and fail with an explicit `NotImplementedError` until the corresponding milestone prompt has been completed.
+Most commands are scaffolded and fail with an explicit `NotImplementedError` until the corresponding milestone acceptance gates have been completed.
 
 ## Repository map
 
