@@ -9,7 +9,7 @@ Latest validation was performed on 30 July 2026 from the repository checkout on 
 - `poetry run ruff check .`
 - `poetry run ruff format --check .`
 - `poetry run mypy src tests`
-- `poetry run pytest`
+- `poetry run pytest` with `--cov-fail-under=90`
 - `python -m pytest`
 
 The current test suite contains 36 tests. All 36 passed. The measured scaffold coverage was 95 percent because milestone-specific estimators and data clients are intentionally represented by explicit stubs until their evidence gates are completed.
@@ -21,7 +21,7 @@ The current test suite contains 36 tests. All 36 passed. The measured scaffold c
 - Ruff linting and formatting pass under the repository configuration.
 - Strict mypy passes for `src` and `tests`, with an explicit override for untyped `statsmodels` imports.
 - Pytest imports from the `src` layout without requiring a manual `PYTHONPATH`.
-- GitHub Actions runs the same lint, format, type-check, and test gates on `main` and `develop`.
+- GitHub Actions runs the same metadata, lint, format, type-check, and test gates on `main` and `develop`.
 
 ## Scientific status
 

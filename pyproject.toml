@@ -87,7 +87,7 @@ mypy_path = "src"
 plugins = ["pydantic.mypy"]
 
 [tool.pytest.ini_options]
-addopts = "--strict-markers --strict-config --cov=short_rate_anomaly_regimes --cov-report=term-missing"
+addopts = "--strict-markers --strict-config --cov=short_rate_anomaly_regimes --cov-report=term-missing --cov-fail-under=90"
 testpaths = ["tests"]
 pythonpath = ["src"]
 markers = [
@@ -99,3 +99,16 @@ markers = [
 [[tool.mypy.overrides]]
 module = ["statsmodels.*"]
 ignore_missing_imports = true
+
+[tool.coverage.run]
+branch = true
+source = ["short_rate_anomaly_regimes"]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+skip_empty = true
+exclude_also = [
+  "if __name__ == .__main__.:",
+  "raise NotImplementedError",
+]

@@ -36,6 +36,7 @@ jobs:
           path: .venv
           key: poetry-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('poetry.lock') }}
       - run: poetry install --no-interaction
+      - run: poetry check
       - run: poetry run ruff check .
       - run: poetry run ruff format --check .
       - run: poetry run mypy src tests

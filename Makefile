@@ -1,7 +1,10 @@
-.PHONY: install lint typecheck test check clean milestones
+.PHONY: install validate-metadata lint typecheck test check clean milestones
 
 install:
 	poetry install
+
+validate-metadata:
+	poetry check
 
 lint:
 	poetry run ruff check .
@@ -13,7 +16,7 @@ typecheck:
 test:
 	poetry run pytest
 
-check: lint typecheck test
+check: validate-metadata lint typecheck test
 
 milestones:
 	poetry run srar show-milestones

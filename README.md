@@ -70,13 +70,14 @@ Data acquisition is intentionally disabled until the source licence and exact va
 ## Quality gates
 
 ```bash
+poetry check
 poetry run ruff check .
 poetry run ruff format --check .
 poetry run mypy src tests
 poetry run pytest
 ```
 
-The GitHub Actions workflow runs the same gates on pushes and pull requests to `main` and `develop`.
+The test command enforces a minimum 90 percent coverage floor. The GitHub Actions workflow runs the same gates on pushes and pull requests to `main` and `develop`.
 
 ## Main commands
 
