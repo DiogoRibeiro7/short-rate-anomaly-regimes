@@ -1,6 +1,6 @@
 source_id,exact_definition_verified,access_status,licence_checked,strict_replication_role,substitute_allowed,substitute_label,owner,notes
-article_pdf,false,missing,false,required,false,,research_lead,Obtain legal access and record version
-article_supplement,false,missing,false,required,false,,research_lead,Obtain publisher or author supplement
+article_pdf,false,located_access_required,false,required,false,,research_lead,Cambridge Core page located; legal local PDF not present under references/private
+article_supplement,false,located_pending_ingestion,false,required,false,,research_lead,Cambridge Core lists supplementary material; legal local supplement not present under references/private
 french_mkt_rf,false,public_pending,false,required,true,reconstruction,data_engineer,Verify exact archive and risk-free convention
 french_size_bm_25,false,public_pending,false,required,true,reconstruction,data_engineer,Verify value-weighted monthly file
 french_size_long_term_reversal_25,false,public_pending,false,required,true,reconstruction,data_engineer,Verify prior 13 to 60 month definition

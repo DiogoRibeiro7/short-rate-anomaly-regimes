@@ -56,6 +56,7 @@ reports/README.md
 reports/generated/
 reports/generated/.gitkeep
 research/
+research/article_method_extraction.md
 research/claim_assumption_map.md
 research/data_access_matrix.csv
 research/data_dictionary.md
@@ -80,6 +81,7 @@ src/short_rate_anomaly_regimes/data/__init__.py
 src/short_rate_anomaly_regimes/data/acquisition.py
 src/short_rate_anomaly_regimes/data/catalog.py
 src/short_rate_anomaly_regimes/data/validation.py
+src/short_rate_anomaly_regimes/evidence.py
 src/short_rate_anomaly_regimes/models/
 src/short_rate_anomaly_regimes/models/__init__.py
 src/short_rate_anomaly_regimes/models/cross_section.py
@@ -107,6 +109,7 @@ src/short_rate_anomaly_regimes/shocks/decomposition.py
 src/short_rate_anomaly_regimes/types.py
 tests/
 tests/test_config.py
+tests/test_evidence.py
 tests/test_rate_innovations.py
 tests/test_regimes.py
 tests/test_validation.py

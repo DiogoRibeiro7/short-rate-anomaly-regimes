@@ -7,6 +7,7 @@ This project has not produced empirical replication results yet. The current rep
 - Code scaffolding is present for configuration, source registry loading, monthly panel validation, provenance, rate innovations, first-pass regressions, cross-sectional OLS, portfolio loading, and audit writing.
 - Unverified empirical steps are deliberately gated with `NotImplementedError`.
 - Strict replication is blocked until the article, supplement, exact source definitions, and required data inputs are legally obtained and recorded.
+- The current article extraction status is documented in `research/article_method_extraction.md`.
 - No raw data, licensed data extracts, generated tables, generated figures, or manuscript build products are committed.
 
 ## Strict Replication Blockers
