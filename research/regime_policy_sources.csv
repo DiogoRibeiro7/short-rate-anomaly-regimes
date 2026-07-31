@@ -1,0 +1,6 @@
+regime_id,boundary_month,policy_action_date,source_url,source_note
+effective_lower_bound_and_qe,2008-12,2008-12-16,https://www.federalreserve.gov/newsevents/pressreleases/monetary20081216b.htm,FOMC lowered the federal funds target range to 0 to 1/4 percent.
+first_normalisation,2015-12,2015-12-16,https://www.federalreserve.gov/newsevents/pressreleases/monetary20151216a.htm,FOMC raised the federal funds target range to 1/4 to 1/2 percent.
+pandemic_elb_and_qe,2020-03,2020-03-15,https://www.federalreserve.gov/newsevents/pressreleases/monetary20200315a.htm,FOMC lowered the federal funds target range to 0 to 1/4 percent during the COVID-19 shock.
+inflation_tightening,2022-03,2022-03-16,https://www.federalreserve.gov/newsevents/pressreleases/monetary20220316a.htm,FOMC raised the federal funds target range to 1/4 to 1/2 percent.
+nber_recession_reference,secondary,2026-07-31,https://www.nber.org/research/data/us-business-cycle-expansions-and-contractions,NBER business-cycle dates are secondary reference points only and are not used to choose monetary-regime boundaries.

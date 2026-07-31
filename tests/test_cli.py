@@ -411,6 +411,20 @@ def test_temporal_extension_writes_blocked_report(tmp_path: Path) -> None:
     assert "Latest common month: `2026-06`" in report
 
 
+def test_run_regimes_writes_blocked_report(tmp_path: Path) -> None:
+    report_path = tmp_path / "regime_report.md"
+
+    result = CliRunner().invoke(
+        app,
+        ["run-regimes", "--config", "configs/regimes.yaml", "--output", str(report_path)],
+    )
+
+    assert result.exit_code == 1
+    assert report_path.is_file()
+    assert "blocked regime report" in str(result.exception)
+    assert "Verdict: `blocked_missing_input`" in report_path.read_text(encoding="utf-8")
+
+
 def test_show_milestones_command_lists_release_gate() -> None:
     runner = CliRunner()
 
@@ -425,7 +439,6 @@ def test_milestone_gated_cli_commands_report_not_implemented() -> None:
     runner = CliRunner()
     command_arguments = [
         ["run-baseline", "--config", "configs/baseline.yaml"],
-        ["run-regimes", "--config", "configs/regimes.yaml"],
         ["build-report", "--config", "configs/reporting.yaml"],
     ]
 

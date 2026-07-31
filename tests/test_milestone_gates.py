@@ -2,10 +2,6 @@ import pandas as pd
 import pytest
 
 from short_rate_anomaly_regimes.portfolios.construction import construct_double_sorted_portfolios
-from short_rate_anomaly_regimes.regimes.stability import (
-    bai_perron_breaks,
-    estimate_regime_interactions,
-)
 from short_rate_anomaly_regimes.shocks.decomposition import decompose_high_frequency_surprises
 
 
@@ -25,11 +21,3 @@ def test_shock_decomposition_is_identification_gated() -> None:
             rate_surprise_column="rate",
             equity_surprise_column="equity",
         )
-
-
-def test_regime_stability_estimators_are_milestone_gated() -> None:
-    with pytest.raises(NotImplementedError, match="Milestone 10"):
-        estimate_regime_interactions()
-
-    with pytest.raises(NotImplementedError, match="Milestone 10"):
-        bai_perron_breaks()

@@ -14,6 +14,7 @@ from short_rate_anomaly_regimes.config import (
     load_baseline_config,
     load_extension_config,
     load_project_config,
+    load_regime_config,
 )
 from short_rate_anomaly_regimes.data.acquisition import (
     download_fred_series,
@@ -28,6 +29,7 @@ from short_rate_anomaly_regimes.extensions.temporal import (
     write_blocked_temporal_report,
 )
 from short_rate_anomaly_regimes.portfolios.construction import write_construction_manifest
+from short_rate_anomaly_regimes.regimes.stability import write_blocked_regime_report
 from short_rate_anomaly_regimes.reporting.audit import (
     build_missing_input_audit,
     load_table_targets,
@@ -423,10 +425,30 @@ def run_baseline(config: ConfigPathOption) -> None:
 
 
 @app.command("run-regimes")
-def run_regimes(config: ConfigPathOption) -> None:
+def run_regimes(
+    config: ConfigPathOption,
+    output: OutputPathOption = Path("reports/generated/regime_report.md"),
+) -> None:
     """Run the regime-stability extension."""
-    del config
-    raise NotImplementedError("Complete Milestones 9 and 10 first")
+    validated = load_regime_config(config)
+    required_paths = [
+        Path(validated.base_config),
+        Path("data/processed/extension/monthly_panel.parquet"),
+        Path("data/processed/factors/short_rate_factors.parquet"),
+        Path("artifacts/estimates/time_series"),
+        Path("artifacts/estimates/cross_section"),
+        Path("research/regime_policy_sources.csv"),
+    ]
+    missing_paths = tuple(path for path in required_paths if not path.exists())
+    if missing_paths:
+        write_blocked_regime_report(output_path=output, missing_inputs=missing_paths)
+        raise ReplicationBlockError(
+            "Wrote blocked regime report; regime stability requires baseline, extension, "
+            f"and verified policy-source inputs: {', '.join(str(path) for path in missing_paths)}"
+        )
+    raise ReplicationBlockError(
+        "Required regime inputs exist, but source-specific regime panel assembly is not frozen"
+    )
 
 
 @app.command("build-report")
