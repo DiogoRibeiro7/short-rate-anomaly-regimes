@@ -5,9 +5,10 @@ from __future__ import annotations
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import pandas as pd
+import yaml
 
 from short_rate_anomaly_regimes.types import ReplicationStatus
 
@@ -218,6 +219,11 @@ def render_replication_report(
     records: list[TableAuditRecord],
     *,
     title: str = "Replication Report",
+    article_manifest_path: Path = Path("artifacts/evidence/article_manifest.json"),
+    data_access_path: Path = Path("research/data_access_matrix.csv"),
+    source_registry_path: Path = Path("configs/data_sources.yaml"),
+    baseline_config_path: Path = Path("configs/baseline.yaml"),
+    robustness_report_path: Path = Path("reports/generated/robustness_report.md"),
 ) -> str:
     """Render a markdown replication report from audit records."""
     summary = audit_summary(records)
@@ -231,12 +237,43 @@ def render_replication_report(
         ],
         "contradicted_targets": [r for r in records if r.status == ReplicationStatus.CONTRADICTED],
     }
+    article_manifest = _load_json_if_present(article_manifest_path)
+    data_access = _load_csv_if_present(data_access_path)
+    source_registry = _load_yaml_if_present(source_registry_path)
+    baseline_config = _load_yaml_if_present(baseline_config_path)
+    robustness_report = (
+        robustness_report_path.read_text(encoding="utf-8")
+        if robustness_report_path.is_file()
+        else "Weak-factor diagnostics have not been generated."
+    )
     lines = [
         f"# {title}",
         "",
-        "## Evidence Availability",
+        "## Bibliographic Target And Versions",
+        "",
+        _render_bibliographic_target(article_manifest),
+        "",
+        "## Accessible And Inaccessible Evidence",
         "",
         "This report distinguishes inaccessible inputs from empirical contradiction.",
+        "",
+        _render_evidence_availability(article_manifest, data_access),
+        "",
+        "## Exact Source Definitions",
+        "",
+        _render_source_definitions(data_access, source_registry),
+        "",
+        "## Factor Reconstruction",
+        "",
+        _render_factor_reconstruction(baseline_config),
+        "",
+        "## Portfolio Reconstruction",
+        "",
+        _render_portfolio_reconstruction(baseline_config, source_registry),
+        "",
+        "## Estimator Reconstruction",
+        "",
+        _render_estimator_reconstruction(baseline_config),
         "",
         "## Status Summary",
         "",
@@ -266,13 +303,21 @@ def render_replication_report(
             "",
             _format_record_list(sections["contradicted_targets"]),
             "",
-            "## Sources Of Numerical Difference",
+            "## Weak-Factor And Influence Diagnostics",
             "",
-            ", ".join(DISCREPANCY_INVESTIGATION_ORDER),
+            _summarise_robustness_report(robustness_report),
             "",
-            "## Baseline Conclusion",
+            "## Deviations From The Article And Their Causes",
+            "",
+            _render_deviations(data_access),
+            "",
+            "## Bounded Conclusion",
             "",
             _baseline_conclusion(records),
+            "",
+            "## Appendix: Complete Audit Table",
+            "",
+            _render_audit_table(records),
             "",
         ]
     )
@@ -291,6 +336,238 @@ def _format_record_list(records: list[TableAuditRecord]) -> str:
     return "\n".join(
         f"- `{record.target_id}` ({record.source_location}): {record.notes}" for record in records
     )
+
+
+def _load_json_if_present(path: Path) -> dict[str, Any]:
+    if not path.is_file():
+        return {}
+    loaded = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(loaded, dict):
+        raise ValueError(f"Expected object JSON in {path}")
+    return loaded
+
+
+def _load_yaml_if_present(path: Path) -> dict[str, Any]:
+    if not path.is_file():
+        return {}
+    loaded = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    if not isinstance(loaded, dict):
+        raise ValueError(f"Expected mapping YAML in {path}")
+    return loaded
+
+
+def _load_csv_if_present(path: Path) -> pd.DataFrame:
+    if not path.is_file():
+        return pd.DataFrame()
+    return pd.read_csv(path)
+
+
+def _render_bibliographic_target(article_manifest: dict[str, Any]) -> str:
+    if not article_manifest:
+        return "Bibliographic metadata are not available."
+    authors = ", ".join(str(author) for author in article_manifest.get("authors", []))
+    files = article_manifest.get("files", [])
+    file_lines: list[str] = []
+    if isinstance(files, list):
+        for file_record in files:
+            if isinstance(file_record, dict):
+                file_lines.append(
+                    "- "
+                    f"`{file_record.get('role', 'unknown')}`: "
+                    f"SHA-256 `{file_record.get('sha256', 'missing')}`; "
+                    f"{file_record.get('access_note', 'access note unavailable')}"
+                )
+    return "\n".join(
+        [
+            f"- Target: {authors}. {article_manifest.get('publication_date', 'n.d.')}. "
+            f"{article_manifest.get('title', 'Untitled')}. "
+            f"{article_manifest.get('journal', 'Unknown journal')} "
+            f"{article_manifest.get('volume', '')}"
+            f"({article_manifest.get('issue', '')}), "
+            f"{article_manifest.get('pages', '')}.",
+            f"- DOI: `{article_manifest.get('doi', 'not_recorded')}`",
+            f"- Evidence-pack status: `{article_manifest.get('status', 'unknown')}`",
+            *file_lines,
+        ]
+    )
+
+
+def _render_evidence_availability(
+    article_manifest: dict[str, Any],
+    data_access: pd.DataFrame,
+) -> str:
+    lines: list[str] = []
+    if article_manifest:
+        lines.append("- Article and publisher supplement metadata are present as hashes only.")
+    if data_access.empty:
+        lines.append("- Data-access matrix is unavailable.")
+        return "\n".join(lines)
+    strict_rows = data_access[data_access["strict_replication_role"] != "extension"]
+    accessible = strict_rows[
+        strict_rows["access_status"].astype("string").str.contains("present|located", na=False)
+    ]
+    inaccessible = strict_rows[
+        ~strict_rows["access_status"].astype("string").str.contains("present|located", na=False)
+    ]
+    lines.append(f"- Accessible or located strict-replication evidence rows: `{len(accessible)}`")
+    lines.append(
+        f"- Inaccessible or pending strict-replication evidence rows: `{len(inaccessible)}`"
+    )
+    for row in inaccessible.itertuples(index=False):
+        lines.append(f"- Pending `{row.source_id}`: {row.notes}")
+    return "\n".join(lines)
+
+
+def _render_source_definitions(
+    data_access: pd.DataFrame,
+    source_registry: dict[str, Any],
+) -> str:
+    sources = source_registry.get("sources", [])
+    source_by_id = {
+        str(source.get("id")): source
+        for source in sources
+        if isinstance(source, dict) and source.get("id") is not None
+    }
+    if data_access.empty:
+        return "Source definitions are unavailable."
+    lines = [
+        "| Source | Exact Definition Verified | Access Status | Provider Or Category | Raw Path |",
+        "|---|---:|---|---|---|",
+    ]
+    strict_rows = data_access[data_access["strict_replication_role"] != "extension"]
+    for row in strict_rows.itertuples(index=False):
+        source = source_by_id.get(str(row.source_id), {})
+        provider = source.get("provider") or source.get("category") or "not_recorded"
+        raw_path = source.get("raw_path") or source.get("expected_path") or "not_recorded"
+        lines.append(
+            f"| `{row.source_id}` | `{row.exact_definition_verified}` | "
+            f"`{row.access_status}` | {provider} | `{raw_path}` |"
+        )
+    return "\n".join(lines)
+
+
+def _render_factor_reconstruction(baseline_config: dict[str, Any]) -> str:
+    short_rate = _mapping(baseline_config.get("short_rate"))
+    innovation = _mapping(short_rate.get("innovation"))
+    sample = _mapping(baseline_config.get("sample"))
+    returns = _mapping(baseline_config.get("returns"))
+    return "\n".join(
+        [
+            f"- Sample: `{sample.get('start', 'unknown')}` to `{sample.get('end', 'unknown')}`, "
+            f"`{sample.get('frequency', 'unknown')}`, aligned to "
+            f"`{sample.get('date_alignment', 'unknown')}`.",
+            f"- Primary short-rate source id: `{short_rate.get('primary_series', 'unknown')}`.",
+            f"- Alternative short-rate source ids: "
+            f"`{', '.join(short_rate.get('alternatives', []) or ['none'])}`.",
+            f"- Innovation model: `{innovation.get('model', 'unknown')}` with "
+            f"`{innovation.get('estimation', 'unknown')}` estimation and "
+            f"`{innovation.get('residual_timing', 'unknown')}` residual timing.",
+            f"- Return units: `{returns.get('units', 'unknown')}`.",
+        ]
+    )
+
+
+def _render_portfolio_reconstruction(
+    baseline_config: dict[str, Any],
+    source_registry: dict[str, Any],
+) -> str:
+    portfolio_sets = baseline_config.get("portfolio_sets", [])
+    sources = source_registry.get("sources", [])
+    registered_portfolios = [
+        str(source.get("id"))
+        for source in sources
+        if isinstance(source, dict) and source.get("category") == "portfolio_returns"
+    ]
+    return "\n".join(
+        [
+            f"- Baseline configured portfolio sets: `{', '.join(portfolio_sets)}`.",
+            f"- Registry portfolio-return sources: `{', '.join(registered_portfolios)}`.",
+            "- Portfolio panels are not silently substituted; unavailable author or WRDS inputs "
+            "remain missing-input rows until manually registered or reconstructed under the "
+            "documented reconstruction label.",
+        ]
+    )
+
+
+def _render_estimator_reconstruction(baseline_config: dict[str, Any]) -> str:
+    asset_pricing = _mapping(baseline_config.get("asset_pricing"))
+    time_series = _mapping(asset_pricing.get("time_series"))
+    cross_section = _mapping(asset_pricing.get("cross_section"))
+    return "\n".join(
+        [
+            f"- Time-series intercept: `{time_series.get('include_intercept', 'unknown')}`.",
+            f"- Time-series covariance: `{time_series.get('covariance', 'unknown')}` with "
+            f"`{time_series.get('nw_lags', 'unknown')}` lags.",
+            f"- Cross-sectional estimators: "
+            f"`{', '.join(cross_section.get('estimators', []) or ['unknown'])}`.",
+            f"- Zero-beta intercept: "
+            f"`{cross_section.get('include_zero_beta_intercept', 'unknown')}`.",
+            f"- Shanken-style correction: `{cross_section.get('shanken_correction', 'unknown')}`.",
+            f"- Weak-factor diagnostics: "
+            f"`{cross_section.get('weak_factor_diagnostics', 'unknown')}`.",
+        ]
+    )
+
+
+def _summarise_robustness_report(report: str) -> str:
+    relevant_lines = [
+        line
+        for line in report.splitlines()
+        if line.startswith("Verdict:")
+        or line.startswith("- `")
+        or "No significant-only robustness reporting" in line
+    ]
+    if not relevant_lines:
+        return "Weak-factor and influence diagnostics have not produced a baseline verdict."
+    return "\n".join(relevant_lines)
+
+
+def _render_deviations(data_access: pd.DataFrame) -> str:
+    lines = [
+        "Potential numerical differences must be investigated in this fixed order: "
+        f"{', '.join(DISCREPANCY_INVESTIGATION_ORDER)}.",
+    ]
+    if data_access.empty:
+        lines.append("- Source-level deviations cannot be classified because the matrix is absent.")
+        return "\n".join(lines)
+    strict_rows = data_access[data_access["strict_replication_role"] != "extension"]
+    unresolved = strict_rows[
+        strict_rows["exact_definition_verified"].astype("string").str.lower() != "true"
+    ]
+    if unresolved.empty:
+        lines.append("- No source-definition deviation is currently recorded.")
+        return "\n".join(lines)
+    for row in unresolved.itertuples(index=False):
+        lines.append(f"- `{row.source_id}`: {row.notes}")
+    return "\n".join(lines)
+
+
+def _render_audit_table(records: list[TableAuditRecord]) -> str:
+    if not records:
+        return "No audit records are available."
+    lines = [
+        "| Target | Source Location | Status | Statistic | Generated Artifact | Notes |",
+        "|---|---|---|---|---|---|",
+    ]
+    for record in records:
+        lines.append(
+            "| "
+            f"`{_escape_table_cell(record.target_id)}` | "
+            f"`{_escape_table_cell(record.source_location)}` | "
+            f"`{record.status.value}` | "
+            f"{_escape_table_cell(record.statistic)} | "
+            f"`{_escape_table_cell(record.generated_artifact)}` | "
+            f"{_escape_table_cell(record.notes)} |"
+        )
+    return "\n".join(lines)
+
+
+def _mapping(value: Any) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
+def _escape_table_cell(value: object) -> str:
+    return str(value).replace("|", "\\|").replace("\n", " ")
 
 
 def _baseline_conclusion(records: list[TableAuditRecord]) -> str:

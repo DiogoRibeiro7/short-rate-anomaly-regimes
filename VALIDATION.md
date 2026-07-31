@@ -20,7 +20,7 @@ Latest validation was performed on 31 July 2026 from the repository checkout on 
 - `poetry run pytest` with `--cov-fail-under=95`
 - `poetry run pre-commit run --all-files`
 
-The current test suite contains 215 tests. All 215 passed. The measured scaffold coverage is 95.35 percent because milestone-specific estimators and data clients are intentionally represented by explicit gates until their evidence inputs are completed.
+The current test suite contains 219 tests. All 219 passed. The measured scaffold coverage is 95.63 percent because milestone-specific estimators and data clients are intentionally represented by explicit gates until their evidence inputs are completed.
 
 ## Current quality status
 
@@ -36,7 +36,7 @@ The current test suite contains 215 tests. All 215 passed. The measured scaffold
 - Portfolio parser, validation, manifest, and synthetic reconstruction tests cover the Milestone 4 test-asset assembly layer.
 - First-pass time-series tests cover excess-return construction, date alignment accounting, Newey-West OLS inference, independent matrix-HAC verification, diagnostics, and artifact writers.
 - Cross-sectional pricing tests cover OLS, GLS, Fama-MacBeth, Shanken-style corrected uncertainty, weak-factor warnings, leave-one-group systems, GRS diagnostics, simulation recovery, model evaluation tables, and artifact writers.
-- Replication-audit tests cover table-target loading, frozen tolerance comparison, allowed status labels, missing-input audit rows, JSON/CSV outputs, and the generated replication report.
+- Replication-audit tests cover table-target loading, frozen tolerance comparison, allowed status labels, missing-input audit rows, JSON/CSV outputs, standalone baseline-only report sections, and the complete audit-table appendix.
 - Robustness tests cover weak-factor rank and singular-value diagnostics, beta dispersion, factor spanning, irrelevant-factor flags, Holm correction within robustness families, economic-change flags, predeclared robustness classification, and blocked report generation.
 - Temporal-extension tests cover locked-vintage panel assembly, revised-history audits, reduced extension universes, December 2013 frozen-parameter pricing errors, pre/post pattern diagnostics, expanding and rolling window schedules, boundary figures, and blocked report generation.
 - Monetary-regime tests cover verified regime tables, boundary-shift sensitivity, split-sample eligibility, pooled regime interactions, joint Wald tests, Chow and Quandt-Andrews breaks, Bai-Perron-style multiple-break selection, CUSUM diagnostics, Holm correction, stability classification, figures, and blocked report generation.

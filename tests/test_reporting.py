@@ -158,6 +158,133 @@ def test_audit_summary_and_rendered_report_sections() -> None:
     assert "## Blocked Targets" in report
 
 
+def test_render_replication_report_has_standalone_baseline_structure() -> None:
+    records = build_missing_input_audit((_target(),), missing_reason="Missing input.")
+
+    report = render_replication_report(records)
+
+    required_sections = [
+        "## Bibliographic Target And Versions",
+        "## Accessible And Inaccessible Evidence",
+        "## Exact Source Definitions",
+        "## Factor Reconstruction",
+        "## Portfolio Reconstruction",
+        "## Estimator Reconstruction",
+        "## Weak-Factor And Influence Diagnostics",
+        "## Deviations From The Article And Their Causes",
+        "## Bounded Conclusion",
+        "## Appendix: Complete Audit Table",
+    ]
+    for section in required_sections:
+        assert section in report
+    assert "post-2013" not in report.lower()
+    assert "regime" not in report.lower()
+    assert "shock decomposition" not in report.lower()
+    assert "| `TBL_001` |" in report
+
+
+def test_render_replication_report_handles_missing_optional_metadata(tmp_path: Path) -> None:
+    report = render_replication_report(
+        [],
+        article_manifest_path=tmp_path / "missing_manifest.json",
+        data_access_path=tmp_path / "missing_access.csv",
+        source_registry_path=tmp_path / "missing_sources.yaml",
+        baseline_config_path=tmp_path / "missing_baseline.yaml",
+        robustness_report_path=tmp_path / "missing_robustness.md",
+    )
+
+    assert "Bibliographic metadata are not available." in report
+    assert "Data-access matrix is unavailable." in report
+    assert "Source definitions are unavailable." in report
+    assert "Primary short-rate source id: `unknown`" in report
+    assert "Weak-factor and influence diagnostics have not produced a baseline verdict." in report
+    assert "No audit records are available." in report
+    assert "No successful baseline replication conclusion" in report
+
+
+def test_render_replication_report_rejects_malformed_metadata(tmp_path: Path) -> None:
+    bad_json = tmp_path / "bad.json"
+    bad_yaml = tmp_path / "bad.yaml"
+    bad_json.write_text("[1, 2, 3]", encoding="utf-8")
+    bad_yaml.write_text("- one\n- two\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="Expected object JSON"):
+        render_replication_report(
+            [build_missing_input_audit((_target(),), missing_reason="x")[0]],
+            article_manifest_path=bad_json,
+        )
+
+    with pytest.raises(ValueError, match="Expected mapping YAML"):
+        render_replication_report(
+            [build_missing_input_audit((_target(),), missing_reason="x")[0]],
+            source_registry_path=bad_yaml,
+        )
+
+
+def test_render_replication_report_classifies_all_exact_sources(tmp_path: Path) -> None:
+    data_access = tmp_path / "data_access.csv"
+    source_registry = tmp_path / "sources.yaml"
+    baseline_config = tmp_path / "baseline.yaml"
+    robustness_report = tmp_path / "robustness.md"
+    data_access.write_text(
+        "source_id,exact_definition_verified,access_status,strict_replication_role,notes\n"
+        "public_factor,true,present_public_file,required,Exact source is frozen\n"
+        "future_extension,false,missing,extension,Excluded extension row\n",
+        encoding="utf-8",
+    )
+    source_registry.write_text(
+        """
+sources:
+  - id: public_factor
+    category: factor_returns
+    raw_path: data/raw/public_factor.csv
+  - id: public_portfolio
+    category: portfolio_returns
+    raw_path: data/raw/public_portfolio.csv
+""",
+        encoding="utf-8",
+    )
+    baseline_config.write_text(
+        """
+sample:
+  start: "1972-01"
+  end: "2013-12"
+short_rate:
+  primary_series: public_factor
+  alternatives: []
+  innovation:
+    model: ar1_with_intercept
+portfolio_sets:
+  - public_portfolio
+asset_pricing:
+  cross_section:
+    estimators: []
+""",
+        encoding="utf-8",
+    )
+    robustness_report.write_text("No baseline diagnostics available yet.", encoding="utf-8")
+    reproduced = compare_statistic(
+        target=_target(),
+        statistic="mean",
+        published_value=1.0,
+        replicated_value=1.0,
+        generated_artifact=Path("artifact.csv"),
+    )
+
+    report = render_replication_report(
+        [reproduced],
+        data_access_path=data_access,
+        source_registry_path=source_registry,
+        baseline_config_path=baseline_config,
+        robustness_report_path=robustness_report,
+    )
+
+    assert "No source-definition deviation is currently recorded." in report
+    assert "Weak-factor and influence diagnostics have not produced a baseline verdict." in report
+    assert "All audited targets are reproduced within the frozen tolerance rules." in report
+    assert "future_extension" not in report
+
+
 def test_write_audit_rejects_unallowed_status(tmp_path: Path) -> None:
     record = TableAuditRecord(
         target_id="bad",
