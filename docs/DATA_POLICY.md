@@ -18,7 +18,7 @@ This repository is designed to be reproducible without committing restricted dat
 - processed data in `data/processed/`;
 - generated reports in `reports/generated/`;
 - build artifacts in `paper/build/`;
-- private references in `references/private/`, except the directory README.
+- private references in `references/private/`.
 
 ## Source Admission Rules
 

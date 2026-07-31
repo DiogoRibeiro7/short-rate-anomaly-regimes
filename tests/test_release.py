@@ -26,8 +26,8 @@ from short_rate_anomaly_regimes.reporting.release import (
 def test_release_path_filters_reject_local_only_materials() -> None:
     assert is_disallowed_release_path("prompts/15_ADVERSARIAL_RELEASE_PROMPT.md")
     assert is_disallowed_release_path("references/private/article.pdf")
+    assert is_disallowed_release_path("references/private/README.md")
     assert is_disallowed_release_path("data/catalog.duckdb")
-    assert not is_disallowed_release_path("references/private/README.md")
     assert not is_disallowed_release_path("src/short_rate_anomaly_regimes/cli.py")
 
     assert not is_checksum_candidate("prompts/15_ADVERSARIAL_RELEASE_PROMPT.md")

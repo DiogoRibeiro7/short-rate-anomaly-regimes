@@ -96,9 +96,6 @@ paper/build/.gitkeep
 paper/manuscript.tex
 paper/references.bib
 pyproject.toml
-references/
-references/private/
-references/private/README.md
 reports/
 reports/README.md
 reports/generated/

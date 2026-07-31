@@ -29,7 +29,6 @@ DISALLOWED_RELEASE_FILES: frozenset[str] = frozenset(
         "data/catalog.duckdb",
     }
 )
-ALLOWED_PRIVATE_REFERENCE_DOCS: frozenset[str] = frozenset({"references/private/README.md"})
 CHECKSUM_EXCLUDED_PREFIXES: tuple[str, ...] = (
     *DISALLOWED_RELEASE_PREFIXES,
     "artifacts/release/",
@@ -80,8 +79,6 @@ def normalise_repo_path(path: Path) -> str:
 def is_disallowed_release_path(path: str) -> bool:
     """Return whether a path must never be included in a public release."""
     normalised = normalise_repo_path(Path(path))
-    if normalised in ALLOWED_PRIVATE_REFERENCE_DOCS:
-        return False
     return normalised in DISALLOWED_RELEASE_FILES or any(
         normalised.startswith(prefix) for prefix in DISALLOWED_RELEASE_PREFIXES
     )
