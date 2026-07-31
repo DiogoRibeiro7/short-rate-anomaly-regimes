@@ -27,10 +27,10 @@ No shell may contain invented numerical cells, dummy stars, or example estimates
 | MT_ROBUST | Render only after comparator and robustness estimates are frozen. |
 | MT_POST | Render only after post-publication extension estimates are frozen. |
 | MT_REGIME | Render only after regime interaction and equivalence outputs are frozen. |
-| MT_SHOCK | Render only after event-level components and monthly aggregates are frozen. |
+| MT_SHOCK | Appendix-only; render only after event-level components, monthly aggregates, and component-strength diagnostics are frozen. |
 | MF_RATE | Render only after rate series, innovations, and regime labels are frozen. |
 | MF_BETA | Render only after baseline beta and average-return artifacts are frozen. |
 | MF_ROLLING | Render only after rolling or expanding risk-price artifacts are frozen. |
 | MF_ERRORS | Render only after model-comparison loss artifacts are frozen. |
 | MF_REGIME | Render only after regime equivalence intervals are frozen. |
-| MF_SHOCK | Render only after component-spanning artifacts are frozen. |
+| MF_SHOCK | Appendix-only; render only after component-spanning and component-strength artifacts are frozen. |

@@ -11,19 +11,20 @@ design artifact, not a result artifact.
 | Cash-flow news | A rate innovation may contain news about future cash flows or expected macro conditions, not only discount-rate news. | Book-to-market, earnings-to-price, reversal | Interpretation requires separating aggregate innovations from identified announcement components. |
 | Financing constraints and balance-sheet sensitivity | Rate news can change financing costs and external-finance constraints, so firms with different investment or balance-sheet profiles may have different exposures. | Investment-to-assets, property-plant-and-equipment investment | Direction is not predeclared without verified family-level evidence. |
 | Inventory and working-capital channel | Rate changes can affect inventory financing and working-capital demand. | Inventory growth | Direction is not predeclared without verified family-level evidence. |
-| Monetary-policy information | Announcement surprises can mix policy-rate news with central-bank information about growth or inflation. | All registered anomaly families | Only the high-frequency extension can use policy and information labels. |
+| Monetary-policy information | Announcement surprises can mix policy-rate news with central-bank information about growth or inflation. | All registered anomaly families | Appendix-only unless event data, component labels, monthly aggregation, and component-strength diagnostics are available. |
 | Intertemporal hedging demand | If the short rate forecasts investment opportunities, investors may pay premia for assets that hedge adverse rate-state news. | Joint anomaly system | Baseline ICAPM mechanism; requires weak-factor diagnostics before interpretation. |
 
 ## Hypothesis Links
 
-| Hypothesis | Mechanism link | Primary test | Interpretation boundary |
+| Claim | Mechanism link | Primary test | Interpretation boundary |
 |---|---|---|---|
-| H1 | ICAPM hedging demand and cross-sectional beta differences | Cross-sectional pricing-error reduction relative to the CAPM | A reproduced pricing improvement is not a causal policy interpretation. |
+| R1 | Numerical replication of registered article statistics | Table-level tolerance audit | Numerical recovery is not an economic mechanism test. |
+| H1 | ICAPM hedging demand and cross-sectional beta differences | Incremental pricing performance relative to comparator models | A pricing improvement is not a causal policy interpretation. |
 | H2 | Persistence of the state-variable price of risk | Post-publication compatibility classification | A nonzero risk price is insufficient without sign, magnitude, and pricing-error compatibility. |
-| H3 | Monetary-regime dependence of beta and risk-price mappings | Pooled regime interactions with equivalence intervals | Ordinary non-rejection of equality cannot support invariance. |
-| H4 | Aggregate innovation versus decomposed announcement information | Component spanning and incremental pricing classification | Causal language is confined to identified event components. |
-| H5 | Identification strength of the short-rate beta column | Dispersion, rank, singular-value, and robust-inference diagnostics | Weak-factor failure limits interpretation even when pricing errors look small. |
+| H3 | Monetary-regime dependence of factor construction, beta, risk-price, and pricing-error mappings | Separate beta-interaction tests and regime-specific second-pass tests | Ordinary non-rejection of equality cannot support invariance. |
+| H4 | Identification strength of the short-rate beta column | Dispersion, rank, singular-value, and robust-inference diagnostics | Weak-factor failure limits interpretation even when pricing errors look small. |
 | E1 | Unregistered structural instability | Exploratory unknown-break tests | Break alignment is hypothesis-generating only. |
+| O1 | Aggregate innovation versus decomposed announcement information | Optional component spanning, pricing, and strength diagnostics | Appendix-only until the component factors have usable evidence. |
 
 ## Sign Discipline
 

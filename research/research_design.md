@@ -8,21 +8,29 @@ The strict replication target is the article's sample from January 1972 through 
 
 ## Primary extension
 
-The extension tests whether the interest-rate factor is stable across monetary regimes and whether its pricing content survives decomposition into policy and central-bank information components.
+The extension tests whether the interest-rate factor is stable after the
+publication sample and across monetary regimes, and whether any pricing content
+survives weak-factor and comparator-model diagnostics.
 
 The extension is not designed to prove that the original paper is wrong. It can produce five legitimate outcomes.
 
 1. The original result is stable and survives all extensions.
 2. The result survives but only for specific anomaly sets.
 3. The result is regime-dependent.
-4. The aggregate short-rate innovation is primarily an information or macro-news proxy.
-5. The result is too sensitive to weak-factor inference, inaccessible inputs, or a narrow sample to support a broad conclusion.
+4. The result is too sensitive to weak-factor inference, inaccessible inputs, or a narrow sample to support a broad conclusion.
+5. The optional announcement-based decomposition motivates a separate appendix or paper only after event data and component diagnostics are available.
 
-## Confirmatory hypotheses
+## Replication target and confirmatory hypotheses
 
-### H1 Baseline replication
+### R1 Baseline replication target
 
-The market and short-rate two-factor model materially reduces cross-sectional pricing errors relative to the CAPM for the article's joint anomaly portfolios.
+The registered article statistics are recovered within their declared tolerances
+after source-compatible inputs and generated artifacts exist.
+
+### H1 Incremental pricing content
+
+The short-rate factor produces economically meaningful incremental pricing
+performance relative to registered comparator models.
 
 ### H2 Temporal stability
 
@@ -30,17 +38,20 @@ The short-rate risk price and the cross-sectional pattern of short-rate betas ar
 
 ### H3 Regime invariance
 
-The short-rate risk price and factor loadings do not vary across conventional policy, effective-lower-bound policy, quantitative easing, normalisation, pandemic policy, and inflation tightening.
+Factor construction, portfolio betas, risk prices, pricing errors, and
+interpretable fit remain within numerical equivalence bounds across conventional
+policy, effective-lower-bound policy, quantitative easing, normalisation,
+pandemic policy, and inflation tightening.
 
-### H4 Shock sufficiency
+### H4 Weak-factor strength
 
-An aggregate AR innovation in the short rate is sufficient. Separating policy and central-bank information components does not materially improve pricing performance or alter interpretation.
+The short-rate beta column has enough dispersion, rank contribution, and robust
+identification strength to support a pricing interpretation.
 
 ## Falsification rules
 
 - Reject a replication claim if the exact published target cannot be linked to the same data definition and estimator.
-- Reject stability if joint tests show economically meaningful regime interactions after multiple-testing adjustment.
-- Reject shock sufficiency if decomposed shocks have different signs, risk prices, or explanatory power and the aggregate factor masks those differences.
+- Reject stability if beta interactions, regime-specific risk prices, or pricing-error comparisons exceed numerical equivalence bounds after multiple-testing adjustment.
 - Treat a factor as weak when beta dispersion, rank diagnostics, or misspecification-robust inference fail declared thresholds.
 - Do not substitute statistical significance for economic relevance.
 

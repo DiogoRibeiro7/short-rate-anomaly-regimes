@@ -99,3 +99,20 @@
 
 - Table and figure architecture pass complete.
 - Baseline result writing is blocked because frozen baseline result artifacts do not exist.
+
+## 2026-07-31 Manuscript review corrections
+
+- Corrected missing-input terminology: blocked audits are no longer described as not reproducible.
+- Fixed the short-rate innovation timing convention so the return regression uses the same-month AR residual with an explicit lag in the innovation equation.
+- Clarified that the benchmark second pass is a single OLS cross-sectional regression of average returns on full-sample estimated betas, not a generic repeated monthly Fama-MacBeth procedure.
+- Split the replication target from the substantive incremental-pricing hypothesis.
+- Reduced the main paper scope to baseline replication, post-publication evidence, monetary-regime stability, weak-factor diagnostics, and model comparison.
+- Moved the policy-information decomposition to an optional appendix design until event data, monthly component artifacts, and component-strength diagnostics exist.
+- Separated regime stability of factor construction, portfolio betas, risk prices, pricing errors, and fit.
+- Added numerical equivalence bounds before observing extension results.
+- Removed main-text repository-path source labels and replaced the prose-in-a-box data-flow figure with a diagrammatic flow.
+
+## Gate Status
+
+- Review corrections complete.
+- Baseline result writing remains blocked until frozen baseline result artifacts exist.

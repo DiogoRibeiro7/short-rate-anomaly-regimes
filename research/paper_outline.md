@@ -2,7 +2,7 @@
 
 ## Abstract
 
-State the replication status first. Then state the temporal, regime, and shock-decomposition results. Avoid a causal claim unless high-frequency identification supports it.
+State the replication status first. Then state the temporal, regime, weak-factor, and model-comparison results. Keep policy-information decomposition in the appendix unless event data and component-strength diagnostics support a separate contribution.
 
 ## 1 Introduction
 
