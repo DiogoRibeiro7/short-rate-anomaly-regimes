@@ -9,7 +9,18 @@
 \setlength{\emergencystretch}{2em}
 
 \title{Short Term Interest Rate Innovations Across Monetary Regimes}
-\author{Diogo Ribeiro}
+\makeatletter
+\newcommand{\inst}[1]{\textsuperscript{#1}}
+\newcommand{\orcidID}[1]{\textsuperscript{\href{https://orcid.org/#1}{ORCID: #1}}}
+\newcommand{\authorrunning}[1]{}
+\newcommand{\institute}[1]{\g@addto@macro\@author{\\[0.75em]\small #1}}
+\makeatother
+\author{Diogo Ribeiro\inst{1,2,*}\orcidID{0009-0001-2022-7072}}
+\authorrunning{D. Ribeiro}
+\institute{Department of Data Science and Research, MySense, London, \MakeUppercase{United Kingdom}.\\[0.35em]
+School of Media Arts and Design, Polytechnic of Porto\\
+PORTUGAL.\\
+\inst{*}\textit{Corresponding Author: \href{mailto:dfr@esmad.ipp.pt}{dfr@esmad.ipp.pt}}}
 \date{Draft}
 
 \newcommand{\artifact}[1]{\path{#1}}

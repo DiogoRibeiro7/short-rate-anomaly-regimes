@@ -242,3 +242,29 @@ def test_manuscript_checks_ignore_tabular_layout_widths(tmp_path: Path) -> None:
         )
         == []
     )
+
+
+def test_manuscript_checks_ignore_author_affiliation_metadata(tmp_path: Path) -> None:
+    manuscript_path = tmp_path / "paper.tex"
+    artifact_map_path = tmp_path / "map.csv"
+    artifact = tmp_path / "artifact.csv"
+    artifact.write_text("x\n", encoding="utf-8")
+    artifact_map_path.write_text(
+        f"artifact_id,path,description\nartifact,{artifact.as_posix()},Fixture artifact\n",
+        encoding="utf-8",
+    )
+    manuscript_path.write_text(
+        "\\title{Clean Title}\n"
+        "\\author{Diogo Ribeiro\\inst{1,2,*}\\orcidID{0009-0001-2022-7072}}\n"
+        "\\authorrunning{D. Ribeiro}\n"
+        "\\institute{Department A \\and Department B}\n",
+        encoding="utf-8",
+    )
+
+    assert (
+        validate_manuscript(
+            manuscript_path=manuscript_path,
+            artifact_map_path=artifact_map_path,
+        )
+        == []
+    )
