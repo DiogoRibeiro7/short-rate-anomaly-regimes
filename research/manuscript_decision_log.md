@@ -116,3 +116,20 @@
 
 - Review corrections complete.
 - Baseline result writing remains blocked until frozen baseline result artifacts exist.
+
+## 2026-07-31 Empirical decision contracts
+
+- Replaced raw short-rate risk-price equivalence with scale-invariant rate-attributable fitted-premium equivalence.
+- Added `research/economic_thresholds.md` to define H1 materiality against the strongest registered comparator and to justify primary equivalence bounds.
+- Added `research/short_rate_series_registry.csv` with reconstruction series codes, rate concepts, monthly aggregation, units, missing-data rules, seasonal-adjustment status, vintage policy, and transformation rules for federal funds and Treasury-bill candidates.
+- Added `research/portfolio_continuity_plan.csv` and chose full security-level reconstruction for post-publication continuity of all seven anomaly families.
+- Added `research/regime_registry.csv` with regime names, dates, instruments, transition rules, minimum observations, and boundary-shift checks.
+- Added `research/fit_metric_contract.md` to define the article-fit priority and no-intercept pseudo-fit fallback mechanically.
+- Added `research/inference_contract.md` to define Shanken use, bootstrap unit, repetitions, block-length fallback, multiplicity families, equivalence confidence level, and weak-factor failure gates.
+- Decomposed the replication target into `R1a` through `R1f`.
+- Replaced the text-arrow data-flow display with a TikZ diagram.
+
+## Gate Status
+
+- Empirical decision contracts complete as pre-analysis specifications.
+- Baseline result writing remains blocked until source-compatible inputs and generated result artifacts exist.

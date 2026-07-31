@@ -22,15 +22,19 @@ The extension is not designed to prove that the original paper is wrong. It can 
 
 ## Replication target and confirmatory hypotheses
 
-### R1 Baseline replication target
+### R1 Baseline replication targets
 
 The registered article statistics are recovered within their declared tolerances
-after source-compatible inputs and generated artifacts exist.
+after source-compatible inputs and generated artifacts exist. The target is
+decomposed into short-rate innovation equations, first-pass betas,
+cross-sectional risk prices, pricing errors and fit, comparator-model results,
+and supplementary robustness tables.
 
 ### H1 Incremental pricing content
 
 The short-rate factor produces economically meaningful incremental pricing
-performance relative to registered comparator models.
+performance relative to the strongest registered non-short-rate comparator on
+the common asset-date intersection.
 
 ### H2 Temporal stability
 
@@ -38,7 +42,7 @@ The short-rate risk price and the cross-sectional pattern of short-rate betas ar
 
 ### H3 Regime invariance
 
-Factor construction, portfolio betas, risk prices, pricing errors, and
+Factor construction, portfolio betas, fitted premia, pricing errors, and
 interpretable fit remain within numerical equivalence bounds across conventional
 policy, effective-lower-bound policy, quantitative easing, normalisation,
 pandemic policy, and inflation tightening.

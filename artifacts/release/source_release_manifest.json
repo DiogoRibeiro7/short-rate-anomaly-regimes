@@ -1,6 +1,6 @@
 {
   "archive_path": "artifacts/release/source_release.zip",
-  "archive_sha256": "25b66a3be163af5eb9a6fbad809aeb069c6cfab96e4c0bf27055b82d33e4990f",
+  "archive_sha256": "7eff14df085fb641d2bb5cef0c22e3957b3fe6d150bf0626f7215dcc25a4ebe3",
   "excluded": [
     "prompts/",
     "references/private/",
@@ -9,7 +9,7 @@
     "artifacts/environment/manifest.json",
     "data/catalog.duckdb"
   ],
-  "file_count": 175,
+  "file_count": 181,
   "members": [
     "CITATION.cff",
     "CONTRIBUTING.md",
@@ -106,7 +106,10 @@
     "research/data_dictionary.md",
     "research/data_flow_diagram.md",
     "research/decision_log.md",
+    "research/economic_thresholds.md",
+    "research/fit_metric_contract.md",
     "research/hypothesis_registry.csv",
+    "research/inference_contract.md",
     "research/latex_table_figure_shells.tex",
     "research/manuscript_artifact_map.csv",
     "research/manuscript_change_plan.md",
@@ -116,10 +119,13 @@
     "research/milestones.md",
     "research/original_framework_audit.md",
     "research/paper_outline.md",
+    "research/portfolio_continuity_plan.csv",
     "research/regime_policy_sources.csv",
+    "research/regime_registry.csv",
     "research/replication_protocol.md",
     "research/research_design.md",
     "research/shock_dataset_selection.csv",
+    "research/short_rate_series_registry.csv",
     "research/statistical_protocol.md",
     "research/table_figure_generation_contracts.md",
     "research/table_target_manifest.csv",

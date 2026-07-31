@@ -52,6 +52,12 @@ squared pricing error, mean absolute pricing error, maximum absolute pricing
 error, cross-sectional fit, and joint pricing-error tests when the estimator
 justifies the test.
 
+The primary materiality comparison is against the strongest registered
+non-short-rate comparator by baseline cross-sectional RMSE on the common
+asset-date intersection. H1 requires RMSE, MAE, and maximum absolute
+pricing-error improvements to pass the thresholds in
+`research/economic_thresholds.md`.
+
 ## Weak-Factor Analysis
 
 A high cross-sectional fit is not sufficient when factor betas have little
@@ -67,12 +73,12 @@ dispersion or the factor is weakly identified. Report
 ## Structural Change
 
 Use both declared and estimated break tests. Regime analysis separates stability
-of factor construction, portfolio betas, cross-sectional risk prices, pricing
-errors, and cross-sectional fit.
+of factor construction, portfolio betas, rate-attributable fitted premia,
+pricing errors, and cross-sectional fit.
 
 - Chow tests at predeclared policy boundaries;
 - pooled time-series regime interaction tests for beta stability;
-- regime-specific or locally estimated second-pass models for risk-price
+- regime-specific or locally estimated second-pass models for fitted-premium
   stability;
 - pricing-error and fit comparisons on common asset-date intersections;
 - pooled regime interactions with a single omitted baseline category;
@@ -140,22 +146,34 @@ For every statistically significant change report
 
 The following bounds are fixed before extension results are observed:
 
-- short-rate risk-price change: at most 0.25 monthly percentage points;
-- beta-dispersion change: at most 25 percent of the baseline value;
+- maximum rate-attributable fitted-premium change: at most 0.25 monthly
+  percentage points;
+- fitted-premium dispersion change: at most 25 percent of the baseline-regime
+  value;
 - cross-sectional RMSE deterioration: at most 10 percent of the baseline value;
 - maximum absolute pricing-error deterioration: at most 0.25 monthly percentage
   points;
 - cross-sectional fit deterioration: at most 0.10 when the fit statistic remains
   interpretable.
 
+The rate-attributable fitted premium is
+`pi_rate[i, s] = beta_rate[i, s] * lambda_rate[s]`. Equivalence is not evaluated
+with an absolute raw risk-price bound because rescaling the short-rate factor
+rescales beta and lambda without changing fitted returns.
+
 ## Method-To-Hypothesis Map
 
 | Claim | Primary method | Decision rule |
 |---|---|---|
-| R1 | Table-level audit against registered article statistics | Replication requires recovery within declared tolerances after inputs and artifacts exist. |
-| H1 | No-intercept two-pass OLS with Shanken correction and common-intersection comparator models | Pricing-error improvement must pass the registered materiality standard. |
+| R1a | Short-rate innovation audit | Replication requires recovery within declared tolerances after inputs and artifacts exist. |
+| R1b | First-pass beta audit | Replication requires recovery within declared tolerances after inputs and artifacts exist. |
+| R1c | Cross-sectional risk-price audit | Replication requires recovery within declared tolerances after inputs and artifacts exist. |
+| R1d | Pricing-error and fit audit | Replication requires recovery within declared tolerances after inputs and artifacts exist. |
+| R1e | Comparator-model audit | Replication requires recovery within declared tolerances after inputs and artifacts exist. |
+| R1f | Supplementary robustness audit | Replication requires recovery within declared tolerances after inputs and artifacts exist. |
+| H1 | No-intercept two-pass OLS with Shanken correction and common-intersection comparator models | RMSE, MAE, and maximum pricing-error improvement must pass materiality thresholds against the strongest comparator. |
 | H2 | Frozen and refitted post-publication two-pass evaluations | Sign, magnitude, and pricing-error compatibility must all hold. |
-| H3 | Beta interaction tests plus regime-specific second-pass pricing and error comparisons | Stability requires all dimensions to remain inside numerical bounds. |
+| H3 | Beta interaction tests plus regime-specific fitted-premium and error comparisons | Stability requires all dimensions to remain inside numerical bounds. |
 | H4 | Beta dispersion, rank, singular-value, and robust-inference diagnostics | Pricing interpretation requires all predeclared strength gates to pass. |
 | E1 | Unknown-break tests | Exploratory only; does not confirm regime stability. |
 | O1 | Optional monthly component spanning, pricing, and strength tests | Appendix-only unless event data and component-strength gates pass. |

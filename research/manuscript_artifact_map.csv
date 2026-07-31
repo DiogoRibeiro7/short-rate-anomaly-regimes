@@ -28,3 +28,9 @@ statistical_protocol,research/statistical_protocol.md,Predeclared econometric me
 table_figure_map,research/manuscript_table_figure_map.csv,Manuscript table and figure architecture
 table_figure_contracts,research/table_figure_generation_contracts.md,Generation contracts for manuscript outputs
 latex_shells,research/latex_table_figure_shells.tex,LaTeX shells for manuscript tables and figures
+economic_thresholds,research/economic_thresholds.md,Predeclared materiality and equivalence thresholds
+short_rate_series_registry,research/short_rate_series_registry.csv,Short-rate source series and transformation registry
+portfolio_continuity_plan,research/portfolio_continuity_plan.csv,Post-publication portfolio continuity path decisions
+regime_registry,research/regime_registry.csv,Predeclared monetary-regime names dates and rules
+fit_metric_contract,research/fit_metric_contract.md,Cross-sectional fit metric definition contract
+inference_contract,research/inference_contract.md,Inference resampling multiplicity and weak-factor gate contract
