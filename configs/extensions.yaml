@@ -16,8 +16,11 @@ data_freeze:
 
 shock_decomposition:
   enabled: true
+  selected_dataset_id: jarocinski_karadi_fed_shocks_update_202401
+  selected_dataset_source: https://github.com/marekjarocinski/jkshocks_update_fed_202401
+  raw_event_path: data/raw/shocks/jarocinski_karadi_fed_events.csv
   identification:
-    primary: high_frequency_rate_equity_sign_decomposition
+    primary: poor_mans_sign_restriction
     alternatives:
       - futures_surprise_only
       - external_instrument_svar

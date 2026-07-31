@@ -170,6 +170,9 @@ class ShockDecompositionConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     enabled: bool
+    selected_dataset_id: str
+    selected_dataset_source: str
+    raw_event_path: str
     identification: ShockIdentificationConfig
     event_window_minutes: int = Field(gt=0)
     aggregation: str

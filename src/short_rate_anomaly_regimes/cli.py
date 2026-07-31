@@ -37,6 +37,7 @@ from short_rate_anomaly_regimes.reporting.audit import (
     write_audit_json,
     write_replication_report,
 )
+from short_rate_anomaly_regimes.shocks.decomposition import write_blocked_shock_report
 
 app = typer.Typer(no_args_is_help=True)
 console = Console()
@@ -448,6 +449,34 @@ def run_regimes(
         )
     raise ReplicationBlockError(
         "Required regime inputs exist, but source-specific regime panel assembly is not frozen"
+    )
+
+
+@app.command("shock-decomposition")
+def shock_decomposition(
+    config: ConfigPathOption = Path("configs/extensions.yaml"),
+    output: OutputPathOption = Path("reports/generated/shock_decomposition_report.md"),
+) -> None:
+    """Run the high-frequency shock-decomposition gate."""
+    validated = load_extension_config(config)
+    shock_config = validated.shock_decomposition
+    required_paths = [
+        Path("research/shock_dataset_selection.csv"),
+        Path(shock_config.raw_event_path),
+    ]
+    missing_paths = tuple(path for path in required_paths if not path.exists())
+    if missing_paths:
+        write_blocked_shock_report(
+            output_path=output,
+            missing_inputs=missing_paths,
+            selected_dataset=shock_config.selected_dataset_id,
+        )
+        raise ReplicationBlockError(
+            "Wrote blocked shock decomposition report; event-level high-frequency "
+            f"shock inputs are missing: {', '.join(str(path) for path in missing_paths)}"
+        )
+    raise ReplicationBlockError(
+        "Selected shock event data exist, but source-study reproduction targets are not frozen"
     )
 
 

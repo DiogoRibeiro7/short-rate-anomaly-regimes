@@ -19,7 +19,7 @@ Latest validation was performed on 31 July 2026 from the repository checkout on 
 - `poetry run pytest` with `--cov-fail-under=95`
 - `poetry run pre-commit run --all-files`
 
-The current test suite contains 191 tests. All 191 passed. The measured scaffold coverage is 95.63 percent because milestone-specific estimators and data clients are intentionally represented by explicit gates until their evidence inputs are completed.
+The current test suite contains 198 tests. All 198 passed. The measured scaffold coverage is 95.69 percent because milestone-specific estimators and data clients are intentionally represented by explicit gates until their evidence inputs are completed.
 
 ## Current quality status
 
@@ -39,6 +39,7 @@ The current test suite contains 191 tests. All 191 passed. The measured scaffold
 - Robustness tests cover weak-factor rank and singular-value diagnostics, beta dispersion, factor spanning, irrelevant-factor flags, Holm correction within robustness families, economic-change flags, predeclared robustness classification, and blocked report generation.
 - Temporal-extension tests cover locked-vintage panel assembly, revised-history audits, reduced extension universes, December 2013 frozen-parameter pricing errors, pre/post pattern diagnostics, expanding and rolling window schedules, boundary figures, and blocked report generation.
 - Monetary-regime tests cover verified regime tables, boundary-shift sensitivity, split-sample eligibility, pooled regime interactions, joint Wald tests, Chow and Quandt-Andrews breaks, Bai-Perron-style multiple-break selection, CUSUM diagnostics, Holm correction, stability classification, figures, and blocked report generation.
+- Shock-decomposition tests cover event-level policy/information/ambiguous component preservation, no-meeting monthly aggregation, multiple-meeting flags, source-study summary audits, asset-pricing shock specifications, spanning correlations, policy-language enforcement, output writing, and blocked report generation.
 
 ## Scientific status
 

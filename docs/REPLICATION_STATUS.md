@@ -15,6 +15,7 @@ This project has not produced empirical replication results yet. The current rep
 - Robustness and weak-factor diagnostics are implemented for beta-matrix rank, singular values, beta dispersion, factor spanning, irrelevant-factor flags, Holm correction within registered robustness families, economic-change flags, and predeclared classification as `robust`, `conditionally_robust`, `fragile`, or `unidentified`. The current robustness report is `unidentified` because baseline generated artifacts are absent.
 - Temporal-extension scaffolding is implemented for locked baseline vintages, post-2013 extension vintages, revised-history audit tables, reduced extension universes, December 2013 frozen-parameter pricing checks, expanding and rolling window plans, and December 2013 boundary figures. The current temporal report is `blocked_missing_input` because compatible baseline and extension panels are absent.
 - Monetary-regime stability code is implemented for source-recorded regime tables, deterministic labels, boundary-shift sensitivity, split-sample eligibility, pooled regime interactions, joint Wald tests, Chow tests, Quandt-Andrews scans, Bai-Perron-style break selection, CUSUM diagnostics, Holm correction, stability verdicts, and report/figure writers. The current regime report is `blocked_missing_input` because baseline factors and extension panels are absent.
+- Shock-decomposition code is implemented for the selected Jarocinski-Karadi updated Fed shock source, rejected-candidate records, event-level sign decomposition into policy, central-bank-information, and ambiguous components, no-meeting monthly aggregation, source-study statistic audits, asset-pricing factor design, spanning correlations, and policy-language enforcement. The current shock report is `blocked_missing_input` because the event-level shock file is absent and redistribution terms still need to be recorded.
 - Unverified empirical steps are deliberately gated with explicit exceptions.
 - Strict replication is blocked until exact source definitions and required data inputs are legally obtained and recorded. The final article PDF and publisher supplement ZIP are present locally and hashed.
 - The current article extraction status is documented in `research/article_method_extraction.md`.
@@ -33,6 +34,7 @@ The following inputs are still marked as missing or pending in `research/data_ac
 - generated baseline and robustness specification cells required to classify empirical robustness beyond `unidentified`.
 - source-compatible post-2013 portfolio and factor panels required for temporal extension without revising the locked baseline vintage.
 - baseline factor outputs and temporal-extension monthly panels required before monetary-regime stability can be estimated.
+- selected Jarocinski-Karadi high-frequency event file and redistribution review required before shock decomposition can produce monthly factors.
 
 ## Status Labels
 

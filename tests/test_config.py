@@ -30,6 +30,10 @@ def test_all_project_configs_load() -> None:
     assert extension_config.data_freeze.latest_common_month == "2026-06"
     assert extension_config.data_freeze.revision_policy == "audit_separately"
     assert extension_config.shock_decomposition.enabled is True
+    assert (
+        extension_config.shock_decomposition.selected_dataset_id
+        == "jarocinski_karadi_fed_shocks_update_202401"
+    )
     assert regime_config.minimum_regime_observations == 36
     assert reporting_config.include_environment_manifest is True
     assert load_project_config(Path("configs/baseline.yaml")).model_dump()
