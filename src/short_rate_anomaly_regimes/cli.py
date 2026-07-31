@@ -15,6 +15,7 @@ from short_rate_anomaly_regimes.config import (
     load_extension_config,
     load_project_config,
     load_regime_config,
+    load_reporting_config,
 )
 from short_rate_anomaly_regimes.data.acquisition import (
     download_fred_series,
@@ -38,6 +39,7 @@ from short_rate_anomaly_regimes.reporting.audit import (
     write_audit_json,
     write_replication_report,
 )
+from short_rate_anomaly_regimes.reporting.manuscript import write_blocked_manuscript_report
 from short_rate_anomaly_regimes.shocks.decomposition import write_blocked_shock_report
 
 app = typer.Typer(no_args_is_help=True)
@@ -508,10 +510,35 @@ def out_of_sample(
 
 
 @app.command("build-report")
-def build_report(config: ConfigPathOption) -> None:
+def build_report(
+    config: ConfigPathOption,
+    output: OutputPathOption = Path("reports/generated/manuscript_output_report.md"),
+) -> None:
     """Build tables, figures, and the replication report."""
-    del config
-    raise NotImplementedError("Complete the relevant empirical milestones first")
+    load_reporting_config(config)
+    required_paths = [
+        Path("paper/manuscript.tex"),
+        Path("research/manuscript_artifact_map.csv"),
+        Path("artifacts/audit/table_replication.csv"),
+        Path("reports/generated/replication_report.md"),
+        Path("reports/generated/robustness_report.md"),
+        Path("reports/generated/temporal_extension_report.md"),
+        Path("reports/generated/regime_report.md"),
+        Path("reports/generated/shock_decomposition_report.md"),
+        Path("reports/generated/out_of_sample_report.md"),
+        Path("data/processed/extension/monthly_panel.parquet"),
+        Path("data/processed/factors/short_rate_factors.parquet"),
+    ]
+    missing_paths = tuple(path for path in required_paths if not path.exists())
+    if missing_paths:
+        write_blocked_manuscript_report(output_path=output, missing_inputs=missing_paths)
+        raise ReplicationBlockError(
+            "Wrote blocked manuscript report; manuscript outputs require frozen empirical "
+            f"artifacts: {', '.join(str(path) for path in missing_paths)}"
+        )
+    raise ReplicationBlockError(
+        "Required manuscript inputs exist, but final table and figure rendering is not frozen"
+    )
 
 
 def _temporal_freeze_from_config(config: ExtensionConfig) -> TemporalFreeze:

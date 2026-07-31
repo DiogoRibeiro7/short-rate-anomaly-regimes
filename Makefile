@@ -15,6 +15,7 @@ typecheck:
 
 manuscript-check:
 	poetry run python scripts/verify_title.py
+	poetry run python scripts/verify_manuscript.py
 
 config-check:
 	poetry run srar validate-config --config configs/baseline.yaml

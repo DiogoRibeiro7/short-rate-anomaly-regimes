@@ -104,8 +104,18 @@ reports/generated/**
 !reports/generated/regime_report.md
 !reports/generated/shock_decomposition_report.md
 !reports/generated/out_of_sample_report.md
+!reports/generated/manuscript_output_report.md
 paper/build/**
 !paper/build/.gitkeep
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.fdb_latexmk
+paper/*.fls
+paper/*.log
+paper/*.out
+paper/*.pdf
+paper/*.synctex.gz
 data/catalog.duckdb
 
 # Never commit restricted source files or copyrighted articles

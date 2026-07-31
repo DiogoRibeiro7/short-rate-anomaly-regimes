@@ -1,0 +1,15 @@
+artifact_id,path,description
+baseline_config,configs/baseline.yaml,Baseline sample dates and strict replication configuration
+extension_config,configs/extensions.yaml,Temporal extension and out-of-sample design configuration
+regime_config,configs/regimes.yaml,Deterministic monetary-regime proposal and sensitivity rules
+table_targets,research/table_target_manifest.csv,Frozen table-level replication targets
+hypothesis_registry,research/hypothesis_registry.csv,Pre-registered replication and extension hypotheses
+data_access,research/data_access_matrix.csv,Input availability and source-access status
+article_manifest,artifacts/evidence/article_manifest.json,Private article and supplement hash metadata
+replication_audit,artifacts/audit/table_replication.csv,Table-level replication audit output
+replication_report,reports/generated/replication_report.md,Baseline replication report
+robustness_report,reports/generated/robustness_report.md,Robustness and weak-factor report
+temporal_report,reports/generated/temporal_extension_report.md,Temporal-extension report
+regime_report,reports/generated/regime_report.md,Monetary-regime stability report
+shock_report,reports/generated/shock_decomposition_report.md,High-frequency shock-decomposition report
+oos_report,reports/generated/out_of_sample_report.md,Out-of-sample falsification report

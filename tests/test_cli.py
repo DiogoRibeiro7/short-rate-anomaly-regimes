@@ -457,6 +457,20 @@ def test_out_of_sample_writes_blocked_report(tmp_path: Path) -> None:
     assert "must not be tuned after test errors are seen" in report
 
 
+def test_build_report_writes_blocked_manuscript_report(tmp_path: Path) -> None:
+    report_path = tmp_path / "manuscript_output_report.md"
+
+    result = CliRunner().invoke(
+        app,
+        ["build-report", "--config", "configs/reporting.yaml", "--output", str(report_path)],
+    )
+
+    assert result.exit_code == 1
+    assert report_path.is_file()
+    assert "blocked manuscript report" in str(result.exception)
+    assert "Verdict: `blocked_missing_input`" in report_path.read_text(encoding="utf-8")
+
+
 def test_show_milestones_command_lists_release_gate() -> None:
     runner = CliRunner()
 
@@ -471,7 +485,6 @@ def test_milestone_gated_cli_commands_report_not_implemented() -> None:
     runner = CliRunner()
     command_arguments = [
         ["run-baseline", "--config", "configs/baseline.yaml"],
-        ["build-report", "--config", "configs/reporting.yaml"],
     ]
 
     for arguments in command_arguments:

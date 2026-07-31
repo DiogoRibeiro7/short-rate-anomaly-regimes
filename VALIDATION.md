@@ -19,7 +19,7 @@ Latest validation was performed on 31 July 2026 from the repository checkout on 
 - `poetry run pytest` with `--cov-fail-under=95`
 - `poetry run pre-commit run --all-files`
 
-The current test suite contains 204 tests. All 204 passed. The measured scaffold coverage is 95.40 percent because milestone-specific estimators and data clients are intentionally represented by explicit gates until their evidence inputs are completed.
+The current test suite contains 209 tests. All 209 passed. The measured scaffold coverage is 95.30 percent because milestone-specific estimators and data clients are intentionally represented by explicit gates until their evidence inputs are completed.
 
 ## Current quality status
 
@@ -41,6 +41,7 @@ The current test suite contains 204 tests. All 204 passed. The measured scaffold
 - Monetary-regime tests cover verified regime tables, boundary-shift sensitivity, split-sample eligibility, pooled regime interactions, joint Wald tests, Chow and Quandt-Andrews breaks, Bai-Perron-style multiple-break selection, CUSUM diagnostics, Holm correction, stability classification, figures, and blocked report generation.
 - Shock-decomposition tests cover event-level policy/information/ambiguous component preservation, no-meeting monthly aggregation, multiple-meeting flags, source-study summary audits, asset-pricing shock specifications, spanning correlations, policy-language enforcement, output writing, and blocked report generation.
 - Out-of-sample tests cover frozen refit schedules, no-lookahead model forecasts, historical-mean and zero-return benchmarks, forecast vintages, RMSE/MAE/max-error/OOS-R2/rank metrics, top-minus-bottom rank accuracy, transparent model-confidence sets, output writing, and blocked report generation.
+- Manuscript tests cover title punctuation, numeric-claim artifact mappings, declared artifact existence, restricted causal-language sections, blocked manuscript reports, and the repository manuscript validation script.
 
 ## Scientific status
 

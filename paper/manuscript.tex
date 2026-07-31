@@ -5,39 +5,141 @@
 \usepackage{lmodern}
 
 \title{Short Term Interest Rate Innovations Across Monetary Regimes}
-\author{Diogo}
+\author{Diogo Ribeiro}
 \date{Draft}
+
+\newcommand{\artifact}[1]{\texttt{#1}}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-This manuscript is generated only after the replication and extension artefacts are frozen. The abstract must state the replication status before the extension findings.
+This manuscript extends the framework of \citet{maio_santaclara_2017} only after
+the replication and extension artifacts are frozen. The current repository state
+is a reproducible scaffold: the article and supplement are hashed locally, but
+baseline replication, temporal extension, regime stability, shock decomposition,
+and out-of-sample falsification remain blocked by missing empirical inputs.
 \end{abstract}
 
 \section{Introduction}
 
+\citet{maio_santaclara_2017} study short-term interest-rate innovations and stock
+market anomaly returns. This paper treats their published article as the starting
+point, then separates exact replication, documented reconstruction, and new
+extension evidence. The present draft contains no empirical finding not generated
+from repository artifacts.
+
 \section{Original Framework}
+
+The baseline asset-pricing representation follows an intertemporal factor model:
+\[
+E[R_i^e] = \lambda_0 + \beta_{i,m}\lambda_m + \beta_{i,r}\lambda_r + \alpha_i.
+\]
+Here \(R_i^e\) is an excess return, \(\beta_{i,m}\) is the market loading,
+\(\beta_{i,r}\) is the loading on a short-rate innovation, and \(\alpha_i\) is a
+pricing error. The short-rate residual is described as a rate innovation, not as
+an identified monetary-policy object.
 
 \section{Replication Design}
 
+The strict baseline sample is frozen from 1972-01 through 2013-12. % artifact: configs/baseline.yaml
+The source-target map and table-level tolerances are stored in
+\artifact{research/table_target_manifest.csv}. Replication labels distinguish
+reproduced, approximately reproduced, missing-input, contradicted, and not-attempted
+targets.
+
 \section{Baseline Replication Results}
+
+Baseline empirical results are blocked until factor, portfolio, first-pass, and
+cross-sectional artifacts exist. The current table-level audit marks the frozen
+targets as missing-input rows rather than as contradictions. % artifact: artifacts/audit/table_replication.csv
 
 \section{Weak Factor and Robustness Analysis}
 
+Weak-factor and robustness diagnostics are implemented, but the robustness report
+is currently unidentified because generated baseline artifacts are absent.
+Robustness conclusions must use the registered families in
+\artifact{configs/extensions.yaml}.
+
 \section{Temporal Extension}
+
+The post-publication extension freezes the original baseline through 2013-12 and % artifact: configs/extensions.yaml
+starts the extension in 2014-01. % artifact: configs/extensions.yaml
+The current temporal report is blocked because compatible post-baseline panels
+have not been generated.
 
 \section{Monetary Regimes}
 
+Regime dates are deterministic proposals verified against recorded policy-action
+sources and evaluated with boundary sensitivity. The regime report is currently
+blocked because the required baseline factors and temporal-extension panel are
+absent.
+
 \section{Policy and Information Shocks}
+
+The high-frequency extension may use the identified component labelled as a policy
+shock only inside this identification section and generated shock reports.
+Jarocinski--Karadi updated Federal Reserve shocks are selected as the primary
+source candidate, while alternatives are recorded in
+\artifact{research/shock_dataset_selection.csv}. The AR residual remains a rate
+innovation.
 
 \section{Out of Sample Results}
 
+The out-of-sample design freezes an initial training endpoint at 1999-12 and an % artifact: configs/extensions.yaml
+annual refit schedule.
+Forecast records must store model vintage, training dates, factor definition, and
+asset universe. Negative out-of-sample performance will be preserved without
+retuning the confirmatory specification.
+
 \section{Interpretation}
+
+Evidence will be classified as confirmation, narrowing, reinterpretation,
+generalisation, or non-reproducibility due to missing inputs. The current state is
+non-reproducibility due to missing inputs, not evidence against the article.
 
 \section{Limitations}
 
+Unavailable inputs include exact public archive versions, author or WRDS portfolio
+files, source-compatible extension panels, high-frequency event files, and frozen
+generated result cells. These limitations are recorded in
+\artifact{research/data_access_matrix.csv}.
+
+\section{Reproducibility Statement}
+
+All manuscript claims must be generated from versioned code, typed configuration,
+and machine-readable artifacts. The validation status is recorded in
+\artifact{VALIDATION.md}.
+
+\section{Data Access Statement}
+
+Restricted article and supplement files remain local-only. The committed repository
+contains hashes and metadata but not copyrighted source documents or restricted raw
+data.
+
+\section{Hypothesis Registry}
+
+Confirmatory and extension hypotheses are listed in
+\artifact{research/hypothesis_registry.csv}. Hypotheses cannot be rewritten after
+observing generated errors or instability diagnostics.
+
+\section{Robustness Appendix}
+
+The robustness appendix must be generated from
+\artifact{reports/generated/robustness_report.md} and the registered robustness
+tables once empirical artifacts exist.
+
+\section{Table-Level Replication Appendix}
+
+The table-level replication appendix must be generated from
+\artifact{artifacts/audit/table_replication.csv}. No baseline verdict can include
+extension results.
+
 \section{Conclusion}
+
+The repository currently provides a professional, tested replication scaffold and
+explicit missing-input reports. Empirical conclusions will be added only when the
+required artifacts are generated and mapped to manuscript claims.
 
 \bibliographystyle{apalike}
 \bibliography{references}
