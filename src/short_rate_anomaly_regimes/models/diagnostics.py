@@ -34,6 +34,7 @@ class WeakFactorReport:
     singular_values: tuple[float, ...]
     condition_number: float
     beta_dispersion: dict[str, float]
+    standardized_exposure_dispersion: dict[str, float]
     factor_spanning: pd.DataFrame
     irrelevant_factors: tuple[str, ...]
     unidentified: bool
@@ -76,6 +77,8 @@ def weak_factor_diagnostics(*, betas: pd.DataFrame, factors: pd.DataFrame) -> pd
     }
     for factor_name, dispersion in report.beta_dispersion.items():
         payload[f"beta_dispersion_{factor_name}"] = dispersion
+    for factor_name, dispersion in report.standardized_exposure_dispersion.items():
+        payload[f"standardized_exposure_dispersion_{factor_name}"] = dispersion
     return pd.Series(payload)
 
 
@@ -105,9 +108,20 @@ def weak_factor_report(
         str(column): float(pd.to_numeric(betas[column], errors="raise").std(ddof=1))
         for column in betas.columns
     }
+    factor_std = {
+        str(column): float(pd.to_numeric(factors[column], errors="raise").dropna().std(ddof=1))
+        for column in betas.columns
+    }
+    standardized_exposures = betas.astype(float).copy()
+    for column in standardized_exposures.columns:
+        standardized_exposures[column] = standardized_exposures[column] * factor_std[str(column)]
+    standardized_exposure_dispersion = {
+        str(column): float(standardized_exposures[column].std(ddof=1))
+        for column in standardized_exposures.columns
+    }
     irrelevant_factors = tuple(
         factor
-        for factor, dispersion in beta_dispersion.items()
+        for factor, dispersion in standardized_exposure_dispersion.items()
         if dispersion <= irrelevant_dispersion_threshold
     )
     spanning = factor_spanning_tests(factors.loc[:, list(betas.columns)])
@@ -119,6 +133,7 @@ def weak_factor_report(
         singular_values=tuple(float(value) for value in singular_values),
         condition_number=condition_number,
         beta_dispersion=beta_dispersion,
+        standardized_exposure_dispersion=standardized_exposure_dispersion,
         factor_spanning=spanning,
         irrelevant_factors=irrelevant_factors,
         unidentified=unidentified,
@@ -296,6 +311,7 @@ def write_robustness_outputs(
             "singular_values": list(weak_report.singular_values),
             "condition_number": weak_report.condition_number,
             "beta_dispersion": weak_report.beta_dispersion,
+            "standardized_exposure_dispersion": weak_report.standardized_exposure_dispersion,
             "irrelevant_factors": list(weak_report.irrelevant_factors),
             "unidentified": weak_report.unidentified,
         },

@@ -9,13 +9,13 @@ regime_definition:
     - id: conventional_pre_elb
       start: "1972-01"
       end: "2008-11"
-    - id: effective_lower_bound_and_qe
+    - id: elb_qe
       start: "2008-12"
       end: "2015-11"
-    - id: first_normalisation
+    - id: normalisation
       start: "2015-12"
       end: "2020-02"
-    - id: pandemic_elb_and_qe
+    - id: pandemic_elb_qe
       start: "2020-03"
       end: "2022-02"
     - id: inflation_tightening

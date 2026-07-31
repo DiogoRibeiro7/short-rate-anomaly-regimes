@@ -45,7 +45,7 @@ asset_pricing:
       - ols_two_pass
       - gls_two_pass
       - fama_macbeth
-    include_zero_beta_intercept: true
+    include_zero_beta_intercept: false
     shanken_correction: true
     weak_factor_diagnostics: true
 

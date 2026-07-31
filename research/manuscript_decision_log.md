@@ -120,7 +120,7 @@
 ## 2026-07-31 Empirical decision contracts
 
 - Replaced raw short-rate risk-price equivalence with scale-invariant rate-attributable fitted-premium equivalence.
-- Added `research/economic_thresholds.md` to define H1 materiality against the strongest registered comparator and to justify primary equivalence bounds.
+- Added `research/economic_thresholds.md` to define H1 materiality against the ex ante CAPM comparator, retain strongest-observed comparators as secondary adversarial analysis, and justify primary equivalence bounds.
 - Added `research/short_rate_series_registry.csv` with reconstruction series codes, rate concepts, monthly aggregation, units, missing-data rules, seasonal-adjustment status, vintage policy, and transformation rules for federal funds and Treasury-bill candidates.
 - Added `research/portfolio_continuity_plan.csv` and chose full security-level reconstruction for post-publication continuity of all seven anomaly families.
 - Added `research/regime_registry.csv` with regime names, dates, instruments, transition rules, minimum observations, and boundary-shift checks.
@@ -133,3 +133,32 @@
 
 - Empirical decision contracts complete as pre-analysis specifications.
 - Baseline result writing remains blocked until source-compatible inputs and generated result artifacts exist.
+
+## 2026-07-31 Final design consistency and feasibility gate
+
+- Completed the final design consistency pass without estimating empirical
+  models.
+- Separated title-page metadata into current affiliation, former affiliation,
+  present address, corresponding-author email, and ORCID fields; confirmation
+  items are listed in `reports/final_design_gate_changelog.md`.
+- Expanded short-rate source status for FEDFUNDS, TB3MS, and DTB3 and aligned
+  manuscript Table 2 with the registry.
+- Added `reports/data_access_feasibility.md` and marked the post-2013 extension
+  blocked until CRSP, Compustat, linking-table access, source rules, and
+  redistribution constraints are confirmed.
+- Added `research/comparator_model_registry.csv`, froze CAPM as the ex ante
+  primary comparator, and moved strongest-observed comparator analysis to a
+  secondary adversarial role.
+- Added `research/bootstrap_contract.md` and removed unresolved conditional
+  bootstrap language from the inference contract.
+- Added `research/weak_factor_registry.csv` and replaced raw-beta scale gates
+  with standardized exposure and fitted-premium diagnostics.
+- Added `reports/citation_support_audit.md` and narrowed the Kenneth French
+  Data Library claim to availability, archives, and selected change notes.
+
+## Gate Status
+
+- Design consistency gate passes.
+- Empirical execution remains blocked at data acquisition, baseline table
+  generation, and post-2013 exact-continuation stages until required source
+  inputs and database access are available.

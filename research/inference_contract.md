@@ -17,13 +17,27 @@ weak-factor decision gates before empirical results are generated.
 
 ## Bootstrap
 
-- Primary bootstrap unit: moving blocks of monthly observations.
+- Primary bootstrap unit: calendar months in the aligned return-factor panel.
+- Bootstrap type: moving-block bootstrap with overlapping monthly blocks.
+- Primary block-length selector: Politis-White automatic block length applied
+  to the baseline market excess return and selected short-rate innovation.
+- Selector failure condition: fewer than 60 complete factor months, zero sample
+  variance, non-finite autocovariances, or a non-finite selected block length
+  outside 2 to 24 months.
+- Fallback block length: 12 monthly observations.
 - Default repetitions: 10,000.
-- Default block length: automatic monthly block length from the configured
-  serial-dependence rule; if the rule is unavailable, use twelve monthly
-  observations and label the choice.
-- Asset resampling is not used for confirmatory inference.
-- Table-target resampling is not used for confirmatory inference.
+- Random-seed policy: use the project seed and record the draw index range with
+  every generated artifact.
+- Joint resampling: factors, portfolio returns, short-rate series, and regime
+  labels are resampled jointly by month.
+- Recomputed stages: the short-rate innovation, all first-pass regressions, the
+  second-pass regression, fitted premia, pricing errors, fit metrics, and
+  equivalence statistics are recomputed in every draw.
+- Regime boundaries: confirmatory regime labels are fixed calendar labels; for
+  regime-specific inference, blocks are resampled within regime.
+- Missing observations: apply the frozen common-intersection rule after
+  resampling; no bootstrap imputation is allowed.
+- Asset and table-target resampling are not used for confirmatory inference.
 
 ## Equivalence Tests
 
@@ -51,12 +65,17 @@ The short-rate factor fails the confirmatory strength gate if any of the
 following occurs:
 
 - beta matrix rank is below the number of priced factors;
-- smallest singular value of the beta matrix is below 10 percent of the largest
-  singular value;
-- cross-sectional standard deviation of short-rate betas is below 10 percent of
-  the market-beta standard deviation on the same asset set;
-- condition number of the beta matrix exceeds 30;
+- cross-sectional standard deviation of standardized short-rate exposure
+  `beta_i_rate * standard_deviation(rate_innovation)` is below 10 percent of
+  the cross-sectional standard deviation of standardized market exposure
+  `beta_i_mkt * standard_deviation(market_factor)` on the same asset set;
+- the rate factor's residual standard deviation after projection on the other
+  priced factors is below 10 percent of the raw rate-factor standard deviation;
 - leave-one-family systems change the sign of the short-rate fitted-premium
   spread or remove the materiality classification;
 - robust-inference intervals include both economically positive and economically
   negative fitted-premium effects under the threshold contract.
+
+Singular values and condition numbers may be reported descriptively, but they
+are not separate confirmatory thresholds because the condition number is the
+ratio of the largest to smallest singular value.

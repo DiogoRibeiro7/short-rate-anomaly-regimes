@@ -111,7 +111,7 @@ asset_pricing:
     nw_lags: automatic
   cross_section:
     estimators: []
-    include_zero_beta_intercept: true
+    include_zero_beta_intercept: false
     shanken_correction: true
     weak_factor_diagnostics: true
 comparators: []

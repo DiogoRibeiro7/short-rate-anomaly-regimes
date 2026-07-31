@@ -4,18 +4,21 @@ These thresholds are fixed before empirical extension results are observed.
 
 ## Incremental Pricing Materiality
 
-The primary comparator for H1 is the strongest registered non-short-rate
-comparator by baseline cross-sectional RMSE on the common asset-date
-intersection. H1 is supported only if the market plus short-rate model satisfies
-all primary materiality gates against that comparator:
+The primary ex ante comparator for H1 is the CAPM on the common asset-date
+intersection. CAPM is chosen independently of observed RMSE because it is the
+minimal non-short-rate benchmark and the direct baseline nesting comparison.
+H1 is supported against the primary comparator only if the market plus
+short-rate model satisfies all primary materiality gates:
 
 - RMSE is at least 10 percent lower;
 - MAE is at least 10 percent lower;
 - maximum absolute cross-sectional pricing error is at least 0.25 monthly
   percentage points lower.
 
-The CAPM comparison is reported as a replication benchmark, but it is not
-sufficient for H1 if stronger registered comparators perform better.
+The strongest observed registered non-short-rate comparator by baseline
+cross-sectional RMSE is retained as a secondary adversarial comparison. It does
+not select the primary comparator and is reported with model-selection
+uncertainty inside the secondary comparator family.
 
 ## Regime Equivalence
 

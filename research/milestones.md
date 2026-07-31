@@ -227,7 +227,7 @@ Determine whether the baseline fit is statistically and economically robust.
 
 **Tasks**
 
-1. Diagnose beta dispersion, beta-matrix rank, irrelevant factors, and weak identification.
+1. Diagnose standardized exposure dispersion, beta-matrix rank, irrelevant factors, and weak identification.
 2. Add misspecification-robust inference and confidence sets where feasible.
 3. Compare alternative HAC lags and block-bootstrap intervals.
 4. Run leave-one-anomaly-set-out and leave-one-portfolio-out tests.

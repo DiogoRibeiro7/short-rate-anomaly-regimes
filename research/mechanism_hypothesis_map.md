@@ -19,10 +19,10 @@ design artifact, not a result artifact.
 | Claim | Mechanism link | Primary test | Interpretation boundary |
 |---|---|---|---|
 | R1a--R1f | Numerical replication of registered article statistics by layer | Innovation, beta, risk-price, pricing-error, comparator, and supplement tolerance audits | Numerical recovery is not an economic mechanism test. |
-| H1 | ICAPM hedging demand and cross-sectional beta differences | Incremental pricing performance relative to the strongest registered comparator | A pricing improvement is not a causal policy interpretation. |
+| H1 | ICAPM hedging demand and cross-sectional beta differences | Incremental pricing performance relative to the ex ante CAPM comparator, with strongest-observed comparator reported as secondary adversarial analysis | A pricing improvement is not a causal policy interpretation. |
 | H2 | Persistence of the state-variable price of risk | Post-publication compatibility classification | A nonzero risk price is insufficient without sign, magnitude, and pricing-error compatibility. |
 | H3 | Monetary-regime dependence of factor construction, beta, fitted-premium, and pricing-error mappings | Separate beta-interaction tests and regime-specific fitted-premium tests | Ordinary non-rejection of equality cannot support invariance. |
-| H4 | Identification strength of the short-rate beta column | Dispersion, rank, singular-value, and robust-inference diagnostics | Weak-factor failure limits interpretation even when pricing errors look small. |
+| H4 | Identification strength of the short-rate factor | Standardized exposure dispersion, rank, spanning, influence, and robust-inference diagnostics | Weak-factor failure limits interpretation even when pricing errors look small. |
 | E1 | Unregistered structural instability | Exploratory unknown-break tests | Break alignment is hypothesis-generating only. |
 | O1 | Aggregate innovation versus decomposed announcement information | Optional component spanning, pricing, and strength diagnostics | Appendix-only until the component factors have usable evidence. |
 

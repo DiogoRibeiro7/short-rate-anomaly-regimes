@@ -648,11 +648,11 @@ def render_adversarial_econometric_audit(issues: list[ReleaseIssue]) -> str:
             "",
             "- Claim threatened: the short-rate factor earns one common cross-sectional price of "
             "risk.",
-            "- Econometric reason: factor strength, beta dispersion, sample intersection, and "
-            "covariance corrections cannot be evaluated without first-pass and cross-section "
-            "artifacts.",
-            "- Decisive diagnostic: inspect beta singular values, weak-factor flags, GRS tests, "
-            "Fama-MacBeth uncertainty, and leave-one-anomaly-family systems.",
+            "- Econometric reason: factor strength, standardized exposure dispersion, sample "
+            "intersection, and covariance corrections cannot be evaluated without first-pass "
+            "and cross-section artifacts.",
+            "- Decisive diagnostic: inspect standardized exposure dispersion, weak-factor flags, "
+            "GRS tests, Fama-MacBeth uncertainty, and leave-one-anomaly-family systems.",
             "- Repair: generate baseline artifacts and rerun robustness diagnostics before "
             "reporting a pricing verdict.",
             "",

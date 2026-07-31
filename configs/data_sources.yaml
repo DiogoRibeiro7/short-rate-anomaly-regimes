@@ -44,16 +44,16 @@ sources:
     access: public
     frequency: monthly
     series_candidates: [FEDFUNDS]
-    exact_series_status: article_confirms_source_not_series_id
+    exact_series_status: documented_reconstruction_series_declared_not_exact_replication
     raw_path: data/raw/fred/federal_funds_rate.csv
 
   - id: treasury_bill_rate
     category: short_rate
-    provider: Federal Reserve Economic Data or original author source
-    access: public_or_author
+    provider: Federal Reserve Economic Data
+    access: public
     frequency: monthly
     series_candidates: [TB3MS, DTB3]
-    exact_series_status: article_confirms_source_series_ambiguous
+    exact_series_status: TB3MS_documented_reconstruction_DTB3_sensitivity_only
     raw_path: data/raw/rates/treasury_bill_rate.csv
 
   - id: one_month_tbill_return

@@ -1,6 +1,6 @@
 {
   "archive_path": "artifacts/release/source_release.zip",
-  "archive_sha256": "7eff14df085fb641d2bb5cef0c22e3957b3fe6d150bf0626f7215dcc25a4ebe3",
+  "archive_sha256": "8e457f743b087a74bbff5c706abf3652c8d621adf360ce4fe3e4a9a4340b67eb",
   "excluded": [
     "prompts/",
     "references/private/",
@@ -9,7 +9,7 @@
     "artifacts/environment/manifest.json",
     "data/catalog.duckdb"
   ],
-  "file_count": 181,
+  "file_count": 187,
   "members": [
     "CITATION.cff",
     "CONTRIBUTING.md",
@@ -89,6 +89,9 @@
     "pre-commit-config.yaml",
     "pyproject.toml",
     "reports/README.md",
+    "reports/citation_support_audit.md",
+    "reports/data_access_feasibility.md",
+    "reports/final_design_gate_changelog.md",
     "reports/generated/.gitkeep",
     "reports/generated/adversarial_code_audit.md",
     "reports/generated/adversarial_econometric_audit.md",
@@ -101,7 +104,9 @@
     "reports/generated/temporal_extension_report.md",
     "research/annotated_literature_review.md",
     "research/article_method_extraction.md",
+    "research/bootstrap_contract.md",
     "research/claim_assumption_map.md",
+    "research/comparator_model_registry.csv",
     "research/data_access_matrix.csv",
     "research/data_dictionary.md",
     "research/data_flow_diagram.md",
@@ -129,6 +134,7 @@
     "research/statistical_protocol.md",
     "research/table_figure_generation_contracts.md",
     "research/table_target_manifest.csv",
+    "research/weak_factor_registry.csv",
     "scripts/.gitkeep",
     "scripts/__init__.py",
     "scripts/verify_manuscript.py",

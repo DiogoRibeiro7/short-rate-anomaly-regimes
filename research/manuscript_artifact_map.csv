@@ -34,3 +34,9 @@ portfolio_continuity_plan,research/portfolio_continuity_plan.csv,Post-publicatio
 regime_registry,research/regime_registry.csv,Predeclared monetary-regime names dates and rules
 fit_metric_contract,research/fit_metric_contract.md,Cross-sectional fit metric definition contract
 inference_contract,research/inference_contract.md,Inference resampling multiplicity and weak-factor gate contract
+comparator_model_registry,research/comparator_model_registry.csv,Frozen comparator model registry and primary comparator choice
+bootstrap_contract,research/bootstrap_contract.md,Executable bootstrap rule and fitted-premium inference contract
+weak_factor_registry,research/weak_factor_registry.csv,Scale-aware weak-factor diagnostic registry
+data_access_feasibility,reports/data_access_feasibility.md,Post-2013 anomaly reconstruction database access feasibility report
+citation_support_audit,reports/citation_support_audit.md,Citation support and claim narrowing audit
+final_design_gate_changelog,reports/final_design_gate_changelog.md,Final consistency gate change log and verdict

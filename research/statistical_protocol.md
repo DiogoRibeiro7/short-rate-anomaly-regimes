@@ -38,11 +38,13 @@ or repeated monthly cross-sectional estimator is reported as a separate
 robustness target.
 
 Estimated-beta uncertainty is handled with the article's Shanken correction when
-the baseline risk-price estimator is used. Bootstrap variants must state the
-resampling unit before interpretation: time-series months, blocks of monthly
-observations, assets, or table-level targets. Repeated Fama-MacBeth,
-Kan-Robotti-Shanken, and GMM variants are labelled separately and mapped to the
-supplement targets or extension diagnostics that require them.
+the baseline risk-price estimator is used. Fitted-premium uncertainty is handled
+with the joint moving-block bootstrap in `research/bootstrap_contract.md`, which
+re-estimates rate innovations, first-pass betas, second-pass risk prices,
+fitted premia, pricing errors, fit metrics, and equivalence statistics in every
+draw. Repeated Fama-MacBeth, Kan-Robotti-Shanken, and GMM variants are labelled
+separately and mapped to the supplement targets or extension diagnostics that
+require them.
 
 ## Model Comparison
 
@@ -52,19 +54,26 @@ squared pricing error, mean absolute pricing error, maximum absolute pricing
 error, cross-sectional fit, and joint pricing-error tests when the estimator
 justifies the test.
 
-The primary materiality comparison is against the strongest registered
-non-short-rate comparator by baseline cross-sectional RMSE on the common
-asset-date intersection. H1 requires RMSE, MAE, and maximum absolute
-pricing-error improvements to pass the thresholds in
-`research/economic_thresholds.md`.
+The primary ex ante materiality comparison is against the CAPM on the common
+asset-date intersection. H1 also reports a secondary adversarial comparison
+against the strongest observed registered non-short-rate comparator by baseline
+cross-sectional RMSE. The strongest-observed comparison is not used to choose
+the primary comparator; it is reported with explicit model-selection uncertainty
+inside the registered secondary family.
 
 ## Weak-Factor Analysis
 
-A high cross-sectional fit is not sufficient when factor betas have little
-dispersion or the factor is weakly identified. Report
+A high cross-sectional fit is not sufficient when factor exposures have little
+economically scaled dispersion or the factor is weakly identified. Report
 
-- singular values and rank of the beta matrix;
-- cross-sectional standard deviation and interquartile range of each beta;
+- rank of the beta matrix;
+- singular values and condition number descriptively, without redundant
+  rejection thresholds;
+- cross-sectional standard deviation and interquartile range of each beta as
+  descriptive statistics;
+- cross-sectional dispersion of standardized exposures
+  `beta_i_f * standard_deviation(factor_f)` as the confirmatory dispersion
+  diagnostic;
 - correlations among beta columns;
 - first-stage factor relevance measures;
 - misspecification-robust confidence sets where feasible;
@@ -174,6 +183,6 @@ rescales beta and lambda without changing fitted returns.
 | H1 | No-intercept two-pass OLS with Shanken correction and common-intersection comparator models | RMSE, MAE, and maximum pricing-error improvement must pass materiality thresholds against the strongest comparator. |
 | H2 | Frozen and refitted post-publication two-pass evaluations | Sign, magnitude, and pricing-error compatibility must all hold. |
 | H3 | Beta interaction tests plus regime-specific fitted-premium and error comparisons | Stability requires all dimensions to remain inside numerical bounds. |
-| H4 | Beta dispersion, rank, singular-value, and robust-inference diagnostics | Pricing interpretation requires all predeclared strength gates to pass. |
+| H4 | Standardized exposure dispersion, rank, spanning, influence, and robust-inference diagnostics | Pricing interpretation requires all predeclared strength gates to pass. |
 | E1 | Unknown-break tests | Exploratory only; does not confirm regime stability. |
 | O1 | Optional monthly component spanning, pricing, and strength tests | Appendix-only unless event data and component-strength gates pass. |

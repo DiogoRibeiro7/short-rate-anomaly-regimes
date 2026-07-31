@@ -15,14 +15,13 @@
 \newcommand{\inst}[1]{\textsuperscript{#1}}
 \newcommand{\orcidID}[1]{\textsuperscript{\href{https://orcid.org/#1}{ORCID: #1}}}
 \newcommand{\authorrunning}[1]{}
-\newcommand{\institute}[1]{\g@addto@macro\@author{\\[0.75em]\small #1}}
+\newcommand{\institute}[1]{\g@addto@macro\@author{\\[0.75em]\parbox{0.9\linewidth}{\centering\small #1}}}
 \makeatother
 \author{Diogo Ribeiro\inst{1,2,*}\orcidID{0009-0001-2022-7072}}
 \authorrunning{D. Ribeiro}
-\institute{Department of Data Science and Research, MySense, London, \MakeUppercase{United Kingdom}.\\[0.35em]
-School of Media Arts and Design, Polytechnic of Porto\\
-PORTUGAL.\\
-\inst{*}\textit{Corresponding Author: \href{mailto:dfr@esmad.ipp.pt}{dfr@esmad.ipp.pt}}}
+\institute{\inst{1}School of Media Arts and Design, Polytechnic of Porto, Portugal.\\[0.35em]
+\inst{2}Former affiliation: Department of Data Science and Research, MySense, London, \MakeUppercase{United Kingdom}.\\[0.35em] % artifact: reports/final_design_gate_changelog.md
+\inst{*}\textit{Corresponding author and present address: School of Media Arts and Design, Polytechnic of Porto, Portugal. Email: \href{mailto:dfr@esmad.ipp.pt}{dfr@esmad.ipp.pt}}}
 \date{Draft}
 
 \newcommand{\artifact}[1]{\path{#1}}
@@ -105,7 +104,7 @@ derives corrections for beta-estimation error, and \citet{kan_zhang_1999} show
 that useless factors can appear priced in two-pass tests. \citet{lewellen_nagel_shanken_2010}
 argue that high cross-sectional fit and small pricing errors can be misleading
 when test assets share a strong characteristic structure. This paper therefore
-treats beta dispersion, rank, spanning, and influence diagnostics as conditions
+treats standardized exposure dispersion, rank, spanning, and influence diagnostics as conditions
 for interpretation rather than optional robustness checks.
 
 The fourth stream concerns monetary regimes and high-frequency identification.
@@ -119,12 +118,12 @@ identified announcement components and from regime-specific pricing evidence.
 Structural-change methods such as \citet{bai_perron_1998} provide a way to
 distinguish predeclared regime boundaries from estimated breaks.
 
-The final stream is data vintage discipline. Official factor archives document
-that published factor and portfolio series can change as databases and
-construction rules are revised \citep{fama_french_data_library_2026}. This paper
-therefore adds value beyond the original article by freezing a table-level
-replication target before asking whether the short-rate evidence generalizes over
-time and across regimes.
+The final stream is data vintage discipline. Official factor libraries provide
+current data access, historical archives, and selected change notes, which makes
+source vintage a replication object rather than a footnote
+\citep{fama_french_data_library_2026}. This paper therefore adds value beyond
+the original article by freezing a table-level replication target before asking
+whether the short-rate evidence generalizes over time and across regimes.
 
 \section{Original framework and economic mechanism}
 
@@ -256,13 +255,18 @@ an effective federal funds rate, monthly provider average, annualized percent
 units, no seasonal adjustment, no imputation, and a vintage audit at retrieval. % artifact: research/short_rate_series_registry.csv
 The Treasury-bill reconstruction uses TB3MS as the monthly secondary-market
 candidate and treats DTB3 only as a sensitivity candidate unless the article or
-supplement verifies a daily aggregation rule. % artifact: research/short_rate_series_registry.csv
+supplement verifies a daily aggregation rule. None of these rate choices is
+eligible for an exact replication label until the source file, vintage, and
+transformation are frozen. % artifact: research/short_rate_series_registry.csv
 
 Portfolio continuity is the largest post-publication constraint. For all seven
 registered anomaly families, the extension path is full security-level
 reconstruction using CRSP returns, delisting returns, Compustat accounting
 inputs, original formation dates, breakpoints, value-weighting rules, and
-holding-period rules. % artifact: research/portfolio_continuity_plan.csv
+holding-period rules. Database access is not assumed, redistribution of licensed
+extracts is prohibited, and the post-2013 extension is blocked until access and % artifact: reports/data_access_feasibility.md
+formation rules are confirmed. % artifact: research/portfolio_continuity_plan.csv
+% artifact: reports/data_access_feasibility.md
 Current public portfolio catalogues may be reported as documented substitutes,
 but they are excluded from exact-replication claims unless source compatibility
 is independently verified.
@@ -273,13 +277,13 @@ is independently verified.
 % artifact: research/data_access_matrix.csv
 % artifact: research/data_dictionary.md
 \small
-\begin{tabular}{p{0.18\linewidth}p{0.18\linewidth}p{0.12\linewidth}p{0.18\linewidth}p{0.18\linewidth}}
+\begin{tabular}{p{0.17\linewidth}p{0.17\linewidth}p{0.12\linewidth}p{0.20\linewidth}p{0.18\linewidth}}
 \toprule
 Variable or family & Source & Frequency & Transformation & Status \\
 \midrule
 Article and supplement & Publisher files & Document & Target extraction & Exact local access \\
-Federal funds rate & Federal Reserve Bank of St. Louis & Monthly & First-order innovation & Source located, series pending \\
-Treasury-bill rate & Federal Reserve Bank of St. Louis or author source & Monthly & First-order innovation & Series ambiguous \\
+Federal funds rate & Federal Reserve Bank of St. Louis & Monthly & FEDFUNDS documented reconstruction; first-order innovation & Source located; download, vintage, and transformation not frozen \\
+Treasury-bill rate & Federal Reserve Bank of St. Louis & Monthly & TB3MS documented reconstruction; DTB3 sensitivity only & Source located; download, vintage, and transformation not frozen \\
 Market and risk-free returns & Kenneth French Data Library & Monthly & Excess-return factors & Source located, vintage pending \\
 Anomaly decile portfolios & Lu Zhang and cited sources & Monthly & Excess returns after alignment & Files pending \\
 Comparator factors & French, Stambaugh, and q-factor sources & Monthly & Common-intersection factors & Source located, vintage pending \\
@@ -349,24 +353,29 @@ absolute pricing error, maximum absolute pricing error, cross-sectional fit, and
 joint pricing-error tests when the estimator supports them. Statistical
 significance is not enough: every supported result must also clear the registered
 economic-magnitude criterion.
-For H1, materiality is defined against the strongest registered non-short-rate
-comparator by baseline RMSE on the common intersection. The short-rate model
-must reduce RMSE and MAE by at least 10 percent and reduce the maximum absolute % artifact: research/economic_thresholds.md
-pricing error by at least 0.25 monthly percentage points relative to that % artifact: research/economic_thresholds.md
-comparator. % artifact: research/economic_thresholds.md
+For H1, materiality is defined first against the ex ante CAPM comparator on the
+common intersection. The short-rate model must reduce RMSE and MAE by at least
+10 percent and reduce the maximum absolute pricing error by at least 0.25 % artifact: research/economic_thresholds.md
+monthly percentage points relative to CAPM. The strongest observed registered
+non-short-rate comparator is retained only as a secondary adversarial analysis
+with model-selection uncertainty. % artifact: research/economic_thresholds.md
+% artifact: research/comparator_model_registry.csv
 
 Weak-factor diagnostics evaluate whether short-rate betas contain enough
 cross-sectional variation to support a pricing interpretation. The planned
-diagnostics include beta dispersion, matrix rank, singular values, condition
-measures, factor-spanning checks, influence diagnostics, and leave-one-family
-systems. A short-rate risk price that fails these diagnostics is interpreted as
-weakly identified even when fit metrics appear favorable.
+diagnostics include standardized exposure dispersion, matrix rank,
+factor-spanning checks, influence diagnostics, estimation precision, and
+leave-one-family systems. Raw beta dispersion, singular values, and condition
+numbers may be reported descriptively, but they are not separate confirmatory
+failure rules. A short-rate risk price that fails these diagnostics is
+interpreted as weakly identified even when fit metrics appear favorable.
 The factor fails the confirmatory strength gate if the beta matrix loses rank,
-the smallest singular value is below 10 percent of the largest singular value, % artifact: research/inference_contract.md
-short-rate beta dispersion is below 10 percent of market-beta dispersion, the % artifact: research/inference_contract.md
-condition number exceeds 30, leave-one-family systems reverse the fitted-premium % artifact: research/inference_contract.md
-spread or materiality classification, or robust intervals span economically
-positive and negative fitted-premium effects. % artifact: research/inference_contract.md
+standardized rate-exposure dispersion is less than 10 percent of standardized % artifact: research/weak_factor_registry.csv
+market-exposure dispersion, the rate factor is nearly spanned by other factors,
+leave-one-family systems reverse the fitted-premium spread or materiality
+classification, or robust intervals span economically positive and negative
+fitted-premium effects. % artifact: research/inference_contract.md
+% artifact: research/weak_factor_registry.csv
 
 Temporal and regime methods are designed as extensions. The post-publication
 analysis has frozen-parameter and refitted variants, with no-lookahead rules for
@@ -395,17 +404,47 @@ is a no-intercept pricing-error pseudo-\(R^2\), \(1-\sum_i % artifact: research/
 positive and all models use the same asset-date intersection. % artifact: research/fit_metric_contract.md
 
 Inference uses Shanken-adjusted covariance for the benchmark full-sample
-second-pass risk-price estimator. Bootstrap p-values use moving blocks of
-monthly observations, 10,000 repetitions, and either the configured % artifact: research/inference_contract.md
-serial-dependence block rule or a labelled 12-month fallback. Equivalence claims % artifact: research/inference_contract.md
-use 95 percent confidence intervals that must lie wholly inside the declared % artifact: research/inference_contract.md
+second-pass risk-price estimator. Fitted-premium uncertainty uses a joint
+moving-block bootstrap with 10,000 repetitions, a Politis-White block-length % artifact: research/bootstrap_contract.md
+selector, a fixed 12-month fallback under declared selector failures, and joint % artifact: research/bootstrap_contract.md
+resampling of factors, returns, rates, and regime labels. Each draw re-estimates
+the rate innovation, first-pass betas, second-pass risk prices, fitted premia,
+pricing errors, fit metrics, and equivalence statistics. Equivalence claims use
+95 percent confidence intervals that must lie wholly inside the declared % artifact: research/inference_contract.md
 bounds. % artifact: research/inference_contract.md
+% artifact: research/bootstrap_contract.md
 
 The primary regime registry contains five regimes: conventional positive-rate
 policy, effective lower bound and first QE, first normalisation, pandemic
 lower-bound and QE, and inflation-driven tightening. Transition months are
 assigned to the new regime, boundary-shift checks are plus or minus three
-months, and short-sample flags are retained for the two post-pandemic regimes. % artifact: research/regime_registry.csv
+months, and short-sample flags are retained where eligibility is limited. The
+entire pre-lower-bound sample is defensible as the confirmatory article-era
+regime because the federal funds rate is the primary short-rate policy
+instrument away from the lower bound; finer pre-lower-bound breaks remain
+exploratory and cannot replace the confirmatory calendar regime. % artifact: research/regime_registry.csv
+
+\begin{table}[htbp]
+\centering
+\caption{Predeclared monetary regimes}
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+% artifact: research/regime_registry.csv
+\begin{tabular}{p{0.13\linewidth}p{0.17\linewidth}p{0.09\linewidth}p{0.09\linewidth}p{0.06\linewidth}p{0.20\linewidth}p{0.17\linewidth}}
+\toprule
+ID & Regime & Start & End & Obs. & Primary instrument & Eligibility \\
+\midrule
+\path{conventional_pre_elb} & Conventional positive-rate policy & 1972-01 & 2008-11 & 443 & Federal funds rate & Beta and second pass \\ % artifact: research/regime_registry.csv
+\path{elb_qe} & Effective lower bound and first QE & 2008-12 & 2015-11 & 84 & Target range and asset purchases & Beta and second pass \\ % artifact: research/regime_registry.csv
+\path{normalisation} & First normalisation & 2015-12 & 2020-02 & 51 & Target range and balance-sheet normalisation & Beta and second pass \\ % artifact: research/regime_registry.csv
+\path{pandemic_elb_qe} & Pandemic lower-bound and QE & 2020-03 & 2022-02 & 24 & Lower-bound target range and asset purchases & Short-sample beta flag; standalone second pass blocked unless precision gate passes \\ % artifact: research/regime_registry.csv
+\path{inflation_tightening} & Inflation-driven tightening & 2022-03 & 2026-06 & 52 & Federal funds target range & Beta and second pass \\ % artifact: research/regime_registry.csv
+\bottomrule
+\end{tabular}
+
+\smallskip
+\small Transition months belong to the new regime; permitted boundary shifts are plus or minus three months. Source: \artifact{research/regime_registry.csv}.
+\end{table}
 
 The high-frequency decomposition is optional rather than part of the main
 contribution. If included, it starts from high-frequency components constructed
@@ -432,10 +471,10 @@ stability, and weak-factor families.
 Claim & Primary method & Decision rule \\
 \midrule
 R1a--R1f & Layer-specific comparison to registered article statistics & Recovery within declared tolerances \\
-H1 & No-intercept two-pass pricing and model comparison & Must beat strongest comparator by materiality thresholds \\
+H1 & No-intercept two-pass pricing and model comparison & Must beat ex ante CAPM by materiality thresholds; strongest observed comparator is secondary \\
 H2 & Frozen and refitted post-publication evaluation & Sign, magnitude, and loss compatibility must hold \\
 H3 & Separate beta, fitted-premium, and pricing-error stability tests & Estimates must remain inside numerical bounds \\
-H4 & Beta dispersion, rank, and robust-inference diagnostics & Strength gates must pass before interpretation \\
+H4 & Standardized exposure, rank, spanning, and robust-inference diagnostics & Strength gates must pass before interpretation \\
 \bottomrule
 \end{tabular}
 
@@ -627,10 +666,11 @@ pricing argument. % empirical-paragraph
 
 \section{Additional diagnostics}
 
-Additional diagnostics include beta dispersion, singular values, rank checks,
+Additional diagnostics include standardized exposure dispersion, rank checks,
 factor spanning, influence diagnostics, leave-one-family systems, boundary-shift
-checks, and multiple-testing adjustments. Diagnostic outputs remain pending until
-the relevant baseline and extension artifacts exist.
+checks, and multiple-testing adjustments. Raw beta dispersion, singular values,
+and condition numbers are descriptive diagnostics only. Diagnostic outputs
+remain pending until the relevant baseline and extension artifacts exist.
 
 \bibliographystyle{apalike}
 \bibliography{paper/references}

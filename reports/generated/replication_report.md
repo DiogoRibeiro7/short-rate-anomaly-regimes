@@ -53,7 +53,7 @@ This report distinguishes inaccessible inputs from empirical contradiction.
 - Time-series intercept: `True`.
 - Time-series covariance: `newey_west` with `automatic` lags.
 - Cross-sectional estimators: `ols_two_pass, gls_two_pass, fama_macbeth`.
-- Zero-beta intercept: `True`.
+- Zero-beta intercept: `False`.
 - Shanken-style correction: `True`.
 - Weak-factor diagnostics: `True`.
 

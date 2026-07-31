@@ -2,7 +2,7 @@
 
 | Published or extension claim | Required empirical result | Required assumptions | Direct challenge |
 |---|---|---|---|
-| Short-rate innovations help price anomaly portfolios | Significant and economically material short-rate risk price with lower pricing errors than CAPM | Correct rate definition, adequate beta dispersion, stable factor interpretation, valid two-pass inference | Alternative rate innovations, weak-factor robust tests, placebo factors |
+| Short-rate innovations help price anomaly portfolios | Significant and economically material fitted premium with lower pricing errors than CAPM | Correct rate definition, adequate standardized exposure dispersion, stable factor interpretation, valid two-pass inference | Alternative rate innovations, weak-factor robust tests, placebo factors |
 | The factor is consistent with ICAPM hedging risk | The short-rate state variable forecasts future investment opportunities with a sign consistent with the risk price | Predictive relation is stable and not due to omitted macro news | Forecasting decomposition, regime interactions, spanning tests |
 | One two-factor model explains several anomalies jointly | One common risk-price vector fits all declared portfolio sets | Test assets are not mechanically selected, data definitions are comparable, cross-sectional fit is not inflated by factor weakness | Leave-one-anomaly-out tests, pooled versus set-specific prices, rank diagnostics |
 | Federal funds and Treasury-bill innovations represent the same economic risk | Similar beta orderings, risk prices, and pricing errors | Both innovations measure a common state shock | Correlation and spanning tests, policy-regime splits |

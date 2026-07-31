@@ -33,7 +33,7 @@ and supplementary robustness tables.
 ### H1 Incremental pricing content
 
 The short-rate factor produces economically meaningful incremental pricing
-performance relative to the strongest registered non-short-rate comparator on
+performance relative to the ex ante CAPM comparator on
 the common asset-date intersection.
 
 ### H2 Temporal stability
@@ -49,14 +49,16 @@ pandemic policy, and inflation tightening.
 
 ### H4 Weak-factor strength
 
-The short-rate beta column has enough dispersion, rank contribution, and robust
-identification strength to support a pricing interpretation.
+The short-rate factor has enough standardized exposure dispersion, rank
+contribution, spanning strength, and robust identification precision to support
+a pricing interpretation.
 
 ## Falsification rules
 
 - Reject a replication claim if the exact published target cannot be linked to the same data definition and estimator.
 - Reject stability if beta interactions, regime-specific risk prices, or pricing-error comparisons exceed numerical equivalence bounds after multiple-testing adjustment.
-- Treat a factor as weak when beta dispersion, rank diagnostics, or misspecification-robust inference fail declared thresholds.
+- Treat a factor as weak when standardized exposure dispersion, rank, spanning,
+  influence, or misspecification-robust inference fail declared thresholds.
 - Do not substitute statistical significance for economic relevance.
 
 ## Primary estimands

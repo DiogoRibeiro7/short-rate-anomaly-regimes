@@ -46,7 +46,9 @@ def test_weak_factor_report_contains_rank_singular_values_and_dispersion() -> No
     assert report.n_factors == 2
     assert len(report.singular_values) == 2
     assert report.beta_dispersion["mkt"] > 0
+    assert report.standardized_exposure_dispersion["rate"] > 0
     assert compact["rank"] == 2
+    assert compact["standardized_exposure_dispersion_rate"] > 0
     assert not bool(compact["unidentified"])
 
 
