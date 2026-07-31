@@ -32,6 +32,11 @@ out_of_sample:
   initial_train_end: "1999-12"
   expanding_window: true
   refit_frequency_months: 12
+  confirmatory_model: two_factor_market_rate
+  factor_definition: mkt,rate
+  benchmarks:
+    - historical_mean
+    - zero_excess_return
   evaluation:
     - cross_sectional_rmse
     - mean_absolute_pricing_error

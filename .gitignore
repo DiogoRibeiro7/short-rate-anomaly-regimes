@@ -50,6 +50,8 @@ artifacts/**
 !artifacts/estimates/time_series/.gitkeep
 !artifacts/estimates/cross_section/
 !artifacts/estimates/cross_section/.gitkeep
+!artifacts/forecasts/
+!artifacts/forecasts/.gitkeep
 !artifacts/evidence/
 !artifacts/evidence/.gitkeep
 !artifacts/evidence/article_manifest.json
@@ -90,6 +92,8 @@ artifacts/**
 !artifacts/tables/regimes/.gitkeep
 !artifacts/tables/shocks/
 !artifacts/tables/shocks/.gitkeep
+!artifacts/tables/out_of_sample/
+!artifacts/tables/out_of_sample/.gitkeep
 !artifacts/tables/portfolio_descriptives/
 !artifacts/tables/portfolio_descriptives/.gitkeep
 reports/generated/**
@@ -99,6 +103,7 @@ reports/generated/**
 !reports/generated/temporal_extension_report.md
 !reports/generated/regime_report.md
 !reports/generated/shock_decomposition_report.md
+!reports/generated/out_of_sample_report.md
 paper/build/**
 !paper/build/.gitkeep
 data/catalog.duckdb

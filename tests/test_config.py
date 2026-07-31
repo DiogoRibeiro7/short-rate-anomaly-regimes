@@ -34,6 +34,8 @@ def test_all_project_configs_load() -> None:
         extension_config.shock_decomposition.selected_dataset_id
         == "jarocinski_karadi_fed_shocks_update_202401"
     )
+    assert extension_config.out_of_sample.confirmatory_model == "two_factor_market_rate"
+    assert "historical_mean" in extension_config.out_of_sample.benchmarks
     assert regime_config.minimum_regime_observations == 36
     assert reporting_config.include_environment_manifest is True
     assert load_project_config(Path("configs/baseline.yaml")).model_dump()

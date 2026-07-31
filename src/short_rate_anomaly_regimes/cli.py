@@ -28,6 +28,7 @@ from short_rate_anomaly_regimes.extensions.temporal import (
     TemporalFreeze,
     write_blocked_temporal_report,
 )
+from short_rate_anomaly_regimes.forecasting.out_of_sample import write_blocked_oos_report
 from short_rate_anomaly_regimes.portfolios.construction import write_construction_manifest
 from short_rate_anomaly_regimes.regimes.stability import write_blocked_regime_report
 from short_rate_anomaly_regimes.reporting.audit import (
@@ -477,6 +478,32 @@ def shock_decomposition(
         )
     raise ReplicationBlockError(
         "Selected shock event data exist, but source-study reproduction targets are not frozen"
+    )
+
+
+@app.command("out-of-sample")
+def out_of_sample(
+    config: ConfigPathOption = Path("configs/extensions.yaml"),
+    output: OutputPathOption = Path("reports/generated/out_of_sample_report.md"),
+) -> None:
+    """Run the out-of-sample falsification gate."""
+    validated = load_extension_config(config)
+    required_paths = [
+        Path("data/processed/extension/monthly_panel.parquet"),
+        Path("data/processed/factors/short_rate_factors.parquet"),
+        Path("artifacts/estimates/time_series"),
+        Path("artifacts/estimates/cross_section"),
+    ]
+    missing_paths = tuple(path for path in required_paths if not path.exists())
+    if missing_paths:
+        write_blocked_oos_report(output_path=output, missing_inputs=missing_paths)
+        raise ReplicationBlockError(
+            "Wrote blocked out-of-sample report; falsification requires frozen "
+            f"baseline and extension inputs: {', '.join(str(path) for path in missing_paths)}"
+        )
+    raise ReplicationBlockError(
+        "Required OOS inputs exist, but panel-specific forecast assembly is not frozen "
+        f"for {validated.out_of_sample.confirmatory_model}"
     )
 
 

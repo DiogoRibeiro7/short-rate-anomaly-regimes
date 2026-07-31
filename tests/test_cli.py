@@ -441,6 +441,22 @@ def test_shock_decomposition_writes_blocked_report(tmp_path: Path) -> None:
     assert "AR residual must remain labelled a rate innovation" in report
 
 
+def test_out_of_sample_writes_blocked_report(tmp_path: Path) -> None:
+    report_path = tmp_path / "out_of_sample_report.md"
+
+    result = CliRunner().invoke(
+        app,
+        ["out-of-sample", "--output", str(report_path)],
+    )
+
+    assert result.exit_code == 1
+    assert report_path.is_file()
+    assert "blocked out-of-sample report" in str(result.exception)
+    report = report_path.read_text(encoding="utf-8")
+    assert "Verdict: `blocked_missing_input`" in report
+    assert "must not be tuned after test errors are seen" in report
+
+
 def test_show_milestones_command_lists_release_gate() -> None:
     runner = CliRunner()
 

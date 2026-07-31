@@ -187,6 +187,9 @@ class OutOfSampleConfig(BaseModel):
     initial_train_end: str
     expanding_window: bool
     refit_frequency_months: int = Field(gt=0)
+    confirmatory_model: str
+    factor_definition: str
+    benchmarks: list[str]
     evaluation: list[str]
 
 
