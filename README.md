@@ -109,7 +109,7 @@ Most commands are scaffolded and fail with an explicit `NotImplementedError` unt
 - `research/`: research design, assumption map, data-access matrix, milestones, and replication protocol.
 - `data/`, `artifacts/`, `reports/generated/`, and `paper/build/`: ignored output locations with tracked placeholders only.
 - `artifacts/release/`: generated source-release assets, including SBOM, sanitized environment manifest, checksums, archive manifest, and source archive.
-- `paper/`: manuscript and bibliography scaffold.
+- `paper/`: manuscript source, bibliography, and the canonical compiled PDF at `paper/manuscript.pdf`.
 
 ## Required reading order
 

@@ -1,6 +1,6 @@
 {
   "archive_path": "artifacts/release/source_release.zip",
-  "archive_sha256": "4e4de37c43ff1d2a0702ff76e1060e05448bd91b702eae85085e1f4cb64784c5",
+  "archive_sha256": "41642a4ef6158a176e7446b1cbf21d5a2e5b42ba9298b23ba4ad01679109f0fd",
   "excluded": [
     "prompts/",
     "references/private/",
@@ -9,7 +9,7 @@
     "artifacts/environment/manifest.json",
     "data/catalog.duckdb"
   ],
-  "file_count": 165,
+  "file_count": 166,
   "members": [
     "CITATION.cff",
     "CONTRIBUTING.md",
@@ -82,6 +82,7 @@
     "gitignore",
     "notebooks/.gitkeep",
     "notebooks/README.md",
+    "paper/manuscript.pdf",
     "paper/manuscript.tex",
     "paper/references.bib",
     "poetry.lock",

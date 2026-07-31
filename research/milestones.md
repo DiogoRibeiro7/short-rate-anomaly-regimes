@@ -367,7 +367,7 @@ Produce the replication paper and extension manuscript from frozen artefacts.
 
 - `paper/manuscript.tex`
 - `paper/references.bib`
-- compiled PDF in `paper/build`
+- compiled PDF at `paper/manuscript.pdf`
 - replication appendix and online appendix
 
 **Acceptance gate**

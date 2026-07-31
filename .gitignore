@@ -125,6 +125,7 @@ paper/*.fls
 paper/*.log
 paper/*.out
 paper/*.pdf
+!paper/manuscript.pdf
 paper/*.synctex.gz
 data/catalog.duckdb
 
