@@ -43,9 +43,13 @@ from short_rate_anomaly_regimes.reporting.manuscript import write_blocked_manusc
 from short_rate_anomaly_regimes.reporting.release import (
     write_adversarial_reports,
     write_checksum_manifest,
+    write_data_acquisition_guide,
+    write_release_environment_manifest,
     write_release_gate,
     write_release_notes,
     write_sbom,
+    write_source_archive,
+    write_source_archive_manifest,
 )
 from short_rate_anomaly_regimes.shocks.decomposition import write_blocked_shock_report
 
@@ -551,9 +555,13 @@ def build_report(
 @app.command("release-audit")
 def release_audit(
     sbom: OutputPathOption = Path("artifacts/release/sbom.json"),
+    environment: OutputPathOption = Path("artifacts/release/environment_manifest.json"),
     checksums: OutputPathOption = Path("artifacts/release/source_artifact_checksums.sha256"),
     gate: OutputPathOption = Path("artifacts/release/release_gate.json"),
+    archive: OutputPathOption = Path("artifacts/release/source_release.zip"),
+    archive_manifest: OutputPathOption = Path("artifacts/release/source_release_manifest.json"),
     release_notes: OutputPathOption = Path("docs/RELEASE_NOTES.md"),
+    data_guide: OutputPathOption = Path("docs/DATA_ACQUISITION.md"),
     code_audit: OutputPathOption = Path("reports/generated/adversarial_code_audit.md"),
     econometric_audit: OutputPathOption = Path(
         "reports/generated/adversarial_econometric_audit.md"
@@ -565,14 +573,26 @@ def release_audit(
         pyproject_path=Path("pyproject.toml"),
         lock_path=Path("poetry.lock"),
     )
-    write_checksum_manifest(output_path=checksums)
+    write_release_environment_manifest(output_path=environment)
     issues = write_release_gate(output_path=gate)
+    write_data_acquisition_guide(
+        output_path=data_guide,
+        data_access_path=Path("research/data_access_matrix.csv"),
+        source_registry_path=Path("configs/data_sources.yaml"),
+    )
     write_release_notes(output_path=release_notes, issues=issues)
     write_adversarial_reports(
         code_report_path=code_audit,
         econometric_report_path=econometric_audit,
         issues=issues,
     )
+    archive_members = write_source_archive(output_path=archive)
+    write_source_archive_manifest(
+        output_path=archive_manifest,
+        archive_path=archive,
+        members=archive_members,
+    )
+    write_checksum_manifest(output_path=checksums)
     critical_count = sum(issue.severity == "critical" for issue in issues)
     major_count = sum(issue.severity == "major" for issue in issues)
     console.print(

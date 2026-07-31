@@ -69,7 +69,7 @@ The test suite also runs from an uninstalled source checkout:
 python -m pytest
 ```
 
-Data acquisition is intentionally disabled until the source licence and exact variable definition have been recorded in `research/data_access_matrix.csv`.
+Data acquisition is intentionally disabled until the source licence and exact variable definition have been recorded in `research/data_access_matrix.csv`. See `docs/DATA_ACQUISITION.md` for source-by-source acquisition and redistribution guidance.
 
 ## Quality gates
 
@@ -95,6 +95,7 @@ poetry run srar estimate-rate-innovation --config configs/baseline.yaml
 poetry run srar run-baseline --config configs/baseline.yaml
 poetry run srar run-regimes --config configs/regimes.yaml
 poetry run srar build-report --config configs/reporting.yaml
+poetry run srar release-audit
 ```
 
 Most commands are scaffolded and fail with an explicit `NotImplementedError` until the corresponding milestone acceptance gates have been completed.
@@ -107,6 +108,7 @@ Most commands are scaffolded and fail with an explicit `NotImplementedError` unt
 - `docs/`: reviewer-facing data policy and replication status.
 - `research/`: research design, assumption map, data-access matrix, milestones, and replication protocol.
 - `data/`, `artifacts/`, `reports/generated/`, and `paper/build/`: ignored output locations with tracked placeholders only.
+- `artifacts/release/`: generated source-release assets, including SBOM, sanitized environment manifest, checksums, archive manifest, and source archive.
 - `paper/`: manuscript and bibliography scaffold.
 
 ## Required reading order

@@ -11,8 +11,10 @@
   "verdict": {
     "critical_issue_count": 0,
     "empirical_release": "blocked",
+    "empirical_result_tag": "blocked",
     "major_issue_count": 1,
     "release_verdict": "source_only_release_ready",
-    "source_release": "permitted"
+    "source_release": "permitted",
+    "source_tag": "source_only_tag_allowed"
   }
 }

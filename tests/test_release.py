@@ -6,6 +6,7 @@ from typer.testing import CliRunner
 from short_rate_anomaly_regimes.cli import app
 from short_rate_anomaly_regimes.reporting.release import (
     build_checksum_manifest,
+    build_release_environment_manifest,
     build_release_issues,
     build_sbom,
     is_checksum_candidate,
@@ -13,9 +14,12 @@ from short_rate_anomaly_regimes.reporting.release import (
     release_verdict,
     render_adversarial_code_audit,
     render_adversarial_econometric_audit,
+    render_data_acquisition_guide,
     render_release_notes,
     write_checksum_manifest,
     write_release_gate,
+    write_source_archive,
+    write_source_archive_manifest,
 )
 
 
@@ -30,6 +34,15 @@ def test_release_path_filters_reject_local_only_materials() -> None:
     assert not is_checksum_candidate("artifacts/release/sbom.json")
     assert not is_checksum_candidate("docs/RELEASE_NOTES.md")
     assert is_checksum_candidate("README.md")
+
+
+def test_release_gate_flags_processed_data_without_redistribution_review(tmp_path: Path) -> None:
+    issues = build_release_issues(
+        cwd=tmp_path,
+        paths=(Path("data/processed/factors/public.parquet"), Path("README.md")),
+    )
+
+    assert any(issue.issue_id == "processed_data_redistribution_unverified" for issue in issues)
 
 
 def test_checksum_manifest_hashes_only_release_candidates(tmp_path: Path) -> None:
@@ -55,6 +68,89 @@ def test_checksum_manifest_hashes_only_release_candidates(tmp_path: Path) -> Non
     )
     assert "README.md" in output.read_text(encoding="utf-8")
     assert "prompts/private.md" not in output.read_text(encoding="utf-8")
+
+
+def test_release_environment_manifest_is_path_sanitized(tmp_path: Path) -> None:
+    config = tmp_path / "configs" / "baseline.yaml"
+    config.parent.mkdir()
+    config.write_text("project: demo\n", encoding="utf-8")
+
+    manifest = build_release_environment_manifest(
+        cwd=tmp_path,
+        config_paths=(Path("configs/baseline.yaml"),),
+    )
+    rendered = json.dumps(manifest)
+
+    assert manifest["machine_specific_paths_included"] is False
+    assert "executable" not in rendered
+    assert "configs/baseline.yaml" in manifest["config_hashes"]
+
+
+def test_data_acquisition_guide_lists_nonredistributed_sources(tmp_path: Path) -> None:
+    data_access = tmp_path / "data_access.csv"
+    registry = tmp_path / "sources.yaml"
+    data_access.write_text(
+        "source_id,exact_definition_verified,access_status,notes\n"
+        "article_pdf,true,present_private_file,Private article copy\n"
+        "public_factor,false,article_source_located,Freeze exact archive\n",
+        encoding="utf-8",
+    )
+    registry.write_text(
+        """
+sources:
+  - id: article_pdf
+    expected_path: references/private/article.pdf
+  - id: public_factor
+    raw_path: data/raw/public_factor.csv
+""",
+        encoding="utf-8",
+    )
+
+    guide = render_data_acquisition_guide(
+        data_access_path=data_access,
+        source_registry_path=registry,
+    )
+
+    assert "do_not_redistribute" in guide
+    assert "data/raw/public_factor.csv" in guide
+    assert "prompt files" in guide
+
+
+def test_source_archive_excludes_local_only_paths(tmp_path: Path) -> None:
+    readme = tmp_path / "README.md"
+    prompt = tmp_path / "prompts" / "private.md"
+    release_asset = tmp_path / "artifacts" / "release" / "sbom.json"
+    private_readme = tmp_path / "references" / "private" / "README.md"
+    readme.write_text("public\n", encoding="utf-8")
+    prompt.parent.mkdir()
+    prompt.write_text("secret\n", encoding="utf-8")
+    release_asset.parent.mkdir(parents=True)
+    release_asset.write_text("{}\n", encoding="utf-8")
+    private_readme.parent.mkdir(parents=True)
+    private_readme.write_text("handling notes\n", encoding="utf-8")
+
+    archive = tmp_path / "artifacts" / "release" / "source_release.zip"
+    members = write_source_archive(
+        output_path=archive,
+        cwd=tmp_path,
+        paths=(
+            Path("README.md"),
+            Path("prompts/private.md"),
+            Path("artifacts/release/sbom.json"),
+            Path("references/private/README.md"),
+        ),
+    )
+    manifest = tmp_path / "artifacts" / "release" / "source_release_manifest.json"
+    write_source_archive_manifest(
+        output_path=manifest,
+        archive_path=archive,
+        members=members,
+    )
+
+    assert [path.as_posix() for path in members] == ["README.md"]
+    assert "README.md" in manifest.read_text(encoding="utf-8")
+    assert "prompts/private.md" not in manifest.read_text(encoding="utf-8")
+    assert "references/private/README.md" not in manifest.read_text(encoding="utf-8")
 
 
 def test_build_sbom_reads_poetry_lock(tmp_path: Path) -> None:
@@ -117,6 +213,8 @@ def test_release_notes_and_adversarial_reports_include_required_verdicts() -> No
     assert "Approximate Results" in notes
     assert "Blocked Results" in notes
     assert "Contradicted Results" in notes
+    assert "Extension Results" in notes
+    assert "source_only_tag_allowed" in notes
     assert "prompts" in notes
     assert "Minimal reproduction" in code_audit
     assert "potentially_publishable_after_major_revision" in econometric_audit
@@ -124,9 +222,13 @@ def test_release_notes_and_adversarial_reports_include_required_verdicts() -> No
 
 def test_release_audit_command_writes_artifacts(tmp_path: Path) -> None:
     sbom = tmp_path / "release" / "sbom.json"
+    environment = tmp_path / "release" / "environment_manifest.json"
     checksums = tmp_path / "release" / "checksums.sha256"
     gate = tmp_path / "release" / "gate.json"
+    archive = tmp_path / "release" / "source_release.zip"
+    archive_manifest = tmp_path / "release" / "source_release_manifest.json"
     notes = tmp_path / "RELEASE_NOTES.md"
+    data_guide = tmp_path / "DATA_ACQUISITION.md"
     code_audit = tmp_path / "adversarial_code_audit.md"
     econometric_audit = tmp_path / "adversarial_econometric_audit.md"
 
@@ -136,12 +238,20 @@ def test_release_audit_command_writes_artifacts(tmp_path: Path) -> None:
             "release-audit",
             "--sbom",
             str(sbom),
+            "--environment",
+            str(environment),
             "--checksums",
             str(checksums),
             "--gate",
             str(gate),
+            "--archive",
+            str(archive),
+            "--archive-manifest",
+            str(archive_manifest),
             "--release-notes",
             str(notes),
+            "--data-guide",
+            str(data_guide),
             "--code-audit",
             str(code_audit),
             "--econometric-audit",
@@ -152,8 +262,15 @@ def test_release_audit_command_writes_artifacts(tmp_path: Path) -> None:
     assert result.exit_code == 0
     assert "Wrote release audit artifacts" in result.stdout
     assert json.loads(sbom.read_text(encoding="utf-8"))["project"]["name"]
+    assert (
+        json.loads(environment.read_text(encoding="utf-8"))["machine_specific_paths_included"]
+        is False
+    )
     assert "README.md" in checksums.read_text(encoding="utf-8")
     assert "source_release" in gate.read_text(encoding="utf-8")
+    assert archive.is_file()
+    assert "archive_sha256" in archive_manifest.read_text(encoding="utf-8")
     assert "Release Verdict" in notes.read_text(encoding="utf-8")
+    assert "Data Acquisition Guide" in data_guide.read_text(encoding="utf-8")
     assert "Adversarial Code Audit" in code_audit.read_text(encoding="utf-8")
     assert "Adversarial Econometric Audit" in econometric_audit.read_text(encoding="utf-8")

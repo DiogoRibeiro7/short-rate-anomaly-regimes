@@ -57,9 +57,12 @@ artifacts/**
 !artifacts/evidence/article_manifest.json
 !artifacts/release/
 !artifacts/release/.gitkeep
+!artifacts/release/environment_manifest.json
 !artifacts/release/release_gate.json
 !artifacts/release/sbom.json
 !artifacts/release/source_artifact_checksums.sha256
+!artifacts/release/source_release.zip
+!artifacts/release/source_release_manifest.json
 !artifacts/portfolios/
 !artifacts/portfolios/.gitkeep
 !artifacts/portfolios/construction_manifest.json

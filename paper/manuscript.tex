@@ -1,6 +1,7 @@
 \documentclass[11pt]{article}
 \usepackage[margin=1in]{geometry}
 \usepackage{amsmath,amssymb,booktabs,graphicx,hyperref,natbib}
+\usepackage{bookmark}
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 
@@ -8,13 +9,13 @@
 \author{Diogo Ribeiro}
 \date{Draft}
 
-\newcommand{\artifact}[1]{\texttt{#1}}
+\newcommand{\artifact}[1]{\texttt{\detokenize{#1}}}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-This paper extends the framework of \citet{maio_santaclara_2017} by separating
+This paper extends the framework of \cite{maio2017} by separating
 strict replication, documented reconstruction, and new regime-oriented evidence.
 The current frozen repository artifacts support a data-limited non-reproduction
 draft. Publication documents are hashed locally, table targets are registered,
@@ -25,7 +26,7 @@ from auditable inputs.
 
 \section{Introduction}
 
-\citet{maio_santaclara_2017} study whether short-term interest-rate innovations
+Maio and Santa-Clara (2017) study whether short-term interest-rate innovations % artifact: artifacts/evidence/article_manifest.json
 help price stock-market anomaly returns. This paper keeps that article as the
 baseline target and adds three distinctions that are useful for a transparent
 extension. First, exact replication is reserved for published targets generated
@@ -38,7 +39,7 @@ priced state variable across monetary regimes, or whether its pricing content is
 narrowed by source definitions, factor strength, sample windows, and shock
 composition. The current answer is deliberately bounded. The repository can state
 what is prepared, blocked, and falsifiable; it cannot report generated empirical
-magnitudes until the missing inputs recorded in \artifact{research/data_access_matrix.csv}
+magnitudes until the missing inputs recorded in \artifact{research/data\_access\_matrix.csv}
 are resolved.
 
 \section{Original Framework}
