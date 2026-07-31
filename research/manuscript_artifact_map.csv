@@ -19,3 +19,12 @@ release_sbom,artifacts/release/sbom.json,Software bill of materials
 release_checksums,artifacts/release/source_artifact_checksums.sha256,Source and public artifact checksums
 release_archive_manifest,artifacts/release/source_release_manifest.json,Source archive manifest
 data_acquisition_guide,docs/DATA_ACQUISITION.md,Source acquisition and redistribution guide
+original_framework_audit,research/original_framework_audit.md,Verified original-framework reconstruction audit
+annotated_literature_review,research/annotated_literature_review.md,Verified annotated literature-review source map
+mechanism_hypothesis_map,research/mechanism_hypothesis_map.md,Economic mechanism and hypothesis mapping
+data_dictionary,research/data_dictionary.md,Data dictionary and source status classes
+data_flow_diagram,research/data_flow_diagram.md,Data-flow figure source
+statistical_protocol,research/statistical_protocol.md,Predeclared econometric methods and decision rules
+table_figure_map,research/manuscript_table_figure_map.csv,Manuscript table and figure architecture
+table_figure_contracts,research/table_figure_generation_contracts.md,Generation contracts for manuscript outputs
+latex_shells,research/latex_table_figure_shells.tex,LaTeX shells for manuscript tables and figures

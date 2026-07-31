@@ -382,7 +382,7 @@ Subject the repository and manuscript to independent hostile review before relea
 
 **Tasks**
 
-1. Run code, data, econometric, and manuscript review prompts.
+1. Run code, data, econometric, and manuscript review passes.
 2. Reproduce the project in a clean environment.
 3. Check for look-ahead, sample drift, unit errors, data leakage, and selective reporting.
 4. Verify licences and remove restricted raw data from the release.

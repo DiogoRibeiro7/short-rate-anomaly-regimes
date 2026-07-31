@@ -9,6 +9,7 @@ Latest validation was performed on 31 July 2026 from the repository checkout on 
 - `poetry run ruff format --check .`
 - `poetry run mypy src tests scripts`
 - `poetry run python scripts/verify_title.py`
+- `poetry run python scripts/verify_manuscript.py`
 - `poetry run srar validate-config --config configs/baseline.yaml`
 - `poetry run srar validate-config --config configs/extensions.yaml`
 - `poetry run srar validate-config --config configs/regimes.yaml`
@@ -20,7 +21,7 @@ Latest validation was performed on 31 July 2026 from the repository checkout on 
 - `poetry run pytest` with `--cov-fail-under=95`
 - `poetry run pre-commit run --all-files`
 
-The current test suite contains 226 tests. All 226 passed. The measured scaffold coverage is 95.60 percent because milestone-specific estimators and data clients are intentionally represented by explicit gates until their evidence inputs are completed.
+The current test suite contains 227 tests. All 227 passed. The measured scaffold coverage is 95.60 percent because milestone-specific estimators and data clients are intentionally represented by explicit gates until their evidence inputs are completed.
 
 ## Current quality status
 

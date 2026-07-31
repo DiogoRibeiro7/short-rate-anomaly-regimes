@@ -18,7 +18,10 @@ ENVIRONMENT_END_PATTERN = re.compile(r"\\end\{(?P<environment>table|figure)\}")
 EMPIRICAL_PARAGRAPH_PATTERN = re.compile(r"%\s*empirical-paragraph\b")
 EMPIRICAL_CONTEXT_PATTERN = re.compile(r"%\s*empirical-context:\s*(?P<context>.*)")
 RESTRICTED_LANGUAGE_PATTERN = re.compile(r"\b(cause|effect|policy shock)\b", re.IGNORECASE)
-APPROVED_LANGUAGE_SECTIONS = {"Policy and Information Shocks"}
+APPROVED_LANGUAGE_SECTIONS = {
+    "Policy and Information Shocks",
+    "Policy and information shock decomposition",
+}
 REQUIRED_EMPIRICAL_CONTEXT_FIELDS = frozenset(
     {
         "sample",
