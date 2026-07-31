@@ -40,6 +40,13 @@ from short_rate_anomaly_regimes.reporting.audit import (
     write_replication_report,
 )
 from short_rate_anomaly_regimes.reporting.manuscript import write_blocked_manuscript_report
+from short_rate_anomaly_regimes.reporting.release import (
+    write_adversarial_reports,
+    write_checksum_manifest,
+    write_release_gate,
+    write_release_notes,
+    write_sbom,
+)
 from short_rate_anomaly_regimes.shocks.decomposition import write_blocked_shock_report
 
 app = typer.Typer(no_args_is_help=True)
@@ -538,6 +545,39 @@ def build_report(
         )
     raise ReplicationBlockError(
         "Required manuscript inputs exist, but final table and figure rendering is not frozen"
+    )
+
+
+@app.command("release-audit")
+def release_audit(
+    sbom: OutputPathOption = Path("artifacts/release/sbom.json"),
+    checksums: OutputPathOption = Path("artifacts/release/source_artifact_checksums.sha256"),
+    gate: OutputPathOption = Path("artifacts/release/release_gate.json"),
+    release_notes: OutputPathOption = Path("docs/RELEASE_NOTES.md"),
+    code_audit: OutputPathOption = Path("reports/generated/adversarial_code_audit.md"),
+    econometric_audit: OutputPathOption = Path(
+        "reports/generated/adversarial_econometric_audit.md"
+    ),
+) -> None:
+    """Generate release hygiene, SBOM, checksum, and adversarial audit artifacts."""
+    write_sbom(
+        output_path=sbom,
+        pyproject_path=Path("pyproject.toml"),
+        lock_path=Path("poetry.lock"),
+    )
+    write_checksum_manifest(output_path=checksums)
+    issues = write_release_gate(output_path=gate)
+    write_release_notes(output_path=release_notes, issues=issues)
+    write_adversarial_reports(
+        code_report_path=code_audit,
+        econometric_report_path=econometric_audit,
+        issues=issues,
+    )
+    critical_count = sum(issue.severity == "critical" for issue in issues)
+    major_count = sum(issue.severity == "major" for issue in issues)
+    console.print(
+        "Wrote release audit artifacts "
+        f"with {critical_count} critical and {major_count} major issues"
     )
 
 

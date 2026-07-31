@@ -18,6 +18,7 @@ This project has not produced empirical replication results yet. The current rep
 - Shock-decomposition code is implemented for the selected Jarocinski-Karadi updated Fed shock source, rejected-candidate records, event-level sign decomposition into policy, central-bank-information, and ambiguous components, no-meeting monthly aggregation, source-study statistic audits, asset-pricing factor design, spanning correlations, and policy-language enforcement. The current shock report is `blocked_missing_input` because the event-level shock file is absent and redistribution terms still need to be recorded.
 - Out-of-sample falsification code is implemented for frozen annual refit schedules, expanding and rolling windows, no-lookahead two-pass forecasts, historical-mean and zero-return benchmarks, forecast vintage records, cross-sectional error metrics, rank diagnostics, model-confidence sets, and report/table writers. The current out-of-sample report is `blocked_missing_input` because baseline factors and extension panels are absent.
 - Manuscript-output scaffolding is implemented for the required outline, reproducibility statement, data access statement, hypothesis registry, robustness appendix, table-level replication appendix, artifact-map validation, numeric-claim traceability, title checks, and restricted causal-language checks. The current manuscript-output report is `blocked_missing_input` because empirical tables and extension panels are absent.
+- Adversarial release checks are implemented for restricted-path detection, SBOM generation from `poetry.lock`, source and public-artifact checksums, release notes, and code/econometric audit reports. The current release gate reports `0` critical issues and `1` major unresolved issue; source-code release is permitted, while empirical-results release remains blocked by missing factor and extension-panel artifacts.
 - Unverified empirical steps are deliberately gated with explicit exceptions.
 - Strict replication is blocked until exact source definitions and required data inputs are legally obtained and recorded. The final article PDF and publisher supplement ZIP are present locally and hashed.
 - The current article extraction status is documented in `research/article_method_extraction.md`.
@@ -39,6 +40,7 @@ The following inputs are still marked as missing or pending in `research/data_ac
 - selected Jarocinski-Karadi high-frequency event file and redistribution review required before shock decomposition can produce monthly factors.
 - baseline factor outputs, compatible portfolio panels, and temporal-extension monthly panels required before out-of-sample falsification can run.
 - frozen empirical tables, figures, and extension artifacts required before the manuscript can contain numerical conclusions.
+- generated factor and extension-panel artifacts required before empirical-results release is permitted by `artifacts/release/release_gate.json`.
 
 ## Status Labels
 

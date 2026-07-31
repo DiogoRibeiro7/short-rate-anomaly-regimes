@@ -1,4 +1,4 @@
-.PHONY: install validate-metadata lint typecheck manuscript-check config-check data-check provenance-check test check clean milestones env-manifest
+.PHONY: install validate-metadata lint typecheck manuscript-check config-check data-check provenance-check release-check test check clean milestones env-manifest
 
 install:
 	poetry install
@@ -30,10 +30,13 @@ provenance-check:
 	poetry run srar acquire-data --registry configs/data_sources.yaml
 	poetry run srar build-catalog --registry configs/data_sources.yaml
 
+release-check:
+	poetry run srar release-audit
+
 test:
 	poetry run pytest
 
-check: validate-metadata lint typecheck manuscript-check config-check data-check provenance-check test
+check: validate-metadata lint typecheck manuscript-check config-check data-check provenance-check release-check test
 
 milestones:
 	poetry run srar show-milestones

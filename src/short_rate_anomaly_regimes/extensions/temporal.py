@@ -7,11 +7,13 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import cast
 
-import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
 import pandas as pd
 from matplotlib.dates import date2num
 from scipy.stats import spearmanr  # type: ignore[import-untyped]
+
+matplotlib.use("Agg")
 
 
 @dataclass(frozen=True, slots=True)
@@ -428,6 +430,8 @@ def write_boundary_figure(
     boundary_month: str,
 ) -> None:
     """Plot mean series values with a vertical December 2013 boundary."""
+    import matplotlib.pyplot as plt
+
     required = {"month", "value", "sample_period"}
     missing = required - set(monthly_panel.columns)
     if missing:

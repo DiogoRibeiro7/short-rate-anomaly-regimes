@@ -10,6 +10,8 @@ This repository is an evidence-gated research scaffold. It currently contains co
 
 Strict replication remains blocked until the final article, supplement, source definitions, and required licensed data inputs are legally obtained, hashed, and recorded in `research/data_access_matrix.csv`.
 
+The adversarial release gate currently reports `0` critical issues and `1` major unresolved issue: source-code release is permitted, but empirical-results release is blocked until generated factor and extension-panel artifacts exist. See `docs/RELEASE_NOTES.md` and `artifacts/release/release_gate.json`.
+
 See `docs/REPLICATION_STATUS.md` for the current replication state and `docs/DATA_POLICY.md` for source and artifact handling rules.
 
 The repository has two deliberately separate tracks.
@@ -77,6 +79,7 @@ poetry run ruff check .
 poetry run ruff format --check .
 poetry run mypy src tests scripts
 poetry run python scripts/verify_title.py
+poetry run srar release-audit
 poetry run pytest
 ```
 
