@@ -104,3 +104,87 @@ def test_artifact_map_and_blocked_report_validation(tmp_path: Path) -> None:
         missing_inputs=(Path("missing.csv"),),
     )
     assert report_path.is_file()
+
+
+def test_manuscript_checks_empirical_paragraph_context(tmp_path: Path) -> None:
+    manuscript_path = tmp_path / "paper.tex"
+    artifact_map_path = tmp_path / "map.csv"
+    artifact = tmp_path / "artifact.csv"
+    artifact.write_text("x\n", encoding="utf-8")
+    artifact_map_path.write_text(
+        f"artifact_id,path,description\nartifact,{artifact.as_posix()},Fixture artifact\n",
+        encoding="utf-8",
+    )
+    manuscript_path.write_text(
+        "\\title{Clean Title}\n"
+        "\\section{Results}\n"
+        "This empirical result paragraph is marked. % empirical-paragraph\n",
+        encoding="utf-8",
+    )
+
+    issues = validate_manuscript(
+        manuscript_path=manuscript_path,
+        artifact_map_path=artifact_map_path,
+    )
+
+    assert issues[0].check == "empirical_paragraph_context"
+
+    manuscript_path.write_text(
+        "\\title{Clean Title}\n"
+        "\\section{Results}\n"
+        "This empirical result paragraph is marked. % empirical-paragraph\n"
+        "% empirical-context: sample=x; model=x; estimator=x; test_assets=x; "
+        "uncertainty=x; economic_magnitude=x\n",
+        encoding="utf-8",
+    )
+
+    assert (
+        validate_manuscript(
+            manuscript_path=manuscript_path,
+            artifact_map_path=artifact_map_path,
+        )
+        == []
+    )
+
+
+def test_manuscript_checks_table_and_figure_artifact_sources(tmp_path: Path) -> None:
+    manuscript_path = tmp_path / "paper.tex"
+    artifact_map_path = tmp_path / "map.csv"
+    artifact = tmp_path / "artifact.csv"
+    artifact.write_text("x\n", encoding="utf-8")
+    artifact_map_path.write_text(
+        f"artifact_id,path,description\nartifact,{artifact.as_posix()},Fixture artifact\n",
+        encoding="utf-8",
+    )
+    manuscript_path.write_text(
+        "\\title{Clean Title}\n"
+        "\\section{Results}\n"
+        "\\begin{table}\n"
+        "\\caption{Unmapped table}\n"
+        "\\end{table}\n",
+        encoding="utf-8",
+    )
+
+    issues = validate_manuscript(
+        manuscript_path=manuscript_path,
+        artifact_map_path=artifact_map_path,
+    )
+
+    assert issues[0].check == "table_figure_artifact_source"
+
+    manuscript_path.write_text(
+        "\\title{Clean Title}\n"
+        "\\section{Results}\n"
+        "\\begin{figure}\n"
+        f"Source: \\artifact{{{artifact.as_posix()}}}\n"
+        "\\end{figure}\n",
+        encoding="utf-8",
+    )
+
+    assert (
+        validate_manuscript(
+            manuscript_path=manuscript_path,
+            artifact_map_path=artifact_map_path,
+        )
+        == []
+    )

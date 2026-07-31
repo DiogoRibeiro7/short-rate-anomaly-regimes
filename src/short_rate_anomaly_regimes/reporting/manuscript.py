@@ -12,8 +12,23 @@ TITLE_PATTERN = re.compile(r"\\title\{(?P<title>[^}]*)\}")
 SECTION_PATTERN = re.compile(r"\\section\{(?P<section>[^}]*)\}")
 NUMERIC_PATTERN = re.compile(r"(?<![A-Za-z_])[-+]?\d+(?:\.\d+)?(?![A-Za-z_])")
 ARTIFACT_TAG_PATTERN = re.compile(r"%\s*artifact:\s*(?P<artifact>\S+)")
+LATEX_ARTIFACT_PATTERN = re.compile(r"\\artifact\{(?P<artifact>[^}]*)\}")
+ENVIRONMENT_BEGIN_PATTERN = re.compile(r"\\begin\{(?P<environment>table|figure)\}")
+ENVIRONMENT_END_PATTERN = re.compile(r"\\end\{(?P<environment>table|figure)\}")
+EMPIRICAL_PARAGRAPH_PATTERN = re.compile(r"%\s*empirical-paragraph\b")
+EMPIRICAL_CONTEXT_PATTERN = re.compile(r"%\s*empirical-context:\s*(?P<context>.*)")
 RESTRICTED_LANGUAGE_PATTERN = re.compile(r"\b(cause|effect|policy shock)\b", re.IGNORECASE)
 APPROVED_LANGUAGE_SECTIONS = {"Policy and Information Shocks"}
+REQUIRED_EMPIRICAL_CONTEXT_FIELDS = frozenset(
+    {
+        "sample",
+        "model",
+        "estimator",
+        "test_assets",
+        "uncertainty",
+        "economic_magnitude",
+    }
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,10 +94,20 @@ def validate_manuscript(
                 )
 
     current_section = ""
+    current_environment: str | None = None
+    environment_start_line = 0
+    environment_artifact_paths: set[str] = set()
     for line_number, line in enumerate(manuscript.splitlines(), start=1):
         section_match = SECTION_PATTERN.search(line)
         if section_match is not None:
             current_section = section_match.group("section")
+        environment_match = ENVIRONMENT_BEGIN_PATTERN.search(line)
+        if environment_match is not None:
+            current_environment = environment_match.group("environment")
+            environment_start_line = line_number
+            environment_artifact_paths = set()
+        if current_environment is not None:
+            environment_artifact_paths.update(_artifact_references(line))
         if _line_has_numeric_claim(line):
             tag_match = ARTIFACT_TAG_PATTERN.search(line)
             if tag_match is None:
@@ -101,6 +126,24 @@ def validate_manuscript(
                         message=f"Artifact tag is not declared: {tag_match.group('artifact')}",
                     )
                 )
+        end_match = ENVIRONMENT_END_PATTERN.search(line)
+        if (
+            end_match is not None
+            and current_environment is not None
+            and current_environment == end_match.group("environment")
+        ):
+            finished_environment = current_environment
+            issues.extend(
+                _validate_environment_artifacts(
+                    environment=finished_environment,
+                    start_line=environment_start_line,
+                    artifact_paths=environment_artifact_paths,
+                    declared_paths=declared_paths,
+                )
+            )
+            current_environment = None
+            environment_start_line = 0
+            environment_artifact_paths = set()
         if current_section not in APPROVED_LANGUAGE_SECTIONS:
             for match in RESTRICTED_LANGUAGE_PATTERN.finditer(_strip_comment(line)):
                 issues.append(
@@ -113,6 +156,9 @@ def validate_manuscript(
                         ),
                     )
                 )
+    for paragraph_start_line, paragraph in _iter_paragraphs(manuscript):
+        if EMPIRICAL_PARAGRAPH_PATTERN.search(paragraph):
+            issues.extend(_validate_empirical_context(paragraph_start_line, paragraph))
     return issues
 
 
@@ -161,10 +207,94 @@ def _line_has_numeric_claim(line: str) -> bool:
     )
     if stripped.lstrip().startswith(ignored_prefixes):
         return False
-    if "\\cite" in stripped or stripped.lstrip().startswith(("\\[", "\\]")):
+    if (
+        "\\cite" in stripped
+        or "\\artifact{" in stripped
+        or stripped.lstrip().startswith(("\\[", "\\]"))
+    ):
         return False
     return NUMERIC_PATTERN.search(stripped) is not None
 
 
 def _strip_comment(line: str) -> str:
     return line.split("%", 1)[0]
+
+
+def _artifact_references(line: str) -> set[str]:
+    references = {match.group("artifact") for match in ARTIFACT_TAG_PATTERN.finditer(line)}
+    references.update(match.group("artifact") for match in LATEX_ARTIFACT_PATTERN.finditer(line))
+    return references
+
+
+def _validate_environment_artifacts(
+    *,
+    environment: str,
+    start_line: int,
+    artifact_paths: set[str],
+    declared_paths: set[str],
+) -> list[ManuscriptIssue]:
+    if not artifact_paths:
+        return [
+            ManuscriptIssue(
+                line_number=start_line,
+                check="table_figure_artifact_source",
+                message=f"{environment} environment lacks a machine-readable artifact source",
+            )
+        ]
+    undeclared = sorted(path for path in artifact_paths if path not in declared_paths)
+    return [
+        ManuscriptIssue(
+            line_number=start_line,
+            check="table_figure_artifact_source",
+            message=f"{environment} artifact source is not declared: {path}",
+        )
+        for path in undeclared
+    ]
+
+
+def _iter_paragraphs(manuscript: str) -> list[tuple[int, str]]:
+    paragraphs: list[tuple[int, str]] = []
+    current_lines: list[str] = []
+    current_start = 1
+    for line_number, line in enumerate(manuscript.splitlines(), start=1):
+        if line.strip():
+            if not current_lines:
+                current_start = line_number
+            current_lines.append(line)
+            continue
+        if current_lines:
+            paragraphs.append((current_start, "\n".join(current_lines)))
+            current_lines = []
+    if current_lines:
+        paragraphs.append((current_start, "\n".join(current_lines)))
+    return paragraphs
+
+
+def _validate_empirical_context(start_line: int, paragraph: str) -> list[ManuscriptIssue]:
+    context_match = EMPIRICAL_CONTEXT_PATTERN.search(paragraph)
+    if context_match is None:
+        return [
+            ManuscriptIssue(
+                line_number=start_line,
+                check="empirical_paragraph_context",
+                message="Empirical paragraph lacks a context declaration",
+            )
+        ]
+    context_fields = {
+        field.strip().split("=", 1)[0]
+        for field in context_match.group("context").split(";")
+        if field.strip()
+    }
+    missing_fields = REQUIRED_EMPIRICAL_CONTEXT_FIELDS - context_fields
+    if not missing_fields:
+        return []
+    return [
+        ManuscriptIssue(
+            line_number=start_line,
+            check="empirical_paragraph_context",
+            message=(
+                "Empirical paragraph context is missing fields: "
+                f"{', '.join(sorted(missing_fields))}"
+            ),
+        )
+    ]

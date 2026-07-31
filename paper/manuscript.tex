@@ -14,111 +14,216 @@
 \maketitle
 
 \begin{abstract}
-This manuscript extends the framework of \citet{maio_santaclara_2017} only after
-the replication and extension artifacts are frozen. The current repository state
-is a reproducible scaffold: the article and supplement are hashed locally, but
-baseline replication, temporal extension, regime stability, shock decomposition,
-and out-of-sample falsification remain blocked by missing empirical inputs.
+This paper extends the framework of \citet{maio_santaclara_2017} by separating
+strict replication, documented reconstruction, and new regime-oriented evidence.
+The current frozen repository artifacts support a data-limited non-reproduction
+draft. Publication documents are hashed locally, table targets are registered,
+and the estimation code is tested, but empirical magnitudes are withheld until
+factor, portfolio, first-pass, cross-sectional, and extension panels are generated
+from auditable inputs.
 \end{abstract}
 
 \section{Introduction}
 
-\citet{maio_santaclara_2017} study short-term interest-rate innovations and stock
-market anomaly returns. This paper treats their published article as the starting
-point, then separates exact replication, documented reconstruction, and new
-extension evidence. The present draft contains no empirical finding not generated
-from repository artifacts.
+\citet{maio_santaclara_2017} study whether short-term interest-rate innovations
+help price stock-market anomaly returns. This paper keeps that article as the
+baseline target and adds three distinctions that are useful for a transparent
+extension. First, exact replication is reserved for published targets generated
+from source-compatible inputs. Second, documented reconstruction is used when an
+input is unavailable and a substitute must be named. Third, extension evidence is
+reported separately from the replication verdict.
+
+The central question is whether the short-rate innovation behaves as a stable
+priced state variable across monetary regimes, or whether its pricing content is
+narrowed by source definitions, factor strength, sample windows, and shock
+composition. The current answer is deliberately bounded. The repository can state
+what is prepared, blocked, and falsifiable; it cannot report generated empirical
+magnitudes until the missing inputs recorded in \artifact{research/data_access_matrix.csv}
+are resolved.
 
 \section{Original Framework}
 
-The baseline asset-pricing representation follows an intertemporal factor model:
+The baseline pricing equation is written before discussing any table result:
 \[
 E[R_i^e] = \lambda_0 + \beta_{i,m}\lambda_m + \beta_{i,r}\lambda_r + \alpha_i.
 \]
-Here \(R_i^e\) is an excess return, \(\beta_{i,m}\) is the market loading,
-\(\beta_{i,r}\) is the loading on a short-rate innovation, and \(\alpha_i\) is a
-pricing error. The short-rate residual is described as a rate innovation, not as
-an identified monetary-policy object.
+Here \(R_i^e\) denotes an excess return, \(\beta_{i,m}\) is the market loading,
+\(\beta_{i,r}\) is the loading on a short-rate innovation, \(\lambda_m\) and
+\(\lambda_r\) are cross-sectional prices, and \(\alpha_i\) is the pricing error.
+The short-rate residual is a rate innovation relative to the fitted time-series
+model. It is not an identified monetary-policy object in the baseline design.
+
+The strict baseline sample is configured from 1972-01 through 2013-12. % artifact: configs/baseline.yaml
+Empirical context: sample is the configured monthly baseline; model is the
+market-plus-short-rate asset-pricing model; estimator is two-pass pricing after
+OLS first-pass regressions; test assets are the registered anomaly portfolios;
+uncertainty is Newey-West and Shanken-style corrected where applicable; economic
+magnitude is unavailable until generated artifacts exist. % empirical-paragraph
+% empirical-context: sample=baseline_monthly; model=market_plus_short_rate; estimator=two_pass_after_ols; test_assets=registered_anomaly_portfolios; uncertainty=newey_west_and_shanken; economic_magnitude=blocked_missing_generated_artifacts
+
+\section{Evidence And Source Versions}
+
+The article and publisher supplement are present only as local private research
+copies, with committed hash metadata in \artifact{artifacts/evidence/article_manifest.json}.
+Those files are not redistributed. The source registry in
+\artifact{configs/data_sources.yaml} records the public, author-supplied, and
+licensed inputs needed to reproduce the study.
+
+\begin{table}[htbp]
+\centering
+\caption{Artifact Gate Summary}
+\begin{tabular}{lll}
+\toprule
+Gate & Machine-readable source & Current interpretation \\
+\midrule
+Publication evidence & \artifact{artifacts/evidence/article_manifest.json} & Document hashes recorded \\
+Baseline audit & \artifact{artifacts/audit/table_replication.csv} & Missing-input rows only \\
+Replication report & \artifact{reports/generated/replication_report.md} & Baseline-only report \\
+Robustness & \artifact{reports/generated/robustness_report.md} & Unidentified until baseline artifacts exist \\
+Temporal extension & \artifact{reports/generated/temporal_extension_report.md} & Blocked pending compatible panels \\
+Release gate & \artifact{artifacts/release/release_gate.json} & Empirical-results release blocked \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Replication Design}
 
-The strict baseline sample is frozen from 1972-01 through 2013-12. % artifact: configs/baseline.yaml
-The source-target map and table-level tolerances are stored in
-\artifact{research/table_target_manifest.csv}. Replication labels distinguish
-reproduced, approximately reproduced, missing-input, contradicted, and not-attempted
-targets.
+The replication design follows a strict separation between the published baseline
+and later extensions. Table-level targets are registered in
+\artifact{research/table_target_manifest.csv}. Each target can be classified only
+as reproduced, approximately reproduced, missing-input, contradicted, or
+not-attempted. Missing source data are reported as missing inputs rather than as
+evidence against the article.
+
+Factor reconstruction uses the configured short-rate source, an autoregressive
+innovation model with an intercept, contemporaneous residual timing, and monthly
+return units. Portfolio reconstruction uses the configured value-weighted anomaly
+sets, with unavailable author or WRDS files held out until they are legally
+registered or reconstructed under the documented reconstruction label.
 
 \section{Baseline Replication Results}
 
-Baseline empirical results are blocked until factor, portfolio, first-pass, and
-cross-sectional artifacts exist. The current table-level audit marks the frozen
-targets as missing-input rows rather than as contradictions. % artifact: artifacts/audit/table_replication.csv
+Baseline empirical results are not yet generated. The committed audit currently
+classifies all frozen table targets as missing-input rows because factor,
+portfolio, first-pass, and cross-sectional artifacts are absent. % artifact: artifacts/audit/table_replication.csv
+Empirical context: sample is the strict monthly baseline; model is the registered
+baseline and comparator asset-pricing system; estimator is the audit layer over
+generated cells; test assets are the table-target anomaly portfolios; uncertainty
+is unavailable because generated standard errors do not exist; economic magnitude
+is unavailable because no replicated table cell has been produced. % empirical-paragraph
+% empirical-context: sample=strict_monthly_baseline; model=baseline_and_comparator_models; estimator=table_audit; test_assets=table_target_anomaly_portfolios; uncertainty=blocked_missing_standard_errors; economic_magnitude=blocked_missing_table_cells
 
-\section{Weak Factor and Robustness Analysis}
+\section{Weak Factor And Robustness Analysis}
 
-Weak-factor and robustness diagnostics are implemented, but the robustness report
-is currently unidentified because generated baseline artifacts are absent.
-Robustness conclusions must use the registered families in
-\artifact{configs/extensions.yaml}.
+Weak-factor and robustness diagnostics are implemented before empirical claims
+are interpreted. The registered diagnostics cover beta-matrix rank, singular
+values, beta dispersion, spanning checks, influence diagnostics, and familywise
+robustness classifications. The current robustness report is unidentified because
+the baseline factor and estimator artifacts are absent.
+
+Empirical context: sample is the strict baseline once generated; model is the
+registered robustness family; estimator is diagnostic comparison over baseline
+pricing outputs; test assets are the same baseline assets used for replication;
+uncertainty is familywise and weak-factor adjusted where configured; economic
+magnitude is blocked until baseline estimates exist. % empirical-paragraph
+% empirical-context: sample=strict_baseline_when_available; model=registered_robustness_family; estimator=diagnostic_comparison; test_assets=baseline_replication_assets; uncertainty=familywise_and_weak_factor_diagnostics; economic_magnitude=blocked_missing_baseline_estimates
 
 \section{Temporal Extension}
 
-The post-publication extension freezes the original baseline through 2013-12 and % artifact: configs/extensions.yaml
-starts the extension in 2014-01. % artifact: configs/extensions.yaml
-The current temporal report is blocked because compatible post-baseline panels
-have not been generated.
+The extension freezes the original baseline through 2013-12 and starts the post-publication window in 2014-01. % artifact: configs/extensions.yaml
+This design prevents revised historical data from being silently merged into the
+baseline. Extension panels must record vintages, compatible asset universes, and
+revision audits before any post-publication pattern is interpreted.
+
+Empirical context: sample is the frozen baseline plus the configured extension
+window; model is the frozen-parameter and refit extension design; estimator is
+the predeclared temporal comparison; test assets are only source-compatible
+baseline assets; uncertainty is generated by the temporal diagnostics; economic
+magnitude is blocked until extension panels exist. % empirical-paragraph
+% empirical-context: sample=baseline_plus_extension_window; model=frozen_parameter_and_refit_extension; estimator=temporal_comparison; test_assets=source_compatible_baseline_assets; uncertainty=temporal_diagnostics; economic_magnitude=blocked_missing_extension_panels
 
 \section{Monetary Regimes}
 
-Regime dates are deterministic proposals verified against recorded policy-action
-sources and evaluated with boundary sensitivity. The regime report is currently
-blocked because the required baseline factors and temporal-extension panel are
-absent.
+Regime boundaries are declared before results and sourced from recorded
+policy-action evidence. The design allows boundary sensitivity, interaction
+tests, split-sample eligibility checks, structural-break scans, and stability
+classification. A stability result can confirm, narrow, reinterpret, or fail to
+generalise the baseline evidence; it cannot change the baseline replication label.
+
+Empirical context: sample is the extension-compatible monthly panel when
+available; model is the registered regime-interaction system; estimator is pooled
+regime pricing and break diagnostics; test assets are compatible anomaly
+portfolios; uncertainty is Wald, Holm-adjusted, and break-test based; economic
+magnitude is blocked until regime inputs exist. % empirical-paragraph
+% empirical-context: sample=extension_compatible_monthly_panel; model=regime_interaction_system; estimator=pooled_regime_and_break_diagnostics; test_assets=compatible_anomaly_portfolios; uncertainty=wald_holm_and_break_tests; economic_magnitude=blocked_missing_regime_inputs
 
 \section{Policy and Information Shocks}
 
-The high-frequency extension may use the identified component labelled as a policy
-shock only inside this identification section and generated shock reports.
-Jarocinski--Karadi updated Federal Reserve shocks are selected as the primary
-source candidate, while alternatives are recorded in
-\artifact{research/shock_dataset_selection.csv}. The AR residual remains a rate
-innovation.
+The high-frequency extension may use the identified component labelled as a
+policy shock only within this identification section and its generated shock
+reports. Jarocinski--Karadi updated Federal Reserve shocks are the selected
+primary candidate, and alternatives are recorded in
+\artifact{research/shock_dataset_selection.csv}. The baseline AR residual remains
+a rate innovation.
 
-\section{Out of Sample Results}
+Empirical context: sample is event-level Federal Reserve announcements aggregated
+to months after source terms are registered; model decomposes high-frequency
+surprises into policy, central-bank-information, and ambiguous components;
+estimator is monthly aggregation plus spanning and pricing checks; test assets
+are the compatible anomaly portfolios; uncertainty follows the registered
+shock-decomposition diagnostics; economic magnitude is blocked until event data
+are legally registered. % empirical-paragraph
+% empirical-context: sample=event_to_month_shock_panel; model=policy_information_ambiguous_decomposition; estimator=aggregation_spanning_and_pricing_checks; test_assets=compatible_anomaly_portfolios; uncertainty=shock_decomposition_diagnostics; economic_magnitude=blocked_missing_event_data
 
-The out-of-sample design freezes an initial training endpoint at 1999-12 and an % artifact: configs/extensions.yaml
-annual refit schedule.
+\section{Out Of Sample Results}
+
+The out-of-sample design freezes an initial training endpoint at 1999-12 and uses a predeclared annual refit schedule. % artifact: configs/extensions.yaml
 Forecast records must store model vintage, training dates, factor definition, and
-asset universe. Negative out-of-sample performance will be preserved without
-retuning the confirmatory specification.
+asset universe. Negative performance, null results, and instability are retained
+rather than used to retune the confirmatory specification.
+
+Empirical context: sample is the registered holdout window; model is the frozen
+confirmatory two-factor specification and benchmark set; estimator is expanding
+and rolling no-lookahead forecasting; test assets are compatible holdout anomaly
+portfolios; uncertainty is model-confidence-set and cross-sectional error
+diagnostics; economic magnitude is blocked until forecast artifacts exist. % empirical-paragraph
+% empirical-context: sample=registered_holdout_window; model=confirmatory_two_factor_and_benchmarks; estimator=no_lookahead_expanding_and_rolling_forecasts; test_assets=compatible_holdout_anomaly_portfolios; uncertainty=model_confidence_set_and_error_diagnostics; economic_magnitude=blocked_missing_forecasts
 
 \section{Interpretation}
 
-Evidence will be classified as confirmation, narrowing, reinterpretation,
-generalisation, or non-reproducibility due to missing inputs. The current state is
-non-reproducibility due to missing inputs, not evidence against the article.
+The paper will frame generated evidence through confirmation, narrowing,
+reinterpretation, generalisation, or data-limited non-reproduction. In the current
+draft, the only supported classification is data-limited non-reproduction. That
+classification means the repository has not yet produced the empirical artifacts
+needed for a replication verdict; it is not a claim that the article is
+contradicted.
 
 \section{Limitations}
 
-Unavailable inputs include exact public archive versions, author or WRDS portfolio
-files, source-compatible extension panels, high-frequency event files, and frozen
-generated result cells. These limitations are recorded in
-\artifact{research/data_access_matrix.csv}.
-The adversarial release gate reports no critical restricted-path finding, but it
-classifies missing factor and extension-panel artifacts as a major unresolved
-issue that blocks empirical-results release.
+Unavailable inputs include exact public archive versions, author or WRDS
+portfolio files, source-compatible extension panels, high-frequency event files,
+and frozen generated result cells. These limitations are recorded in
+\artifact{research/data_access_matrix.csv}. The adversarial release gate reports
+no critical restricted-path finding, but it classifies missing factor and
+extension-panel artifacts as a major unresolved issue that blocks empirical
+results release.
 
 \section{Reproducibility Statement}
 
-All manuscript claims must be generated from versioned code, typed configuration,
+All empirical claims must be generated from versioned code, typed configuration,
 and machine-readable artifacts. The validation status is recorded in
-\artifact{VALIDATION.md}.
+\artifact{VALIDATION.md}. The release gate, SBOM, and source checksum manifest
+are generated by \artifact{artifacts/release/release_gate.json},
+\artifact{artifacts/release/sbom.json}, and
+\artifact{artifacts/release/source_artifact_checksums.sha256}.
 
 \section{Data Access Statement}
 
-Restricted article and supplement files remain local-only. The committed repository
-contains hashes and metadata but not copyrighted source documents or restricted raw
-data.
+Restricted article and supplement files remain local-only. The committed
+repository contains hashes and metadata but not copyrighted source documents,
+prompt files, licensed data extracts, local catalogs, or temporary artifacts.
+Public acquisition remains disabled until exact source definitions and licence
+terms are recorded.
 
 \section{Hypothesis Registry}
 
@@ -129,20 +234,24 @@ observing generated errors or instability diagnostics.
 \section{Robustness Appendix}
 
 The robustness appendix must be generated from
-\artifact{reports/generated/robustness_report.md} and the registered robustness
-tables once empirical artifacts exist.
+\artifact{reports/generated/robustness_report.md} and registered robustness
+tables once empirical artifacts exist. Null results, weak-factor warnings, and
+instability are reportable outcomes.
 
 \section{Table-Level Replication Appendix}
 
 The table-level replication appendix must be generated from
 \artifact{artifacts/audit/table_replication.csv}. No baseline verdict can include
-extension results.
+temporal, regime, shock-decomposition, or out-of-sample extension results.
 
 \section{Conclusion}
 
-The repository currently provides a professional, tested replication scaffold and
-explicit missing-input reports. Empirical conclusions will be added only when the
-required artifacts are generated and mapped to manuscript claims.
+The current repository supports a professional extension-paper draft whose
+empirical conclusions are intentionally blocked. Its contribution at this stage
+is a reproducible structure for separating exact replication, documented
+reconstruction, and new extension evidence. Numerical conclusions will be added
+only when the required artifacts are generated, mapped, and accepted by the
+manuscript and release gates.
 
 \bibliographystyle{apalike}
 \bibliography{references}

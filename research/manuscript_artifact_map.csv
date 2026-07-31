@@ -13,3 +13,6 @@ temporal_report,reports/generated/temporal_extension_report.md,Temporal-extensio
 regime_report,reports/generated/regime_report.md,Monetary-regime stability report
 shock_report,reports/generated/shock_decomposition_report.md,High-frequency shock-decomposition report
 oos_report,reports/generated/out_of_sample_report.md,Out-of-sample falsification report
+release_gate,artifacts/release/release_gate.json,Adversarial release gate status
+release_sbom,artifacts/release/sbom.json,Software bill of materials
+release_checksums,artifacts/release/source_artifact_checksums.sha256,Source and public artifact checksums
