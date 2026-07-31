@@ -20,7 +20,7 @@ Latest validation was performed on 31 July 2026 from the repository checkout on 
 - `poetry run pytest` with `--cov-fail-under=95`
 - `poetry run pre-commit run --all-files`
 
-The current test suite contains 225 tests. All 225 passed. The measured scaffold coverage is 95.61 percent because milestone-specific estimators and data clients are intentionally represented by explicit gates until their evidence inputs are completed.
+The current test suite contains 226 tests. All 226 passed. The measured scaffold coverage is 95.61 percent because milestone-specific estimators and data clients are intentionally represented by explicit gates until their evidence inputs are completed.
 
 ## Current quality status
 

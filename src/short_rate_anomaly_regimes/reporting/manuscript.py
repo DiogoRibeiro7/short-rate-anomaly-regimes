@@ -203,6 +203,7 @@ def _line_has_numeric_claim(line: str) -> bool:
         "\\date",
         "\\bibliography",
         "\\bibliographystyle",
+        "\\begin{tabular}",
         "\\cite",
     )
     if stripped.lstrip().startswith(ignored_prefixes):

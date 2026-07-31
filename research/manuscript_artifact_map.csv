@@ -14,5 +14,8 @@ regime_report,reports/generated/regime_report.md,Monetary-regime stability repor
 shock_report,reports/generated/shock_decomposition_report.md,High-frequency shock-decomposition report
 oos_report,reports/generated/out_of_sample_report.md,Out-of-sample falsification report
 release_gate,artifacts/release/release_gate.json,Adversarial release gate status
+release_environment,artifacts/release/environment_manifest.json,Sanitized release environment manifest
 release_sbom,artifacts/release/sbom.json,Software bill of materials
 release_checksums,artifacts/release/source_artifact_checksums.sha256,Source and public artifact checksums
+release_archive_manifest,artifacts/release/source_release_manifest.json,Source archive manifest
+data_acquisition_guide,docs/DATA_ACQUISITION.md,Source acquisition and redistribution guide
