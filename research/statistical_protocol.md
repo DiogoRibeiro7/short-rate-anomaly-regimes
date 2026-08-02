@@ -64,7 +64,12 @@ inside the registered secondary family.
 ## Weak-Factor Analysis
 
 A high cross-sectional fit is not sufficient when factor exposures have little
-economically scaled dispersion or the factor is weakly identified. Report
+economically scaled dispersion or the factor is weakly identified. The weak-factor
+claim is split into three separately classified confirmatory hypotheses so that
+the reason for a failure is visible: H4a cross-sectional identification strength,
+H4b influence stability, and H4c fitted-premium precision. Their numerical gates,
+including the numerical factor-spanning criterion, are fixed in
+`research/inference_contract.md`. Report
 
 - rank of the beta matrix;
 - singular values and condition number descriptively, without redundant
@@ -91,7 +96,8 @@ pricing errors, and cross-sectional fit.
   stability;
 - pricing-error and fit comparisons on common asset-date intersections;
 - pooled regime interactions with a single omitted baseline category;
-- equivalence intervals against predeclared numerical economic bounds;
+- equivalence intervals against predeclared numerical economic bounds, decided by
+  standard 5 percent TOST implemented as 90 percent interval inclusion;
 - Quandt-Andrews unknown-break tests;
 - Bai-Perron multiple-break tests with a minimum segment length;
 - CUSUM and recursive residual diagnostics;
@@ -100,6 +106,16 @@ pricing errors, and cross-sectional fit.
 Exploratory break dates do not replace the predeclared regime system. Boundary
 sensitivity checks shift registered regime cutoffs under the configuration rules
 and report whether classifications change.
+
+The primary transition rule assigns a regime to the first calendar month lying
+entirely under the new policy stance; the month containing the policy action
+remains with the outgoing regime. The whole-transition-month rule is retained
+as a declared sensitivity analysis only. Minimum regime-estimation eligibility
+is frozen in `configs/regimes.yaml`: fewer than 36 months permits pooled
+regime-interaction models only, 36 to 59 months permits flagged regime-specific
+first-pass betas, and a standalone regime second pass additionally requires at
+least 60 months, at least 10 test assets, and full beta-matrix rank. These
+floors may not be relaxed for a regime that turns out to be short.
 
 ## Temporal Extension And Out-Of-Sample Design
 
@@ -182,7 +198,9 @@ rescales beta and lambda without changing fitted returns.
 | R1f | Supplementary robustness audit | Replication requires recovery within declared tolerances after inputs and artifacts exist. |
 | H1 | No-intercept two-pass OLS with Shanken correction and common-intersection comparator models | RMSE, MAE, and maximum pricing-error improvement must pass materiality thresholds against the strongest comparator. |
 | H2 | Frozen and refitted post-publication two-pass evaluations | Sign, magnitude, and pricing-error compatibility must all hold. |
-| H3 | Beta interaction tests plus regime-specific fitted-premium and error comparisons | Stability requires all dimensions to remain inside numerical bounds. |
-| H4 | Standardized exposure dispersion, rank, spanning, influence, and robust-inference diagnostics | Pricing interpretation requires all predeclared strength gates to pass. |
+| H3 | Beta interaction tests plus regime-specific fitted-premium and error comparisons | Stability requires all dimensions to remain inside numerical bounds under 5 percent TOST with 90 percent intervals. |
+| H4a | Beta-matrix rank, standardized exposure dispersion, and the numerical spanning regression | All three identification gates must pass. |
+| H4b | Leave-one-anomaly-family refits and standardized influence diagnostics | No sign reversal, no materiality loss, and no portfolio with standardized influence of one or more. |
+| H4c | Joint moving-block bootstrap of the rate-attributable fitted-premium spread | The 95 percent interval may not span both economically positive and negative effects. |
 | E1 | Unknown-break tests | Exploratory only; does not confirm regime stability. |
 | O1 | Optional monthly component spanning, pricing, and strength tests | Appendix-only unless event data and component-strength gates pass. |

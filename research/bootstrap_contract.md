@@ -12,7 +12,8 @@ This contract freezes bootstrap execution before empirical results are generated
 - Fallback rationale: one year preserves seasonal accounting and portfolio-formation dependence while avoiding a result-dependent block choice.
 - Repetitions: 10000 for confirmatory inference.
 - Random-seed policy: use the project seed in `configs/baseline.yaml`; store the seed and draw index range with each generated artifact.
-- Joint resampling: factors, portfolio returns, rate series, and regime labels are resampled jointly by month.
+- Stochastic variables: the market factor, the comparator factors, the portfolio returns, and the short-rate level series. These are the only quantities resampled, and they are resampled jointly by calendar month.
+- Regime labels are excluded from the stochastic variables. A regime label is a deterministic calendar function of the observation month, frozen in `research/regime_registry.csv`. Each resampled month carries its own label as a fixed attribute. Labels are never permuted, never drawn independently of the month, and never re-derived from the resampled ordering. Treating labels as random would fabricate uncertainty about a known calendar and would break the correspondence between an observation and its policy regime.
 - Recomputed stages: each draw re-estimates the short-rate innovation, all first-pass regressions, the second-pass regression, fitted premia, pricing errors, fit metrics, and equivalence statistics.
 - Regime boundaries: confirmatory regime labels are fixed calendar labels; blocks may not move observations across labels for regime-specific inference. Within-regime bootstraps resample blocks inside each regime.
 - Missing observations: each draw applies the frozen common-intersection rule after resampling; no imputation is introduced by the bootstrap.
@@ -28,3 +29,16 @@ both are recomputed inside every draw.
 The delta method is not a confirmatory fallback unless the joint covariance of
 `beta_rate[i, s]` and `lambda_rate[s]` is implemented, tested, and stored with
 the generated artifact.
+
+## Interval Levels
+
+Two interval levels are used and must never be interchanged.
+
+- Confirmatory equivalence tests use the two-sided 90 percent percentile
+  interval, implementing standard 5 percent TOST as fixed in
+  `research/inference_contract.md`.
+- Two-sided precision statements about a single estimand, including the H4c
+  fitted-premium precision gate, use the 95 percent percentile interval.
+
+A 95 percent interval-inclusion equivalence result may be reported only under
+the label `strict_95pct_interval_sensitivity`.

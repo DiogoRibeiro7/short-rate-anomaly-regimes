@@ -7,6 +7,31 @@ This contract fixes how fit is reported before empirical results are generated.
 The primary fit statistic is the article's exact cross-sectional fit definition
 when it can be verified from the article, supplement, or author code.
 
+### Status: verified
+
+The article states the definition explicitly, so the primary metric applies and
+the fallback below is not used for the baseline targets.
+
+`article_cross_sectional_fit = 1 - var_N(alpha_cs[i]) / var_N(mean_excess_return[i])`
+
+where `var_N` is the cross-sectional variance across test assets. Source:
+article page 933, equation (6). The article notes at page 933 footnote 13 that
+the metric can be negative because the second pass has no intercept.
+
+A second, constrained variant applies only to comparator models whose factors
+are traded excess returns:
+
+`article_constrained_fit = 1 - var_N(alpha_constrained[i]) / var_N(mean_excess_return[i])`
+
+where the constrained pricing errors restrict each risk price to the sample mean
+of the corresponding factor. Source: article page 934, equations (7) and (8).
+The article states that this restriction does not apply to the ICAPM because the
+hedging factors are not traded returns, so the constrained variant may never be
+used for the short-rate model.
+
+Because `var_N` is a centred cross-sectional variance, the article metric and the
+uncentred fallback below are not interchangeable and must never share a label.
+
 ## Mechanical Fallback
 
 If the article's exact definition cannot be verified, the manuscript reports a

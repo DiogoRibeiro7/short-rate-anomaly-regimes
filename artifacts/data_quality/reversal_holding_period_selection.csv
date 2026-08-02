@@ -1,0 +1,4 @@
+member,holding_period_months,computed_mean,computed_sd,computed_min,computed_max,computed_phi,published_mean,published_sd,published_min,published_max,published_phi,total_absolute_distance,selected
+portf_rev_1_monthly_2025.csv,1,-0.3973,5.1729,-32.974,16.1745,0.0596,-0.41,5.21,-32.99,18.08,0.06,1.9717,True
+portf_rev_6_monthly_2025.csv,6,-0.3791,4.8591,-30.2978,15.4245,0.053,-0.41,5.21,-32.99,18.08,0.06,5.7365,False
+portf_rev_12_monthly_2025.csv,12,-0.3615,4.527,-26.9065,13.5326,0.0634,-0.41,5.21,-32.99,18.08,0.06,11.3659,False

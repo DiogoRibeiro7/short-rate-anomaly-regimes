@@ -1,0 +1,24 @@
+{
+  "archive": "vvg_monthly_2025",
+  "article_definition": "value-weighted deciles sorted on the book-to-market ratio",
+  "article_label": "BM",
+  "continuous_months": true,
+  "family": "book_to_market",
+  "member": "portf_bm_monthly_2025.csv",
+  "member_sha256": "0dbba371bd905751ee97372a48b0c5c4ac383d2b1dbdae2adecbeb53f617eab2",
+  "minimum_stocks_per_portfolio": 104,
+  "missing_value_codes": "none observed; the archive omits absent months rather than coding them",
+  "missing_value_count": 0,
+  "monthly_observations": 708,
+  "normalized_path": "data/interim/portfolios/book_to_market_global_q_2025_retrieved_20260802.csv",
+  "normalized_sha256": "1ed644ab8b04b74ef262f04985ba47e02e077507d97630ca476d98a6666cb0fe",
+  "number_of_portfolios": 10,
+  "return_units": "percent_per_month",
+  "sample_end": "2025-12",
+  "sample_start": "1967-01",
+  "value_range": {
+    "maximum": 30.402,
+    "minimum": -37.0401
+  },
+  "weighting": "value_weighted"
+}

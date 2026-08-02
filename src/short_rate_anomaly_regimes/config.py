@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -71,6 +71,17 @@ class ShortRateInnovationConfig(BaseModel):
     estimation: str
     residual_timing: str
     standardize: bool
+    timing_variant: Literal["pre_window_lag", "within_window_lag"]
+    timing_variant_sensitivity: Literal["pre_window_lag", "within_window_lag"]
+    timing_variant_evidence: str
+    intercept_comparison_units: Literal["decimal_rate_units", "percentage_points"]
+
+    @model_validator(mode="after")
+    def validate_distinct_timing_variants(self) -> ShortRateInnovationConfig:
+        """Require the sensitivity variant to differ from the primary variant."""
+        if self.timing_variant == self.timing_variant_sensitivity:
+            raise ValueError("timing_variant_sensitivity must differ from timing_variant")
+        return self
 
 
 class ShortRateConfig(BaseModel):
@@ -232,6 +243,29 @@ class RegimeIntervalConfig(BaseModel):
     id: str
     start: str
     end: str
+    sensitivity_start: str | None = None
+    sensitivity_end: str | None = None
+
+
+class RegimeTransitionRuleConfig(BaseModel):
+    """Primary and sensitivity transition-month assignment rules."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    primary: Literal["first_full_month_after_policy_action"]
+    sensitivity: Literal["whole_transition_month_belongs_to_new_regime"]
+    note: str
+
+
+class RegimeCombinationConfig(BaseModel):
+    """One predeclared combination of adjacent short regimes."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    members: list[str] = Field(min_length=2)
+    role: str
+    reason: str
 
 
 class RegimeSensitivityConfig(BaseModel):
@@ -249,8 +283,58 @@ class RegimeDefinitionConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     primary: str
+    transition_rule: RegimeTransitionRuleConfig
     regimes: list[RegimeIntervalConfig]
+    declared_combinations: list[RegimeCombinationConfig] = Field(default_factory=list)
     sensitivity: RegimeSensitivityConfig
+
+
+class RegimeEligibilityTierConfig(BaseModel):
+    """One frozen regime-estimation eligibility tier."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    condition: str
+    permitted: str
+
+
+class RegimeEstimationEligibilityConfig(BaseModel):
+    """Frozen minimum requirements for regime-specific estimation."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    minimum_months_for_regime_specific_estimation: int = Field(gt=0)
+    minimum_months_for_standalone_second_pass: int = Field(gt=0)
+    minimum_test_assets_for_standalone_second_pass: int = Field(gt=0)
+    required_beta_matrix_rank: str
+    short_sample_flag_band_months: list[int] = Field(min_length=2, max_length=2)
+    below_minimum_treatment: str
+    tiers: list[RegimeEligibilityTierConfig] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def validate_thresholds(self) -> RegimeEstimationEligibilityConfig:
+        """Require the second-pass floor to be at least the first-pass floor."""
+        if (
+            self.minimum_months_for_standalone_second_pass
+            < self.minimum_months_for_regime_specific_estimation
+        ):
+            raise ValueError(
+                "minimum_months_for_standalone_second_pass must be at least "
+                "minimum_months_for_regime_specific_estimation"
+            )
+        lower, upper = self.short_sample_flag_band_months
+        if lower != self.minimum_months_for_regime_specific_estimation:
+            raise ValueError(
+                "short_sample_flag_band_months must start at "
+                "minimum_months_for_regime_specific_estimation"
+            )
+        if upper != self.minimum_months_for_standalone_second_pass - 1:
+            raise ValueError(
+                "short_sample_flag_band_months must end one month below "
+                "minimum_months_for_standalone_second_pass"
+            )
+        return self
 
 
 class RegimeConfig(BaseModel):
@@ -261,10 +345,23 @@ class RegimeConfig(BaseModel):
     base_config: str
     sample: RegimeSampleConfig
     regime_definition: RegimeDefinitionConfig
+    regime_estimation_eligibility: RegimeEstimationEligibilityConfig
     models: list[str]
     structural_break_tests: list[str]
     minimum_regime_observations: int = Field(gt=0)
     multiple_testing_adjustment: str
+    equivalence_rule: Literal["tost_5pct_90pct_interval"]
+
+    @model_validator(mode="after")
+    def validate_minimum_alignment(self) -> RegimeConfig:
+        """Keep the legacy minimum aligned with the frozen eligibility floor."""
+        floor = self.regime_estimation_eligibility.minimum_months_for_regime_specific_estimation
+        if self.minimum_regime_observations != floor:
+            raise ValueError(
+                "minimum_regime_observations must equal "
+                "regime_estimation_eligibility.minimum_months_for_regime_specific_estimation"
+            )
+        return self
 
 
 class ReportingPipelineConfig(BaseModel):

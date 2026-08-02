@@ -27,6 +27,15 @@ short_rate:
     estimation: full_sample
     residual_timing: contemporaneous
     standardize: false
+    timing_variant: pre_window_lag
+    timing_variant_sensitivity: within_window_lag
+    timing_variant_evidence: >-
+      The article does not state which month supplies the first lagged rate.
+      Only the pre-window lag, which draws the 1971-12 level, reproduces the
+      published slope at its printed precision, both published t-ratios, the
+      published R-squared, and all five Table 1 innovation statistics for both
+      rates. See artifacts/tables/factors/ar1_published_target_comparison.csv.
+    intercept_comparison_units: decimal_rate_units
 
 portfolio_sets:
   - size_book_to_market_25

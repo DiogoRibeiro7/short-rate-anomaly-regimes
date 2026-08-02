@@ -1,0 +1,24 @@
+{
+  "archive": "inv_monthly_2025",
+  "article_definition": "value-weighted deciles sorted on changes in property, plant, and equipment plus changes in inventory scaled by assets",
+  "article_label": "PIA",
+  "continuous_months": true,
+  "family": "ppe_investment",
+  "member": "portf_dpia_monthly_2025.csv",
+  "member_sha256": "b629133b5bead13dc94ca73672bc2251cf54ee6b589cfc071bcc17f2ba5e0496",
+  "minimum_stocks_per_portfolio": 86,
+  "missing_value_codes": "none observed; the archive omits absent months rather than coding them",
+  "missing_value_count": 0,
+  "monthly_observations": 708,
+  "normalized_path": "data/interim/portfolios/ppe_investment_global_q_2025_retrieved_20260802.csv",
+  "normalized_sha256": "04214950611d919cd54a844d83a829cd8094a57b4dca23935aca5ac393b3a6fd",
+  "number_of_portfolios": 10,
+  "return_units": "percent_per_month",
+  "sample_end": "2025-12",
+  "sample_start": "1967-01",
+  "value_range": {
+    "maximum": 23.7241,
+    "minimum": -28.2396
+  },
+  "weighting": "value_weighted"
+}

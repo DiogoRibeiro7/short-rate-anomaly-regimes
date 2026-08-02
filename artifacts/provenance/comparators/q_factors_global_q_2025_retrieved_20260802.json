@@ -1,0 +1,36 @@
+{
+  "archive_date": "2026-08-02",
+  "attributed_by_article_to": "Lu Zhang",
+  "columns": [
+    "R_F",
+    "R_MKT",
+    "R_ME",
+    "R_IA",
+    "R_ROE",
+    "R_EG"
+  ],
+  "dataset": "q_factors",
+  "file_name": "q5_factors_monthly_2025.csv",
+  "http_etag": null,
+  "http_last_modified": "Thu, 30 Jul 2026 20:12:01 GMT",
+  "missing_value_code": "none; absent months are omitted rather than coded",
+  "missing_value_count": 0,
+  "monthly_end": "2025-12",
+  "monthly_observations": 708,
+  "monthly_start": "1967-01",
+  "normalized_path": "data/interim/comparators/q_factors_global_q_2025_retrieved_20260802.csv",
+  "normalized_sha256": "2ca597cb4c0a7d4dc9041e24c3b7dbd9d61a7b7aeca65d9554bf8f815b9d20c9",
+  "provider": "Hou, Xue, and Zhang q-factor library (global-q.org)",
+  "raw_path": "data/raw/comparators/q_factors/q_factors_global_q_2025_retrieved_20260802.csv",
+  "raw_sha256": "8b2e2f1364890f8f5876da20e6bfad0acd8d272425de3b65c725f54b51128f6a",
+  "redistribution_status": "public author-provided research data; the download page states no registration or licensing condition. Raw bytes are retained locally and are not redistributed by this repository.",
+  "retrieved_at_utc": "2026-08-02T20:45:01.939437+00:00",
+  "source_metadata_lines": [],
+  "source_url": "https://global-q.org/uploads/1/2/2/6/122679606/q5_factors_monthly_2025.csv",
+  "units": "percent_per_month",
+  "value_range": {
+    "maximum": 22.1486,
+    "minimum": -23.2228
+  },
+  "vintage_label": "global_q_2025_retrieved_20260802"
+}

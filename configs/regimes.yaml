@@ -5,28 +5,80 @@ sample:
 
 regime_definition:
   primary: deterministic_calendar
+  transition_rule:
+    primary: first_full_month_after_policy_action
+    sensitivity: whole_transition_month_belongs_to_new_regime
+    note: >-
+      A regime begins in the first calendar month that is entirely under the new
+      policy stance. The month containing the FOMC action stays with the
+      outgoing regime because it is a mixture of both stances. The whole-month
+      rule that assigns the action month to the incoming regime is preserved as
+      a declared sensitivity analysis and is never used for confirmatory
+      classification.
   regimes:
     - id: conventional_pre_elb
       start: "1972-01"
-      end: "2008-11"
+      end: "2008-12"
+      sensitivity_start: "1972-01"
+      sensitivity_end: "2008-11"
     - id: elb_qe
-      start: "2008-12"
-      end: "2015-11"
+      start: "2009-01"
+      end: "2015-12"
+      sensitivity_start: "2008-12"
+      sensitivity_end: "2015-11"
     - id: normalisation
-      start: "2015-12"
-      end: "2020-02"
+      start: "2016-01"
+      end: "2020-03"
+      sensitivity_start: "2015-12"
+      sensitivity_end: "2020-02"
     - id: pandemic_elb_qe
-      start: "2020-03"
-      end: "2022-02"
+      start: "2020-04"
+      end: "2022-03"
+      sensitivity_start: "2020-03"
+      sensitivity_end: "2022-02"
     - id: inflation_tightening
-      start: "2022-03"
+      start: "2022-04"
+      end: "2024-09"
+      sensitivity_start: "2022-03"
+      sensitivity_end: "2024-08"
+    - id: post_tightening_easing
+      start: "2024-10"
       end: latest_available
+      sensitivity_start: "2024-09"
+      sensitivity_end: latest_available
+  declared_combinations:
+    - id: post_pandemic_cycle_combined
+      members: [inflation_tightening, post_tightening_easing]
+      role: declared_combination_sensitivity
+      reason: both split regimes fall below the frozen minimum for regime-specific estimation
   sensitivity:
     boundary_shifts_months: [-3, 3]
     alternative_rules:
+      - whole_transition_month
       - policy_rate_threshold
       - balance_sheet_growth
       - nber_cycle_interaction
+
+# Frozen minimum regime-estimation eligibility requirements.
+# These thresholds are fixed before any regime estimate is produced and may not
+# be relaxed to accommodate a regime that turns out to be short.
+regime_estimation_eligibility:
+  minimum_months_for_regime_specific_estimation: 36
+  minimum_months_for_standalone_second_pass: 60
+  minimum_test_assets_for_standalone_second_pass: 10
+  required_beta_matrix_rank: number_of_priced_factors
+  short_sample_flag_band_months: [36, 59]
+  below_minimum_treatment: pooled_regime_interaction_models_only
+  tiers:
+    - id: blocked_for_regime_specific_estimation_below_36_months
+      condition: months < 36
+      permitted: pooled regime-interaction models only
+    - id: eligible_first_pass_with_short_sample_flag
+      condition: 36 <= months < 60
+      permitted: regime-specific first-pass betas with a short-sample flag; standalone second pass blocked
+    - id: eligible_first_pass_and_standalone_second_pass
+      condition: months >= 60 and test_assets >= 10 and beta_rank == number_of_priced_factors
+      permitted: regime-specific first pass and standalone regime second pass
 
 models:
   - pooled_constant_beta
@@ -42,3 +94,4 @@ structural_break_tests:
 
 minimum_regime_observations: 36
 multiple_testing_adjustment: holm
+equivalence_rule: tost_5pct_90pct_interval

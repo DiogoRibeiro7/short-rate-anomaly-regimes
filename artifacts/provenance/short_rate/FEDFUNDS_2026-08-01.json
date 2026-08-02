@@ -1,0 +1,39 @@
+{
+  "aggregation_of_source_declared": "provider monthly average of daily figures",
+  "declared_metadata_audit": {
+    "frequency_declared_vs_observed": "consistent",
+    "seasonal_adjustment_confirmed_against_provider": "no",
+    "units_confirmed_against_provider_metadata_endpoint": "no",
+    "units_magnitude_check": "consistent_with_percent_per_annum"
+  },
+  "frequency_declared": "monthly",
+  "frequency_observed": "monthly_first_of_month_stamped",
+  "metadata_provenance": "units, frequency, seasonal adjustment, aggregation, and notes are declared by this project because the FRED series metadata pages and the fred.stlouisfed.org/data/*.txt endpoint refuse automated requests and no FRED API key is configured; every declared field is audited against the payload in declared_metadata_audit",
+  "missing_value_code": ".",
+  "missing_value_count": 0,
+  "normalized_path": "data/interim/fred/FEDFUNDS_2026-08-01.csv",
+  "normalized_sha256": "b492202f08be4d5e817e8f2a374c33d86dfc32882b48cd4f1aeccc82f05c0bb2",
+  "observation_count": 864,
+  "observation_end": "2026-06-01",
+  "observation_start": "1954-07-01",
+  "provider": "Federal Reserve Bank of St. Louis (FRED)",
+  "provider_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=FEDFUNDS",
+  "raw_path": "data/raw/fred/FEDFUNDS/FEDFUNDS_2026-08-01.csv",
+  "raw_sha256": "0e465217248919f27590a55f25ef2cffe5286ab1723a81688a4a03194f0885e9",
+  "redistribution_status": "public_domain_us_government_work",
+  "retrieved_at_utc": "2026-08-02T14:17:07.482785+00:00",
+  "seasonal_adjustment_declared": "not_seasonally_adjusted",
+  "series_id": "FEDFUNDS",
+  "source_notes": "Effective federal funds rate published by the Board of Governors of the Federal Reserve System (H.15) and redistributed by the Federal Reserve Bank of St. Louis. The monthly series is the provider's average of the daily effective rate.",
+  "title": "Federal Funds Effective Rate",
+  "unit_magnitude_audit": {
+    "maximum": 19.1,
+    "mean": 4.597083333333333,
+    "minimum": 0.05
+  },
+  "units_declared": "percent_per_annum",
+  "vintage_http_etag": null,
+  "vintage_http_last_modified": null,
+  "vintage_label": "fred_current_retrieved_2026-08-01",
+  "vintage_source": "current unrevised-vintage download from the FRED graph CSV endpoint; no ALFRED vintage date was requested, so this is the latest published revision as of the retrieval timestamp"
+}

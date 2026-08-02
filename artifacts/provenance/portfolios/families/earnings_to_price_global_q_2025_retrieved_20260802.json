@@ -1,0 +1,24 @@
+{
+  "archive": "vvg_monthly_2025",
+  "article_definition": "value-weighted deciles sorted on the earnings-to-price ratio",
+  "article_label": "EP",
+  "continuous_months": true,
+  "family": "earnings_to_price",
+  "member": "portf_ep_monthly_2025.csv",
+  "member_sha256": "45bb7ebe71774fc38fcf3fd1cd9d42cc0a5602769246e7909ed35e57aadae516",
+  "minimum_stocks_per_portfolio": 94,
+  "missing_value_codes": "none observed; the archive omits absent months rather than coding them",
+  "missing_value_count": 0,
+  "monthly_observations": 708,
+  "normalized_path": "data/interim/portfolios/earnings_to_price_global_q_2025_retrieved_20260802.csv",
+  "normalized_sha256": "1ce72ca029f10ef4316966a37d7dc7d94da0475b74f39df909060de68204651c",
+  "number_of_portfolios": 10,
+  "return_units": "percent_per_month",
+  "sample_end": "2025-12",
+  "sample_start": "1967-01",
+  "value_range": {
+    "maximum": 25.9912,
+    "minimum": -25.6866
+  },
+  "weighting": "value_weighted"
+}

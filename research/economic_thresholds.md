@@ -44,6 +44,24 @@ hold:
 - the selected fit metric deteriorates by no more than 0.10 when the fit metric
   is defined by the fit contract.
 
+## Equivalence Decision Rule
+
+Every equivalence bound above is evaluated with the single confirmatory rule
+fixed in `research/inference_contract.md`: standard two one-sided tests at the 5
+percent level, implemented as inclusion of the two-sided 90 percent
+joint-bootstrap percentile interval inside the bound. The 95 percent
+interval-inclusion variant is a stricter, non-standard-size procedure and is
+reported only as a labelled sensitivity column.
+
+## Factor Spanning
+
+The numerical factor-spanning criterion is fixed in
+`research/inference_contract.md`. The short-rate factor passes when the spanning
+coefficient of determination against the registered non-short-rate comparator
+factor set satisfies `R2_span <= 0.90`, equivalently a residual
+standard-deviation ratio `s_span >= 0.3162`. Both statistics are scale free, so
+the criterion is unaffected by rescaling the short-rate innovation.
+
 ## Rationale
 
 The 0.25 monthly percentage-point pricing-error and fitted-premium bounds are

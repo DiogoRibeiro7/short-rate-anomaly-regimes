@@ -1,0 +1,6 @@
+factor,source,months,published_mean,computed_mean,difference_mean,published_sd,computed_sd,difference_sd,published_min,computed_min,difference_min,published_max,computed_max,difference_max,published_phi,computed_phi,difference_phi,statistics_matching_at_published_precision,statistics_compared,total_absolute_distance
+ME,q5_factors_2025|R_ME,504.0,0.31,0.31,-0.0,3.14,3.1259,-0.0141,-14.45,-14.4115,0.0385,22.41,22.1486,-0.2614,0.03,0.0257,-0.0043,2,5,0.3184
+IA,q5_factors_2025|R_IA,504.0,0.44,0.4475,0.0075,1.87,1.8718,0.0018,-7.13,-7.1267,0.0033,9.41,9.2245,-0.1855,0.06,0.079,0.019,2,5,0.2171
+ROE,q5_factors_2025|R_ROE,504.0,0.57,0.5562,-0.0138,2.62,2.6097,-0.0103,-13.85,-13.9833,-0.1333,10.39,10.3676,-0.0224,0.1,0.0947,-0.0053,0,5,0.1852
+LIQ,pastor_stambaugh_publication_era|traded_liquidity_factor,504.0,0.43,0.4337,0.0037,3.57,3.4684,-0.1016,-10.14,-12.4893,-2.3493,21.01,11.0783,-9.9317,0.09,0.1,0.01,1,5,12.3962
+LIQ,pastor_stambaugh_current|traded_liquidity_factor,504.0,0.43,0.419,-0.011,3.57,3.6066,0.0366,-10.14,-13.5627,-3.4227,21.01,13.0124,-7.9976,0.09,0.0938,0.0038,1,5,11.4717

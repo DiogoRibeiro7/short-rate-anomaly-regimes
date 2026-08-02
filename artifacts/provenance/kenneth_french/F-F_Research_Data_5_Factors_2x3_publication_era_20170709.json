@@ -1,0 +1,43 @@
+{
+  "archive_date": "2017-07-09",
+  "columns": [
+    "Mkt-RF",
+    "SMB",
+    "HML",
+    "RMW",
+    "CMA",
+    "RF"
+  ],
+  "dataset": "F-F_Research_Data_5_Factors_2x3",
+  "file_name": "F-F_Research_Data_5_Factors_2x3_CSV.zip",
+  "http_etag": null,
+  "http_last_modified": null,
+  "member_name": "F-F_Research_Data_5_Factors_2x3.CSV",
+  "member_sha256": "1a8dab60e9b8af013aa810c4f8d114a0e6bb593878b6976fb92ba6e2e4e1116e",
+  "missing_value_codes": [
+    -99.99,
+    -999.0
+  ],
+  "missing_value_count": 0,
+  "monthly_end": "2017-05",
+  "monthly_observations": 647,
+  "monthly_start": "1963-07",
+  "normalized_path": "data/interim/kenneth_french/F-F_Research_Data_5_Factors_2x3_publication_era_20170709.csv",
+  "normalized_sha256": "3d2ffa7f4f2e5ec04fb6e6e0ca503437ca27259b1b30e7b0da74db1fe1ba3baf",
+  "provider": "Kenneth French Data Library",
+  "raw_path": "data/raw/kenneth_french/F-F_Research_Data_5_Factors_2x3/F-F_Research_Data_5_Factors_2x3_publication_era_20170709.zip",
+  "raw_sha256": "24553b6d6b93bfd58d0a87a6859d599e75df2db24c85631f693b7ed7ef493ae8",
+  "redistribution_status": "public research data provided by the Kenneth French Data Library; raw archive bytes are retained locally and are not redistributed by this repository",
+  "retrieved_at_utc": "2026-08-01T00:06:51.646066+00:00",
+  "source_metadata_lines": [
+    "This file was created by CMPT_ME_BEME_OP_INV_RETS using the 201705 CRSP database.",
+    "The 1-month TBill return is from Ibbotson and Associates Inc."
+  ],
+  "source_url": "https://web.archive.org/web/20170709190513id_/http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_5_Factors_2x3_CSV.zip",
+  "units": "percent_per_month",
+  "value_range": {
+    "maximum": 18.73,
+    "minimum": -23.24
+  },
+  "vintage_label": "publication_era_20170709"
+}
