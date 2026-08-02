@@ -9,6 +9,14 @@
       "orcid": "0009-0001-2022-7072"
     }
   ],
+  "contributors": [
+    {
+      "name": "Ribeiro, Diogo",
+      "type": "ContactPerson",
+      "affiliation": "School of Media Arts and Design, Polytechnic of Porto, Portugal",
+      "orcid": "0009-0001-2022-7072"
+    }
+  ],
   "license": "MIT",
   "access_right": "open",
   "language": "eng",
@@ -41,5 +49,5 @@
       "scheme": "url"
     }
   ],
-  "notes": "Public data sources used and separately licensed by their providers: Federal Reserve Economic Data (FRED) at the Federal Reserve Bank of St. Louis; the Kenneth R. French Data Library; the Hou, Xue, and Zhang q-factor library at global-q.org; and the Pastor-Stambaugh liquidity series published by Robert F. Stambaugh. Publication-era vintages were retrieved from the Internet Archive. This repository redistributes none of those files; it distributes the acquisition code, checksums, and provenance manifests needed to obtain and verify them."
+  "notes": "Corresponding author: Diogo Ribeiro, School of Media Arts and Design, Polytechnic of Porto, Portugal. Email: dfr@esmad.ipp.pt. ORCID: 0009-0001-2022-7072. Public data sources used and separately licensed by their providers: Federal Reserve Economic Data (FRED) at the Federal Reserve Bank of St. Louis; the Kenneth R. French Data Library; the Hou, Xue, and Zhang q-factor library at global-q.org; and the Pastor-Stambaugh liquidity series published by Robert F. Stambaugh. Publication-era vintages were retrieved from the Internet Archive. This repository redistributes none of those files; it distributes the acquisition code, checksums, and provenance manifests needed to obtain and verify them."
 }
