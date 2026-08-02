@@ -2,6 +2,12 @@
 
 Verdict: `BLOCKED`.
 
+> Superseded in part. The Empirical Input Acquisition and Baseline
+> Reconstruction milestone applied eight further design corrections and acquired
+> the rate, market, and portfolio inputs. See
+> `reports/design_correction_changelog.md` and
+> `reports/baseline_input_readiness.md`, whose verdict is `PARTIAL`.
+
 The design gate is internally consistent after this pass, but empirical
 execution remains blocked at the data-acquisition and post-2013 extension stages
 because source-compatible anomaly portfolios, CRSP/Compustat access, exact source

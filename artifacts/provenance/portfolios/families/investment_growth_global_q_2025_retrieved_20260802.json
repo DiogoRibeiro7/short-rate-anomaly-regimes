@@ -1,0 +1,24 @@
+{
+  "archive": "inv_monthly_2025",
+  "article_definition": "deciles sorted on investment growth",
+  "article_label": "IG",
+  "continuous_months": true,
+  "family": "investment_growth",
+  "member": "portf_ig_monthly_2025.csv",
+  "member_sha256": "e0a80e524d8ff7a3e478f13969b642084b65e62883094133cb2c5f222074f251",
+  "minimum_stocks_per_portfolio": 70,
+  "missing_value_codes": "none observed; the archive omits absent months rather than coding them",
+  "missing_value_count": 0,
+  "monthly_observations": 708,
+  "normalized_path": "data/interim/portfolios/investment_growth_global_q_2025_retrieved_20260802.csv",
+  "normalized_sha256": "237601b35f7a79f5f069f7a822b079a2428af42f923ffcece36163407e3d7ffa",
+  "number_of_portfolios": 10,
+  "return_units": "percent_per_month",
+  "sample_end": "2025-12",
+  "sample_start": "1967-01",
+  "value_range": {
+    "maximum": 29.2716,
+    "minimum": -27.7748
+  },
+  "weighting": "value_weighted"
+}

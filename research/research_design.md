@@ -47,18 +47,31 @@ interpretable fit remain within numerical equivalence bounds across conventional
 policy, effective-lower-bound policy, quantitative easing, normalisation,
 pandemic policy, and inflation tightening.
 
-### H4 Weak-factor strength
+### H4a Cross-sectional identification strength
 
-The short-rate factor has enough standardized exposure dispersion, rank
-contribution, spanning strength, and robust identification precision to support
-a pricing interpretation.
+The short-rate factor has enough standardized exposure dispersion, beta-matrix
+rank contribution, and independent variation under the numerical spanning
+criterion to identify a risk price in the cross-section.
+
+### H4b Influence stability
+
+The rate-attributable fitted-premium conclusion keeps its sign and materiality
+classification under every leave-one-anomaly-family refit, and no single
+portfolio dominates the estimated rate risk price.
+
+### H4c Fitted-premium precision
+
+The joint-bootstrap interval for the rate-attributable fitted-premium spread is
+precise enough to exclude at least one economic direction under the threshold
+contract.
 
 ## Falsification rules
 
 - Reject a replication claim if the exact published target cannot be linked to the same data definition and estimator.
 - Reject stability if beta interactions, regime-specific risk prices, or pricing-error comparisons exceed numerical equivalence bounds after multiple-testing adjustment.
-- Treat a factor as weak when standardized exposure dispersion, rank, spanning,
-  influence, or misspecification-robust inference fail declared thresholds.
+- Treat a factor as weak when H4a identification strength, H4b influence
+  stability, or H4c fitted-premium precision fails its declared threshold, and
+  report which of the three failed.
 - Do not substitute statistical significance for economic relevance.
 
 ## Primary estimands

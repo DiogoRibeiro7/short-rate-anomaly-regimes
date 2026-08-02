@@ -1,0 +1,24 @@
+{
+  "archive": "vvg_monthly_2025",
+  "article_definition": "value-weighted deciles sorted on long-term prior returns",
+  "article_label": "REV",
+  "continuous_months": true,
+  "family": "long_term_reversal",
+  "member": "portf_rev_1_monthly_2025.csv",
+  "member_sha256": "b23d4346919f11ce4730c3608dafbea94239bef05e198e656c41684f1c074417",
+  "minimum_stocks_per_portfolio": 90,
+  "missing_value_codes": "none observed; the archive omits absent months rather than coding them",
+  "missing_value_count": 0,
+  "monthly_observations": 708,
+  "normalized_path": "data/interim/portfolios/long_term_reversal_global_q_2025_retrieved_20260802.csv",
+  "normalized_sha256": "90e7f9c96d55b9e1865d72293eee81c39ad5563839ac196a2e3d3f39e05b2929",
+  "number_of_portfolios": 10,
+  "return_units": "percent_per_month",
+  "sample_end": "2025-12",
+  "sample_start": "1967-01",
+  "value_range": {
+    "maximum": 38.1004,
+    "minimum": -30.1823
+  },
+  "weighting": "value_weighted"
+}

@@ -32,6 +32,7 @@ economic_thresholds,research/economic_thresholds.md,Predeclared materiality and 
 short_rate_series_registry,research/short_rate_series_registry.csv,Short-rate source series and transformation registry
 portfolio_continuity_plan,research/portfolio_continuity_plan.csv,Post-publication portfolio continuity path decisions
 regime_registry,research/regime_registry.csv,Predeclared monetary-regime names dates and rules
+regime_policy_sources,research/regime_policy_sources.csv,Official FOMC policy-action dates and boundary months for each predeclared regime
 fit_metric_contract,research/fit_metric_contract.md,Cross-sectional fit metric definition contract
 inference_contract,research/inference_contract.md,Inference resampling multiplicity and weak-factor gate contract
 comparator_model_registry,research/comparator_model_registry.csv,Frozen comparator model registry and primary comparator choice
@@ -40,3 +41,6 @@ weak_factor_registry,research/weak_factor_registry.csv,Scale-aware weak-factor d
 data_access_feasibility,reports/data_access_feasibility.md,Post-2013 anomaly reconstruction database access feasibility report
 citation_support_audit,reports/citation_support_audit.md,Citation support and claim narrowing audit
 final_design_gate_changelog,reports/final_design_gate_changelog.md,Final consistency gate change log and verdict
+short_rate_source_report,reports/short_rate_source_report.md,Short-rate acquisition provenance and monthly-aggregation audit
+anomaly_portfolio_availability,research/anomaly_portfolio_availability.csv,Per-family availability provider vintage definition and eligibility for the anomaly portfolios
+baseline_input_readiness,reports/baseline_input_readiness.md,Replication readiness report for the acquired baseline inputs

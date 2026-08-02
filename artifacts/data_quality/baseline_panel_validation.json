@@ -1,0 +1,29 @@
+{
+  "checks": {
+    "excess_returns_use_same_month_risk_free": true,
+    "innovation_has_no_timing_shift": true,
+    "market_factor_has_no_timing_shift": true,
+    "monotonically_increasing_dates": true,
+    "no_implicit_forward_filling": true,
+    "no_infinite_values": true,
+    "no_internal_month_gaps": true,
+    "no_missing_values": true,
+    "no_observation_after_frozen_endpoint": true,
+    "no_observation_before_window_start": true,
+    "rate_units_are_annualized_percentage_points": true,
+    "return_units_are_percent_per_month": true,
+    "risk_free_return_is_percent_per_month": true,
+    "unique_monthly_keys": true
+  },
+  "columns": 78,
+  "details": {
+    "repeated_consecutive_return_values": "{}"
+  },
+  "panel_csv_sha256": "a6b2d336b0257e254af78ef0f5044df992e6fcd7e8adfc2a224532f1414b08df",
+  "panel_parquet_sha256": "f1354c66d8983bfed626dc9dbc62204d31d236f1117b700158e3b9b04f8a1cc0",
+  "passed": true,
+  "rows": 504,
+  "sample_end": "2013-12",
+  "sample_start": "1972-01",
+  "source_vintage_id": "fred_2026-08-01|french_publication_era_20170709|globalq_global_q_2025_retrieved_20260802|ar1_pre_window_lag"
+}

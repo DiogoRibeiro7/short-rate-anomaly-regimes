@@ -1,0 +1,24 @@
+{
+  "archive": "inv_monthly_2025",
+  "article_definition": "value-weighted deciles sorted on inventory growth",
+  "article_label": "IVG",
+  "continuous_months": true,
+  "family": "inventory_growth",
+  "member": "portf_ivg_monthly_2025.csv",
+  "member_sha256": "63159acb9c0f428d1336adf73291e4dacd0c94638943af93f43453952a454815",
+  "minimum_stocks_per_portfolio": 80,
+  "missing_value_codes": "none observed; the archive omits absent months rather than coding them",
+  "missing_value_count": 0,
+  "monthly_observations": 708,
+  "normalized_path": "data/interim/portfolios/inventory_growth_global_q_2025_retrieved_20260802.csv",
+  "normalized_sha256": "018854e864c3eac3e117785d52f548493bcd3d55c92cc90a1d6a0db445fabd5d",
+  "number_of_portfolios": 10,
+  "return_units": "percent_per_month",
+  "sample_end": "2025-12",
+  "sample_start": "1967-01",
+  "value_range": {
+    "maximum": 22.5172,
+    "minimum": -28.7251
+  },
+  "weighting": "value_weighted"
+}

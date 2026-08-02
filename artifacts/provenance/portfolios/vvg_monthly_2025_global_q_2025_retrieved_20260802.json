@@ -1,0 +1,13 @@
+{
+  "archive": "vvg_monthly_2025",
+  "http_etag": null,
+  "http_last_modified": "Fri, 31 Jul 2026 12:55:47 GMT",
+  "member_count": 32,
+  "provider": "Hou, Xue, and Zhang testing-portfolio library (global-q.org)",
+  "raw_path": "data/raw/portfolios/global_q/vvg_monthly_2025_global_q_2025_retrieved_20260802.zip",
+  "raw_sha256": "d5f7fb88c401195d9b31f0bd8853d6087a47b77ac3642e2fd9217b67ccb6a2ba",
+  "redistribution_status": "public author-provided research data; the page states no registration or licensing condition. Raw archive bytes are retained locally and are not redistributed by this repository.",
+  "retrieved_at_utc": "2026-08-02T11:57:28.594495+00:00",
+  "source_url": "https://global-q.org/uploads/1/2/2/6/122679606/vvg_monthly_2025.zip",
+  "vintage_label": "global_q_2025_retrieved_20260802"
+}

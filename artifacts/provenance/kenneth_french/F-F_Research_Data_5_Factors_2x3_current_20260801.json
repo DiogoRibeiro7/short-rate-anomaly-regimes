@@ -1,0 +1,44 @@
+{
+  "archive_date": "2026-08-01",
+  "columns": [
+    "Mkt-RF",
+    "SMB",
+    "HML",
+    "RMW",
+    "CMA",
+    "RF"
+  ],
+  "dataset": "F-F_Research_Data_5_Factors_2x3",
+  "file_name": "F-F_Research_Data_5_Factors_2x3_CSV.zip",
+  "http_etag": "\"1822939729dd1:0\"",
+  "http_last_modified": "Wed, 01 Jul 2026 15:56:47 GMT",
+  "member_name": "F-F_Research_Data_5_Factors_2x3.csv",
+  "member_sha256": "e101e7bb3ba30d0abe5919ec28fb78723b08bd668041cf0274c65ed7ca5bf249",
+  "missing_value_codes": [
+    -99.99,
+    -999.0
+  ],
+  "missing_value_count": 0,
+  "monthly_end": "2026-05",
+  "monthly_observations": 755,
+  "monthly_start": "1963-07",
+  "normalized_path": "data/interim/kenneth_french/F-F_Research_Data_5_Factors_2x3_current_20260801.csv",
+  "normalized_sha256": "5e7bfc4d642205f5bf0c7b01e89ae10a3cd61f97074b3ea4c890dc72488c9ecd",
+  "provider": "Kenneth French Data Library",
+  "raw_path": "data/raw/kenneth_french/F-F_Research_Data_5_Factors_2x3/F-F_Research_Data_5_Factors_2x3_current_20260801.zip",
+  "raw_sha256": "ddc0280b2bb8ca6c4c6ea5b68923a5549c37259bde468202108c11e812bd4241",
+  "redistribution_status": "public research data provided by the Kenneth French Data Library; raw archive bytes are retained locally and are not redistributed by this repository",
+  "retrieved_at_utc": "2026-08-01T00:06:52.397230+00:00",
+  "source_metadata_lines": [
+    "This file was created using the 202605 CRSP database.",
+    "The 1-month TBill rate data until 202405 are from Ibbotson Associates. Starting from 202406, the 1-month TBill rate is from ICE BofA US 1-Month Treasury Bill Index.",
+    "The annual TBill return is compounded from the monthly T-bill rates from January to December."
+  ],
+  "source_url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_5_Factors_2x3_CSV.zip",
+  "units": "percent_per_month",
+  "value_range": {
+    "maximum": 18.46,
+    "minimum": -23.19
+  },
+  "vintage_label": "current_20260801"
+}

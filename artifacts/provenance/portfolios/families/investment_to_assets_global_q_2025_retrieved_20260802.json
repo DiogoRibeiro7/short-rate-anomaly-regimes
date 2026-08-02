@@ -1,0 +1,24 @@
+{
+  "archive": "inv_monthly_2025",
+  "article_definition": "value-weighted deciles sorted on the investment-to-assets ratio",
+  "article_label": "IA",
+  "continuous_months": true,
+  "family": "investment_to_assets",
+  "member": "portf_ia_monthly_2025.csv",
+  "member_sha256": "40a27b394d89f2f9563758fe98eff5552361ce8d4eb55354cc7f8899cecf9bf5",
+  "minimum_stocks_per_portfolio": 94,
+  "missing_value_codes": "none observed; the archive omits absent months rather than coding them",
+  "missing_value_count": 0,
+  "monthly_observations": 708,
+  "normalized_path": "data/interim/portfolios/investment_to_assets_global_q_2025_retrieved_20260802.csv",
+  "normalized_sha256": "a5bcdbc373a17df728aa5c03a7e3c98cd3099ea8c690f70ece7b24a6ab426044",
+  "number_of_portfolios": 10,
+  "return_units": "percent_per_month",
+  "sample_end": "2025-12",
+  "sample_start": "1967-01",
+  "value_range": {
+    "maximum": 26.0069,
+    "minimum": -28.3616
+  },
+  "weighting": "value_weighted"
+}

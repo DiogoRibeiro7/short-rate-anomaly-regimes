@@ -1,0 +1,39 @@
+{
+  "aggregation_of_source_declared": "not applicable; this is the daily source frequency",
+  "declared_metadata_audit": {
+    "frequency_declared_vs_observed": "consistent",
+    "seasonal_adjustment_confirmed_against_provider": "no",
+    "units_confirmed_against_provider_metadata_endpoint": "no",
+    "units_magnitude_check": "consistent_with_percent_per_annum"
+  },
+  "frequency_declared": "daily_including_weekends",
+  "frequency_observed": "daily_including_weekends",
+  "metadata_provenance": "units, frequency, seasonal adjustment, aggregation, and notes are declared by this project because the FRED series metadata pages and the fred.stlouisfed.org/data/*.txt endpoint refuse automated requests and no FRED API key is configured; every declared field is audited against the payload in declared_metadata_audit",
+  "missing_value_code": ".",
+  "missing_value_count": 0,
+  "normalized_path": "data/interim/fred/DFF_2026-08-01.csv",
+  "normalized_sha256": "c04111f1ec384ee0fbe2d96561d8f80d42ee843957bae83e91af87b29a795db8",
+  "observation_count": 26328,
+  "observation_end": "2026-07-30",
+  "observation_start": "1954-07-01",
+  "provider": "Federal Reserve Bank of St. Louis (FRED)",
+  "provider_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFF",
+  "raw_path": "data/raw/fred/DFF/DFF_2026-08-01.csv",
+  "raw_sha256": "c85aa2518db619b048026e12037389014679f05b02b6ea55917a7155ee514f89",
+  "redistribution_status": "public_domain_us_government_work",
+  "retrieved_at_utc": "2026-08-02T14:17:09.791053+00:00",
+  "seasonal_adjustment_declared": "not_seasonally_adjusted",
+  "series_id": "DFF",
+  "source_notes": "Daily effective federal funds rate published by the Board of Governors of the Federal Reserve System (H.15) and redistributed by the Federal Reserve Bank of St. Louis. FRED publishes an observation for every calendar day, carrying the preceding business-day rate through non-business days. Acquired only to audit the monthly aggregation of FEDFUNDS; it is not a replication input.",
+  "title": "Federal Funds Effective Rate (daily)",
+  "unit_magnitude_audit": {
+    "maximum": 22.36,
+    "mean": 4.596178213309025,
+    "minimum": 0.04
+  },
+  "units_declared": "percent_per_annum",
+  "vintage_http_etag": null,
+  "vintage_http_last_modified": null,
+  "vintage_label": "fred_current_retrieved_2026-08-01",
+  "vintage_source": "current unrevised-vintage download from the FRED graph CSV endpoint; no ALFRED vintage date was requested, so this is the latest published revision as of the retrieval timestamp"
+}

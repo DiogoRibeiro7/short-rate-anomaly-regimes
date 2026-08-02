@@ -1,0 +1,41 @@
+{
+  "archive_date": "2017-07-09",
+  "columns": [
+    "Mkt-RF",
+    "SMB",
+    "HML",
+    "RF"
+  ],
+  "dataset": "F-F_Research_Data_Factors",
+  "file_name": "F-F_Research_Data_Factors_CSV.zip",
+  "http_etag": null,
+  "http_last_modified": null,
+  "member_name": "F-F_Research_Data_Factors.CSV",
+  "member_sha256": "3d14193764956dc75ee99b098835ecf5049897a2f2744f8815cc53a6b8ea7aff",
+  "missing_value_codes": [
+    -99.99,
+    -999.0
+  ],
+  "missing_value_count": 0,
+  "monthly_end": "2017-05",
+  "monthly_observations": 1091,
+  "monthly_start": "1926-07",
+  "normalized_path": "data/interim/kenneth_french/F-F_Research_Data_Factors_publication_era_20170709.csv",
+  "normalized_sha256": "00801342b2ae938c4e7901f3b8c7e840fd06599b9812cc8fb4ef21a68c520c4b",
+  "provider": "Kenneth French Data Library",
+  "raw_path": "data/raw/kenneth_french/F-F_Research_Data_Factors/F-F_Research_Data_Factors_publication_era_20170709.zip",
+  "raw_sha256": "cb60eb74fa068ff567d87d01b393a96bd0ef4f0fb9346dd7d0aec7e38711da0f",
+  "redistribution_status": "public research data provided by the Kenneth French Data Library; raw archive bytes are retained locally and are not redistributed by this repository",
+  "retrieved_at_utc": "2026-08-01T00:06:47.242438+00:00",
+  "source_metadata_lines": [
+    "This file was created by CMPT_ME_BEME_RETS using the 201705 CRSP database.",
+    "The 1-month TBill return is from Ibbotson and Associates, Inc."
+  ],
+  "source_url": "https://web.archive.org/web/20170709190420id_/http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_CSV.zip",
+  "units": "percent_per_month",
+  "value_range": {
+    "maximum": 38.85,
+    "minimum": -29.13
+  },
+  "vintage_label": "publication_era_20170709"
+}

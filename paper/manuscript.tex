@@ -217,10 +217,12 @@ language is reserved for the optional announcement-based appendix design.
 Claim & Role & Primary test & Interpretation rule \\
 \midrule
 R1a--R1f & Replication targets & Layer-specific article statistics within tolerances & Numerical recovery only \\
-H1 & Incremental pricing content & Improvement versus strongest comparator & Economic thresholds required \\
+H1 & Incremental pricing content & Improvement versus the ex ante CAPM comparator & Economic thresholds required against CAPM; the strongest observed comparator is a secondary adversarial check \\ % artifact: research/comparator_model_registry.csv
 H2 & Temporal stability & Post-publication compatibility & Sign and magnitude matter \\
 H3 & Regime stability & Separate beta, fitted-premium, and error tests & Non-rejection is insufficient \\
-H4 & Factor-strength condition & Beta dispersion and rank diagnostics & Weak factors limit interpretation \\
+H4a & Cross-sectional identification strength & Beta rank, standardized exposure dispersion, and the numerical spanning criterion & Weak identification blocks interpretation \\ % artifact: research/hypothesis_registry.csv
+H4b & Influence stability & Leave-one-family refits and standardized influence & One family or one portfolio may not drive the conclusion \\ % artifact: research/hypothesis_registry.csv
+H4c & Fitted-premium precision & Joint-bootstrap interval for the rate-attributable fitted premium & An interval spanning both economic directions is uninterpretable \\ % artifact: research/hypothesis_registry.csv
 \bottomrule
 \end{tabular}
 
@@ -252,24 +254,32 @@ to a missing-input classification rather than an empirical contradiction.
 The short-rate registry fixes the documented reconstruction series before the AR
 model is estimated. The federal-funds reconstruction uses FRED series FEDFUNDS,
 an effective federal funds rate, monthly provider average, annualized percent
-units, no seasonal adjustment, no imputation, and a vintage audit at retrieval. % artifact: research/short_rate_series_registry.csv
+units, no seasonal adjustment, no imputation, and a frozen retrieval vintage. % artifact: research/short_rate_series_registry.csv
 The Treasury-bill reconstruction uses TB3MS as the monthly secondary-market
-candidate and treats DTB3 only as a sensitivity candidate unless the article or
-supplement verifies a daily aggregation rule. None of these rate choices is
-eligible for an exact replication label until the source file, vintage, and
-transformation are frozen. % artifact: research/short_rate_series_registry.csv
+candidate and treats DTB3 only as a sensitivity candidate, because neither the
+article nor the supplement names a daily source or a daily-to-monthly
+aggregation rule. The monthly aggregation of both series is verified rather than
+assumed: each provider monthly value equals the corresponding daily mean rounded
+to the published precision in every complete month, and two competing % artifact: reports/short_rate_source_report.md
+aggregation rules are rejected. None of these rate choices is % artifact: research/short_rate_series_registry.csv
+eligible for an exact replication label, because the article names a provider
+without a series code or an archive vintage. Source identity, not numerical
+proximity, decides the replication mode. % artifact: research/short_rate_series_registry.csv
 
-Portfolio continuity is the largest post-publication constraint. For all seven
-registered anomaly families, the extension path is full security-level
-reconstruction using CRSP returns, delisting returns, Compustat accounting
-inputs, original formation dates, breakpoints, value-weighting rules, and
-holding-period rules. Database access is not assumed, redistribution of licensed
-extracts is prohibited, and the post-2013 extension is blocked until access and % artifact: reports/data_access_feasibility.md
-formation rules are confirmed. % artifact: research/portfolio_continuity_plan.csv
+Portfolio continuity is the largest post-publication constraint. All seven
+registered anomaly families are available from the author source the article
+names, but only in a post-publication vintage that runs to 2025-12; no % artifact: research/anomaly_portfolio_availability.csv
+publication-era vintage of those files is publicly recoverable. The extension
+therefore proceeds as a documented reconstruction on the author's own updated
+panels, and the portfolio sample rather than the rate and factor data sets the
+binding extension endpoint. Security-level reconstruction from CRSP and % artifact: reports/baseline_input_readiness.md
+Compustat remains the only route to an exact continuation; database access is
+not assumed and redistribution of licensed extracts is prohibited, so that route % artifact: reports/data_access_feasibility.md
+is not taken. % artifact: research/portfolio_continuity_plan.csv
 % artifact: reports/data_access_feasibility.md
-Current public portfolio catalogues may be reported as documented substitutes,
-but they are excluded from exact-replication claims unless source compatibility
-is independently verified.
+Portfolio catalogues from other providers are never substituted for a named
+author source, and no acquired portfolio supports an exact-replication claim
+unless source compatibility is independently verified.
 
 \begin{table}[htbp]
 \centering
@@ -282,17 +292,17 @@ is independently verified.
 Variable or family & Source & Frequency & Transformation & Status \\
 \midrule
 Article and supplement & Publisher files & Document & Target extraction & Exact local access \\
-Federal funds rate & Federal Reserve Bank of St. Louis & Monthly & FEDFUNDS documented reconstruction; first-order innovation & Source located; download, vintage, and transformation not frozen \\
-Treasury-bill rate & Federal Reserve Bank of St. Louis & Monthly & TB3MS documented reconstruction; DTB3 sensitivity only & Source located; download, vintage, and transformation not frozen \\
-Market and risk-free returns & Kenneth French Data Library & Monthly & Excess-return factors & Source located, vintage pending \\
-Anomaly decile portfolios & Lu Zhang and cited sources & Monthly & Excess returns after alignment & Files pending \\
-Comparator factors & French, Stambaugh, and q-factor sources & Monthly & Common-intersection factors & Source located, vintage pending \\
+Federal funds rate & Federal Reserve Bank of St. Louis & Monthly & FEDFUNDS documented reconstruction; first-order innovation & Acquired and frozen; aggregation verified; not exact \\ % artifact: research/data_access_matrix.csv
+Treasury-bill rate & Federal Reserve Bank of St. Louis & Monthly & TB3MS documented reconstruction; DTB3 sensitivity only & Acquired and frozen; aggregation verified; not exact \\ % artifact: research/data_access_matrix.csv
+Market and risk-free returns & Kenneth French Data Library & Monthly & Excess-return factors & Acquired at a publication-era and a current vintage; not exact \\ % artifact: research/data_access_matrix.csv
+Anomaly decile portfolios & Lu Zhang and cited sources & Monthly & Excess returns after alignment & Acquired from the named source at a post-publication vintage; equal-weighted variants unavailable \\ % artifact: research/anomaly_portfolio_availability.csv
+Comparator factors & French, Stambaugh, and q-factor sources & Monthly & Common-intersection factors & French factors acquired; liquidity and q-factor sets pending \\ % artifact: research/data_access_matrix.csv
 Announcement components & Documented research dataset & Event & Monthly aggregation & Extension input pending \\
 \bottomrule
 \end{tabular}
 
 \smallskip
-\small Source: Authors' replication protocol.
+\small No input is exact, because the article names providers and people rather than files. Source: \artifact{research/data_access_matrix.csv}.
 \end{table}
 
 Short-rate series are stored in their source units and transformed only in named
@@ -362,19 +372,29 @@ with model-selection uncertainty. % artifact: research/economic_thresholds.md
 % artifact: research/comparator_model_registry.csv
 
 Weak-factor diagnostics evaluate whether short-rate betas contain enough
-cross-sectional variation to support a pricing interpretation. The planned
-diagnostics include standardized exposure dispersion, matrix rank,
-factor-spanning checks, influence diagnostics, estimation precision, and
-leave-one-family systems. Raw beta dispersion, singular values, and condition
-numbers may be reported descriptively, but they are not separate confirmatory
-failure rules. A short-rate risk price that fails these diagnostics is
-interpreted as weakly identified even when fit metrics appear favorable.
-The factor fails the confirmatory strength gate if the beta matrix loses rank,
-standardized rate-exposure dispersion is less than 10 percent of standardized % artifact: research/weak_factor_registry.csv
-market-exposure dispersion, the rate factor is nearly spanned by other factors,
-leave-one-family systems reverse the fitted-premium spread or materiality
-classification, or robust intervals span economically positive and negative
-fitted-premium effects. % artifact: research/inference_contract.md
+cross-sectional variation to support a pricing interpretation. They are split
+into three separately classified confirmatory claims rather than one composite
+gate, because identification strength, influence stability, and estimation
+precision fail for different reasons and carry different remedies. Raw beta
+dispersion, singular values, and condition numbers may be reported
+descriptively, but they are not separate confirmatory failure rules. A
+short-rate risk price that fails any of the three is interpreted as weakly
+identified even when fit metrics appear favorable.
+
+H4a is cross-sectional identification strength. It fails when the beta matrix
+loses rank, when standardized rate-exposure dispersion is less than 10 percent % artifact: research/weak_factor_registry.csv
+of standardized market-exposure dispersion, or when the numerical spanning
+criterion fails. Spanning is decided mechanically: the short-rate innovation is
+regressed by OLS on a constant and the registered non-short-rate comparator
+factors available on the same intersection, and the gate fails when the spanning
+\(R^2\) exceeds 0.90, equivalently when the residual standard deviation falls % artifact: research/inference_contract.md
+below 0.3162 of the raw factor standard deviation. Both statistics are scale % artifact: research/inference_contract.md
+free. H4b is influence stability, which fails when a leave-one-family refit
+reverses the sign or materiality of the rate-attributable fitted-premium spread
+or when a single portfolio reaches a standardized influence of one on the rate
+risk price. H4c is fitted-premium precision, which fails when the 95 percent % artifact: research/inference_contract.md
+joint-bootstrap interval for the fitted-premium spread contains both \(+0.25\) % artifact: research/inference_contract.md
+and \(-0.25\) monthly percentage points. % artifact: research/inference_contract.md
 % artifact: research/weak_factor_registry.csv
 
 Temporal and regime methods are designed as extensions. The post-publication
@@ -406,23 +426,51 @@ positive and all models use the same asset-date intersection. % artifact: resear
 Inference uses Shanken-adjusted covariance for the benchmark full-sample
 second-pass risk-price estimator. Fitted-premium uncertainty uses a joint
 moving-block bootstrap with 10,000 repetitions, a Politis-White block-length % artifact: research/bootstrap_contract.md
-selector, a fixed 12-month fallback under declared selector failures, and joint % artifact: research/bootstrap_contract.md
-resampling of factors, returns, rates, and regime labels. Each draw re-estimates
+selector, and a fixed 12-month fallback under declared selector failures. The % artifact: research/bootstrap_contract.md
+stochastic variables resampled jointly by calendar month are the market factor,
+the comparator factors, the portfolio returns, and the short-rate level series.
+Regime labels are not among them: a label is a deterministic calendar function
+of the observation month, so each resampled month carries its own frozen label
+as a fixed attribute. Resampling labels would fabricate uncertainty about a
+known policy calendar. Each draw re-estimates % artifact: research/bootstrap_contract.md
 the rate innovation, first-pass betas, second-pass risk prices, fitted premia,
 pricing errors, fit metrics, and equivalence statistics. Equivalence claims use
-95 percent confidence intervals that must lie wholly inside the declared % artifact: research/inference_contract.md
-bounds. % artifact: research/inference_contract.md
+one rule: standard two one-sided tests at the 5 percent level, implemented as % artifact: research/inference_contract.md
+inclusion of the two-sided 90 percent bootstrap interval inside the declared % artifact: research/inference_contract.md
+bound. The stricter 95 percent interval-inclusion variant is reported only as a % artifact: research/inference_contract.md
+labelled sensitivity column and never as the confirmatory test. % artifact: research/inference_contract.md
 % artifact: research/bootstrap_contract.md
 
-The primary regime registry contains five regimes: conventional positive-rate
+The primary regime registry contains six regimes: conventional positive-rate
 policy, effective lower bound and first QE, first normalisation, pandemic
-lower-bound and QE, and inflation-driven tightening. Transition months are
-assigned to the new regime, boundary-shift checks are plus or minus three
-months, and short-sample flags are retained where eligibility is limited. The
+lower-bound and QE, inflation-driven tightening, and post-tightening easing and
+normalisation. The post-2022 period is split because a rapid tightening cycle % artifact: research/regime_policy_sources.csv
+and the subsequent reduction from the cycle peak attach different information to
+the same measured rate movement; the split boundary is the first policy
+reduction on 18 September 2024. % artifact: research/regime_policy_sources.csv
+The primary transition rule assigns a regime to the first calendar month that
+lies entirely under the new policy stance, so the month containing the policy
+action stays with the outgoing regime. The whole-transition-month rule, which
+assigns the action month to the incoming regime, is preserved as a declared
+sensitivity analysis and never decides a confirmatory classification. % artifact: research/regime_registry.csv
+Boundary-shift checks remain plus or minus three months. The
 entire pre-lower-bound sample is defensible as the confirmatory article-era
 regime because the federal funds rate is the primary short-rate policy
 instrument away from the lower bound; finer pre-lower-bound breaks remain
 exploratory and cannot replace the confirmatory calendar regime. % artifact: research/regime_registry.csv
+
+Regime-estimation eligibility is frozen numerically before any regime estimate
+is produced and is not relaxed for regimes that turn out to be short. A regime
+shorter than 36 months supports no regime-specific estimation and enters only % artifact: configs/regimes.yaml
+pooled regime-interaction models. A regime of 36 to 59 months supports % artifact: configs/regimes.yaml
+regime-specific first-pass betas under a short-sample flag but no standalone
+second pass. A standalone regime-specific second pass additionally requires at
+least 60 months, at least 10 test assets, and a beta matrix whose rank equals % artifact: configs/regimes.yaml
+the number of priced factors. Under these frozen rules only the conventional
+and lower-bound regimes carry full eligibility, and the three post-2020 regimes % artifact: configs/regimes.yaml
+are restricted to pooled interactions; a predeclared combination of the two
+post-2022 regimes is available as a first-pass sensitivity. % artifact: configs/regimes.yaml
+% artifact: research/regime_registry.csv
 
 \begin{table}[htbp]
 \centering
@@ -434,16 +482,17 @@ exploratory and cannot replace the confirmatory calendar regime. % artifact: res
 \toprule
 ID & Regime & Start & End & Obs. & Primary instrument & Eligibility \\
 \midrule
-\path{conventional_pre_elb} & Conventional positive-rate policy & 1972-01 & 2008-11 & 443 & Federal funds rate & Beta and second pass \\ % artifact: research/regime_registry.csv
-\path{elb_qe} & Effective lower bound and first QE & 2008-12 & 2015-11 & 84 & Target range and asset purchases & Beta and second pass \\ % artifact: research/regime_registry.csv
-\path{normalisation} & First normalisation & 2015-12 & 2020-02 & 51 & Target range and balance-sheet normalisation & Beta and second pass \\ % artifact: research/regime_registry.csv
-\path{pandemic_elb_qe} & Pandemic lower-bound and QE & 2020-03 & 2022-02 & 24 & Lower-bound target range and asset purchases & Short-sample beta flag; standalone second pass blocked unless precision gate passes \\ % artifact: research/regime_registry.csv
-\path{inflation_tightening} & Inflation-driven tightening & 2022-03 & 2026-06 & 52 & Federal funds target range & Beta and second pass \\ % artifact: research/regime_registry.csv
+\path{conventional_pre_elb} & Conventional positive-rate policy & 1972-01 & 2008-12 & 444 & Federal funds rate & First pass and standalone second pass \\ % artifact: research/regime_registry.csv
+\path{elb_qe} & Effective lower bound and first QE & 2009-01 & 2015-12 & 84 & Target range and asset purchases & First pass and standalone second pass \\ % artifact: research/regime_registry.csv
+\path{normalisation} & First normalisation & 2016-01 & 2020-03 & 51 & Target range and balance-sheet normalisation & First pass with short-sample flag; standalone second pass blocked \\ % artifact: research/regime_registry.csv
+\path{pandemic_elb_qe} & Pandemic lower-bound and QE & 2020-04 & 2022-03 & 24 & Lower-bound target range and asset purchases & Below the 36-month floor; pooled interactions only \\ % artifact: research/regime_registry.csv
+\path{inflation_tightening} & Inflation-driven tightening & 2022-04 & 2024-09 & 30 & Federal funds target range & Below the 36-month floor; pooled interactions only \\ % artifact: research/regime_registry.csv
+\path{post_tightening_easing} & Post-tightening easing and normalisation & 2024-10 & 2026-06 & 21 & Federal funds target range & Below the 36-month floor; pooled interactions only \\ % artifact: research/regime_registry.csv
 \bottomrule
 \end{tabular}
 
 \smallskip
-\small Transition months belong to the new regime; permitted boundary shifts are plus or minus three months. Source: \artifact{research/regime_registry.csv}.
+\small A regime begins in the first calendar month lying entirely under the new policy stance, so the month containing the policy action stays with the outgoing regime; the whole-transition-month rule is a declared sensitivity. Permitted boundary shifts are plus or minus three months. Observation counts end at the extension freeze month. Source: \artifact{research/regime_registry.csv}.
 \end{table}
 
 The high-frequency decomposition is optional rather than part of the main
@@ -473,8 +522,10 @@ Claim & Primary method & Decision rule \\
 R1a--R1f & Layer-specific comparison to registered article statistics & Recovery within declared tolerances \\
 H1 & No-intercept two-pass pricing and model comparison & Must beat ex ante CAPM by materiality thresholds; strongest observed comparator is secondary \\
 H2 & Frozen and refitted post-publication evaluation & Sign, magnitude, and loss compatibility must hold \\
-H3 & Separate beta, fitted-premium, and pricing-error stability tests & Estimates must remain inside numerical bounds \\
-H4 & Standardized exposure, rank, spanning, and robust-inference diagnostics & Strength gates must pass before interpretation \\
+H3 & Separate beta, fitted-premium, and pricing-error stability tests & Estimates must remain inside numerical bounds under 5 percent TOST \\ % artifact: research/inference_contract.md
+H4a & Beta rank, standardized exposure dispersion, and spanning regression & All three identification gates must pass \\ % artifact: research/inference_contract.md
+H4b & Leave-one-family refits and standardized influence diagnostics & No sign reversal, no materiality loss, and no dominant portfolio \\ % artifact: research/inference_contract.md
+H4c & Joint moving-block bootstrap of the rate-attributable fitted premium & The interval may not span both economic directions \\ % artifact: research/inference_contract.md
 \bottomrule
 \end{tabular}
 

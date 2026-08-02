@@ -1,0 +1,7 @@
+series_id,timing_variant,replication_mode,exact_input_available,r1a_classification,note
+FEDFUNDS,within_window_lag,documented_reconstruction,False,not_reproduced_under_documented_reconstruction_exact_input_missing,"The article names a provider without a series code or vintage, so no rate reconstruction is eligible for an exact-replication label."
+FEDFUNDS,pre_window_lag,documented_reconstruction,False,approximately_reproduced_under_documented_reconstruction,"The article names a provider without a series code or vintage, so no rate reconstruction is eligible for an exact-replication label."
+TB3MS,within_window_lag,documented_reconstruction,False,not_reproduced_under_documented_reconstruction_exact_input_missing,"The article names a provider without a series code or vintage, so no rate reconstruction is eligible for an exact-replication label."
+TB3MS,pre_window_lag,documented_reconstruction,False,approximately_reproduced_under_documented_reconstruction,"The article names a provider without a series code or vintage, so no rate reconstruction is eligible for an exact-replication label."
+DTB3_MONTHLY_MEAN,within_window_lag,sensitivity_only,False,not_attempted_no_published_target_for_this_series,"The article never reports an AR(1) for a daily-aggregated Treasury-bill series, so there is no published target to audit."
+DTB3_MONTHLY_MEAN,pre_window_lag,sensitivity_only,False,not_attempted_no_published_target_for_this_series,"The article never reports an AR(1) for a daily-aggregated Treasury-bill series, so there is no published target to audit."

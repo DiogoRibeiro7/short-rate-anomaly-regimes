@@ -254,7 +254,7 @@ def first_pass_diagnostics(
             "max_leverage": float(leverage.max()),
             "max_cooks_distance": float(cooks.max()),
             "max_abs_dfbeta": float(np.abs(dfbeta.to_numpy(dtype=float)).max()),
-            "crisis_month_count": int(len(crisis_overlap)),
+            "crisis_month_count": len(crisis_overlap),
             "crisis_max_abs_residual": crisis_abs_residual,
         }
     )

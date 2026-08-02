@@ -1,0 +1,24 @@
+{
+  "archive": "vvg_monthly_2025",
+  "article_definition": "value-weighted deciles sorted on equity duration",
+  "article_label": "DUR",
+  "continuous_months": true,
+  "family": "equity_duration",
+  "member": "portf_dur_monthly_2025.csv",
+  "member_sha256": "edc56d0f017d2568289add4ecc25c22079ff4f613b06273d9664f0d1f3948d3e",
+  "minimum_stocks_per_portfolio": 38,
+  "missing_value_codes": "none observed; the archive omits absent months rather than coding them",
+  "missing_value_count": 0,
+  "monthly_observations": 708,
+  "normalized_path": "data/interim/portfolios/equity_duration_global_q_2025_retrieved_20260802.csv",
+  "normalized_sha256": "bf3bba6be9db675349f164fd82d518eb1b77079a717d78053f25c63cae691359",
+  "number_of_portfolios": 10,
+  "return_units": "percent_per_month",
+  "sample_end": "2025-12",
+  "sample_start": "1967-01",
+  "value_range": {
+    "maximum": 28.9705,
+    "minimum": -29.6679
+  },
+  "weighting": "value_weighted"
+}

@@ -1,0 +1,24 @@
+{
+  "archive": "vvg_monthly_2025",
+  "article_definition": "deciles sorted on the cash-flow-to-price ratio",
+  "article_label": "CFP",
+  "continuous_months": true,
+  "family": "cash_flow_to_price",
+  "member": "portf_cp_monthly_2025.csv",
+  "member_sha256": "be359cf758fed65d750da7aba7c4e7a480b27ce82cb2585b7cd02b7af3e62336",
+  "minimum_stocks_per_portfolio": 105,
+  "missing_value_codes": "none observed; the archive omits absent months rather than coding them",
+  "missing_value_count": 0,
+  "monthly_observations": 708,
+  "normalized_path": "data/interim/portfolios/cash_flow_to_price_global_q_2025_retrieved_20260802.csv",
+  "normalized_sha256": "d833df1fe05b2030ea04dc1d739d3f45ad18978ff2d60ed80dbad035f6d80819",
+  "number_of_portfolios": 10,
+  "return_units": "percent_per_month",
+  "sample_end": "2025-12",
+  "sample_start": "1967-01",
+  "value_range": {
+    "maximum": 26.0537,
+    "minimum": -28.3492
+  },
+  "weighting": "value_weighted"
+}
