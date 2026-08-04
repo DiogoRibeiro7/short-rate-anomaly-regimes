@@ -365,6 +365,24 @@ class TestManifestVerification:
             )
 
 
+#: These checks re-hash the frozen inputs named by each provenance record. Those
+#: inputs live under ``data/``, which is deliberately excluded from version
+#: control, so the checks can only run where the data has actually been
+#: acquired. They are marked ``integration`` and skipped elsewhere rather than
+#: weakened, because verifying a checksum against a file that is not present
+#: would be no verification at all.
+_ACQUIRED_DATA_PRESENT = (
+    REPOSITORY_ROOT / "data" / "interim" / "portfolios"
+).is_dir() and (REPOSITORY_ROOT / "data" / "interim" / "fred").is_dir()
+
+requires_acquired_data = pytest.mark.skipif(
+    not _ACQUIRED_DATA_PRESENT,
+    reason="frozen inputs under data/ are not present; run the acquisition scripts first",
+)
+
+
+@pytest.mark.integration
+@requires_acquired_data
 class TestCommittedProvenanceRecords:
     """The committed audit outputs must still match the record written beside them."""
 
