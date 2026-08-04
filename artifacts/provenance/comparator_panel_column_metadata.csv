@@ -1,0 +1,11 @@
+column,source_dataset,source_vintage,source_column,units,exact_or_reconstructed
+RM,F-F_Research_Data_Factors,publication_era_20170709,Mkt-RF,percent_per_month,documented_reconstruction; publication-era vintage
+SMB,F-F_Research_Data_Factors,publication_era_20170709,SMB,percent_per_month,documented_reconstruction; publication-era vintage
+HML,F-F_Research_Data_Factors,publication_era_20170709,HML,percent_per_month,documented_reconstruction; publication-era vintage
+UMD,F-F_Momentum_Factor,publication_era_20170709,Mom,percent_per_month,documented_reconstruction; publication-era vintage
+RMW,F-F_Research_Data_5_Factors_2x3,publication_era_20170709,RMW,percent_per_month,documented_reconstruction; publication-era vintage
+CMA,F-F_Research_Data_5_Factors_2x3,publication_era_20170709,CMA,percent_per_month,documented_reconstruction; publication-era vintage
+LIQ,pastor_stambaugh_liquidity,publication_era_20170828,traded_liquidity_factor times 100,percent_per_month,documented_reconstruction; publication-era vintage
+ME,q_factors,global_q_2025_retrieved_20260802,R_ME,percent_per_month,"documented_reconstruction; current vintage only, no publication-era vintage exists"
+IA,q_factors,global_q_2025_retrieved_20260802,R_IA,percent_per_month,"documented_reconstruction; current vintage only, no publication-era vintage exists"
+ROE,q_factors,global_q_2025_retrieved_20260802,R_ROE,percent_per_month,"documented_reconstruction; current vintage only, no publication-era vintage exists"

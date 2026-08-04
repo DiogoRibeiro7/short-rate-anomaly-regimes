@@ -1,0 +1,5 @@
+layer,cells_in_registry,cells_compared,cells_recovered,share_recovered,classification,note
+R1b,0,0,0,,no_published_statistic_level_target,"The article plots first-pass betas in Figure 3 and reports beta-times-lambda decompositions in Table 5, but tabulates no beta. There is no statistic-level cell to audit, so this layer is evidenced only through the layers that consume it."
+R1c,45,45,23,0.5111111111111111,partially_recovered_under_documented_reconstruction,"No exact-replication label is available at any recovery rate, because the article names providers and people rather than files."
+R1d,58,58,3,0.05172413793103448,partially_recovered_under_documented_reconstruction,"No exact-replication label is available at any recovery rate, because the article names providers and people rather than files."
+R1e,20,20,3,0.15,partially_recovered_under_documented_reconstruction,"No exact-replication label is available at any recovery rate, because the article names providers and people rather than files."

@@ -1,0 +1,29 @@
+{
+  "column_metadata": "artifacts/provenance/comparator_panel_column_metadata.csv",
+  "columns": [
+    "RM",
+    "SMB",
+    "HML",
+    "UMD",
+    "RMW",
+    "CMA",
+    "LIQ",
+    "ME",
+    "IA",
+    "ROE"
+  ],
+  "liquidity_scale": 100.0,
+  "panel_path": "data/processed/comparator_factors.parquet",
+  "panel_sha256": "43d96e181c25a2de895f1da5eff30f37b8a2aba0c131cd315da645fd360bfb77",
+  "script": "scripts/build_comparator_panel.py",
+  "vintages": {
+    "french": "publication_era_20170709",
+    "liquidity": "publication_era_20170828",
+    "q_factors": "global_q_2025_retrieved_20260802"
+  },
+  "window": {
+    "end": "2013-12",
+    "months": 504,
+    "start": "1972-01"
+  }
+}

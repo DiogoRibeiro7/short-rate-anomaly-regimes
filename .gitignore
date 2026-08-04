@@ -110,6 +110,15 @@ artifacts/**
 !artifacts/data_quality/liquidity_column_selection.csv
 !artifacts/data_quality/french_shared_factor_consistency.csv
 !artifacts/provenance/short_rate_innovations_baseline.json
+!artifacts/audit/published_target_audit.csv
+!artifacts/audit/replication_layer_classification.csv
+!artifacts/tables/cross_section/
+!artifacts/tables/cross_section/.gitkeep
+!artifacts/tables/cross_section/baseline_risk_prices.csv
+!artifacts/provenance/baseline_replication_run.json
+!artifacts/provenance/comparator_panel.json
+!artifacts/provenance/comparator_panel_column_metadata.csv
+!artifacts/provenance/published_target_audit.json
 !artifacts/provenance/portfolio_compatibility_audit.json
 !artifacts/figures/
 !artifacts/figures/.gitkeep

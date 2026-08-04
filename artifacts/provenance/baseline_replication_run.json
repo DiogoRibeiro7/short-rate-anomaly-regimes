@@ -1,0 +1,90 @@
+{
+  "asset_sets": {
+    "all_seven_families_joint": 70,
+    "book_to_market": 10,
+    "earnings_to_price": 10,
+    "equity_duration": 10,
+    "inventory_growth": 10,
+    "investment_to_assets": 10,
+    "long_term_reversal": 10,
+    "ppe_investment": 10
+  },
+  "first_pass": {
+    "covariance": "newey_west",
+    "estimator": "ols_with_intercept",
+    "hac_lag_rule": "automatic; the article does not state a lag rule. The choice affects only first-pass t-statistics, which the article does not tabulate, and does not affect the betas, the second pass, or any audited cell.",
+    "hac_lags": 5
+  },
+  "inputs": {
+    "baseline_panel": {
+      "path": "data/processed/baseline_panel.parquet",
+      "sha256": "f1354c66d8983bfed626dc9dbc62204d31d236f1117b700158e3b9b04f8a1cc0"
+    },
+    "comparator_factors": {
+      "path": "data/processed/comparator_factors.parquet",
+      "sha256": "43d96e181c25a2de895f1da5eff30f37b8a2aba0c131cd315da645fd360bfb77"
+    }
+  },
+  "models": {
+    "capm": [
+      "RM"
+    ],
+    "carhart_4": [
+      "RM",
+      "SMB",
+      "HML",
+      "UMD"
+    ],
+    "fama_french_3": [
+      "RM",
+      "SMB",
+      "HML"
+    ],
+    "fama_french_5": [
+      "RM",
+      "SMB",
+      "HML",
+      "RMW",
+      "CMA"
+    ],
+    "liquidity": [
+      "RM",
+      "SMB",
+      "HML",
+      "LIQ"
+    ],
+    "market_plus_fedfunds_innovation": [
+      "RM",
+      "FFR_innovation"
+    ],
+    "market_plus_tbill_innovation": [
+      "RM",
+      "TB_innovation"
+    ],
+    "q_factor": [
+      "RM",
+      "ME",
+      "IA",
+      "ROE"
+    ]
+  },
+  "outputs": {
+    "artifacts/estimates/cross_section/baseline_pricing_errors.parquet": "c0587e7baf221c302f93bf4296f29df68550c09a6a8a1ab133725459bf0f88e3",
+    "artifacts/estimates/cross_section/baseline_second_pass.parquet": "fde0868f26781a6b31f1e0ab047d6a685b19a43a8fd2f7bcf89582b4b8dc7ed0",
+    "artifacts/estimates/time_series/baseline_first_pass_betas.parquet": "ef1ee06ceba52d49d95d27f6c34d3ab177dce1ba7a06abe0a4092ef80a36f4b7",
+    "artifacts/tables/cross_section/baseline_risk_prices.csv": "3a74666591854e87377174568f1a9b08a0e2bb5d0dbd18ea939559747d781e89"
+  },
+  "replication_status": "documented_reconstruction",
+  "script": "scripts/run_baseline_replication.py",
+  "second_pass": {
+    "estimator": "no_intercept_ols_article_equation_4",
+    "fit_metric": "article_cross_sectional_fit_equation_6",
+    "specification_test": "article_equation_5_chi_square_with_pseudo_inverse",
+    "uncertainty": "shanken_1992"
+  },
+  "window": {
+    "end": "2013-12",
+    "months": 504,
+    "start": "1972-01"
+  }
+}
