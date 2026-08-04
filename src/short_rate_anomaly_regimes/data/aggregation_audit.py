@@ -30,6 +30,12 @@ SECONDARY_TOLERANCE_PERCENTAGE_POINTS = 0.01
 #: landing marginally outside an exactly-equal tolerance boundary.
 NUMERICAL_EPSILON = 1e-9
 
+#: Tokens a provider payload uses for an unavailable daily observation. FRED
+#: publishes a closed market either as a lone period or as an empty field
+#: depending on the series, and both must be excluded before any aggregation or
+#: coverage statement is derived.
+MISSING_VALUE_TOKENS = frozenset({"", "."})
+
 AggregationRule = Literal[
     "calendar_day_mean",
     "business_day_mean",
@@ -96,18 +102,41 @@ def aggregate_daily_to_monthly(
 
 
 def daily_month_coverage(daily: pd.Series) -> pd.DataFrame:
-    """Summarise how completely a daily series covers each calendar month."""
+    """Summarise how completely a daily series covers each calendar month.
+
+    Boundary coverage is derived from the non-missing observations only, because
+    those are exactly the observations :func:`aggregate_daily_to_monthly` uses. A
+    month whose first or last dated row carries a missing value therefore does
+    not count as covering that boundary, and cannot be certified complete on the
+    strength of an observation that never entered the aggregate.
+
+    Args:
+        daily: Daily rate series indexed by observation date, with unavailable
+            observations already represented as nulls.
+
+    Returns:
+        One row per calendar month present in the series, carrying the total and
+        non-missing observation counts, the first and last non-missing calendar
+        days, the length of the month, and the derived boundary and completeness
+        flags, indexed by month-start timestamp.
+
+    Raises:
+        TypeError: If the series does not use a ``DatetimeIndex``.
+    """
+    if not isinstance(daily.index, pd.DatetimeIndex):
+        raise TypeError("Daily rate series must use a DatetimeIndex")
     clean = daily.sort_index()
     periods = _month_period(pd.DatetimeIndex(clean.index))
     present = clean.dropna()
+    present_index = pd.DatetimeIndex(present.index)
+    present_periods = _month_period(present_index)
+    present_days = pd.Series(present_index.day, index=present_periods)
     frame = pd.DataFrame(
         {
             "observations": clean.groupby(periods).size(),
-            "non_missing_observations": present.groupby(
-                _month_period(pd.DatetimeIndex(present.index))
-            ).size(),
-            "first_day": clean.groupby(periods).apply(lambda block: block.index.min().day),
-            "last_day": clean.groupby(periods).apply(lambda block: block.index.max().day),
+            "non_missing_observations": present.groupby(present_periods).size(),
+            "first_day": present_days.groupby(level=0).min(),
+            "last_day": present_days.groupby(level=0).max(),
         }
     )
     frame["days_in_month"] = [period.days_in_month for period in frame.index]
@@ -126,7 +155,25 @@ def build_aggregation_difference_frame(
     daily_series_id: str,
     rule: AggregationRule,
 ) -> pd.DataFrame:
-    """Build the month-by-month difference table for one aggregation rule."""
+    """Build the month-by-month difference table for one aggregation rule.
+
+    Args:
+        monthly: Published provider monthly series.
+        daily: Daily series to aggregate.
+        monthly_series_id: Identifier recorded on every row.
+        daily_series_id: Identifier recorded on every row.
+        rule: Aggregation rule to apply.
+
+    Returns:
+        One row per month common to both series, carrying the signed and
+        absolute difference, the completeness flag from
+        :func:`daily_month_coverage`, the count of daily observations that
+        entered the aggregate, and the tolerance flags.
+
+    Raises:
+        TypeError: If the daily series does not use a ``DatetimeIndex``.
+        ValueError: If the rule is not recognised.
+    """
     aggregated = aggregate_daily_to_monthly(daily, rule=rule)
     coverage = daily_month_coverage(daily)
     joined = pd.concat(
@@ -188,6 +235,10 @@ def exact_decimal_rounding_check(
     provider would resolve it rather than the way binary representation happens
     to fall.
 
+    Rows carrying a provider missing-value token are removed before anything is
+    computed, so the month-boundary screen that decides which months are
+    complete is derived from the same observations that enter the mean.
+
     Args:
         monthly_raw_path: Immutable raw provider CSV for the monthly series.
         daily_raw_path: Immutable raw provider CSV for the daily series.
@@ -209,10 +260,11 @@ def exact_decimal_rounding_check(
     daily = pd.read_csv(daily_raw_path, dtype=str)
     daily.columns = ["date", "value"]
     daily["date"] = pd.to_datetime(daily["date"], errors="raise")
-    daily = daily[daily["value"].str.strip() != "."]
+    daily["value"] = daily["value"].fillna("").str.strip()
+    daily = daily[~daily["value"].isin(MISSING_VALUE_TOKENS)]
     if rule == "business_day_mean":
         daily = daily[daily["date"].dt.weekday < 5]
-    daily["decimal_value"] = daily["value"].str.strip().map(Decimal)
+    daily["decimal_value"] = daily["value"].map(Decimal)
 
     periods = daily["date"].dt.to_period("M")
     totals = daily.groupby(periods)["decimal_value"].sum()
@@ -224,12 +276,11 @@ def exact_decimal_rounding_check(
 
     monthly = pd.read_csv(monthly_raw_path, dtype=str)
     monthly.columns = ["date", "value"]
-    monthly = monthly[monthly["value"].str.strip() != "."]
+    monthly["value"] = monthly["value"].fillna("").str.strip()
+    monthly = monthly[~monthly["value"].isin(MISSING_VALUE_TOKENS)]
     monthly["date"] = pd.to_datetime(monthly["date"], errors="raise")
-    published = (
-        monthly.set_index(monthly["date"].dt.to_period("M"))["value"]
-        .str.strip()
-        .map(lambda value: Decimal(value).quantize(quantum))
+    published = monthly.set_index(monthly["date"].dt.to_period("M"))["value"].map(
+        lambda value: Decimal(value).quantize(quantum)
     )
 
     matches = 0
@@ -265,7 +316,18 @@ def exact_decimal_rounding_check(
 
 
 def summarise_aggregation(frame: pd.DataFrame) -> AggregationComparison:
-    """Reduce a month-by-month difference table to one comparison record."""
+    """Reduce a month-by-month difference table to one comparison record.
+
+    Args:
+        frame: Month-by-month difference table from
+            :func:`build_aggregation_difference_frame`.
+
+    Returns:
+        The single comparison record for the complete months in the table.
+
+    Raises:
+        ValueError: If the table contains no complete month.
+    """
     complete = frame[frame["complete_month"]].copy()
     if complete.empty:
         raise ValueError("No complete months available for comparison")
@@ -278,7 +340,7 @@ def summarise_aggregation(frame: pd.DataFrame) -> AggregationComparison:
         verdict = "reproduced_within_primary_tolerance"
     elif share_primary >= 0.99:
         verdict = "reproduced_for_at_least_99_percent_of_months_with_isolated_exceptions"
-    elif max_absolute <= SECONDARY_TOLERANCE_PERCENTAGE_POINTS:
+    elif max_absolute <= SECONDARY_TOLERANCE_PERCENTAGE_POINTS + NUMERICAL_EPSILON:
         verdict = "reproduced_within_secondary_tolerance_only"
     else:
         verdict = "not_reproduced_within_declared_tolerance"

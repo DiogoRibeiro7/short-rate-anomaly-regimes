@@ -47,7 +47,17 @@ zero rather than around the cross-sectional mean.
 
 - Never mix centred and uncentred fit statistics under one label.
 - If the article fit definition is used, label it `article_cross_sectional_fit`.
+- If the constrained variant is used, label it `article_constrained_fit`, never
+  `article_cross_sectional_fit`. Both are centred and share a denominator, but
+  their numerators are different statistics: the unconstrained metric uses the
+  estimated cross-sectional risk prices while the constrained metric restricts
+  each risk price to the corresponding factor's sample mean. Reporting them
+  under one label would mix two estimands and would breach the rule above. The
+  constrained label may be applied only to comparator models whose factors are
+  traded excess returns, and never to the short-rate ICAPM.
 - If the fallback is used, label it `pricing_error_pseudo_R2`.
+- A table or figure that shows more than one of these three metrics must label
+  each column separately and must not rank models across labels.
 - The phrase "fit is interpretable" means exactly that the denominator in the
   selected fit statistic is positive and the same asset-date intersection is
   used for every model in the comparison.

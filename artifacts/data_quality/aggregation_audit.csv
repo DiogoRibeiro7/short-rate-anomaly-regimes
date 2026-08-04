@@ -1,5 +1,5 @@
 monthly_series_id,daily_series_id,rule,complete_months_compared,exact_match_months,max_absolute_difference,mean_absolute_difference,root_mean_squared_difference,months_within_primary_tolerance,months_within_secondary_tolerance,share_within_primary_tolerance,verdict
 FEDFUNDS,DFF,calendar_day_mean,864,87,0.005000000000000782,0.0024093955193209104,0.0028763143394917113,864,864,1.0,reproduced_within_primary_tolerance
 FEDFUNDS,DFF,business_day_mean,864,60,0.2857142857142865,0.021521003360903727,0.037658791500652856,331,439,0.38310185185185186,not_reproduced_within_declared_tolerance
-TB3MS,DTB3,available_observation_mean,869,29,0.005000000000000782,0.002542921403954174,0.002905213972175858,869,869,1.0,reproduced_within_primary_tolerance
-TB3MS,DTB3,month_end_last_observation,869,63,2.8099999999999987,0.12130034522439587,0.24105087344860152,63,186,0.07249712313003452,not_reproduced_within_declared_tolerance
+TB3MS,DTB3,available_observation_mean,846,29,0.005000000000000782,0.0025238034389173814,0.00288868346250496,846,846,1.0,reproduced_within_primary_tolerance
+TB3MS,DTB3,month_end_last_observation,846,63,2.8099999999999987,0.11968085106382981,0.2386677463425002,63,185,0.07446808510638298,not_reproduced_within_declared_tolerance

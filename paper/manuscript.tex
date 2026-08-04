@@ -296,7 +296,7 @@ Federal funds rate & Federal Reserve Bank of St. Louis & Monthly & FEDFUNDS docu
 Treasury-bill rate & Federal Reserve Bank of St. Louis & Monthly & TB3MS documented reconstruction; DTB3 sensitivity only & Acquired and frozen; aggregation verified; not exact \\ % artifact: research/data_access_matrix.csv
 Market and risk-free returns & Kenneth French Data Library & Monthly & Excess-return factors & Acquired at a publication-era and a current vintage; not exact \\ % artifact: research/data_access_matrix.csv
 Anomaly decile portfolios & Lu Zhang and cited sources & Monthly & Excess returns after alignment & Acquired from the named source at a post-publication vintage; equal-weighted variants unavailable \\ % artifact: research/anomaly_portfolio_availability.csv
-Comparator factors & French, Stambaugh, and q-factor sources & Monthly & Common-intersection factors & French factors acquired; liquidity and q-factor sets pending \\ % artifact: research/data_access_matrix.csv
+Comparator factors & French, Stambaugh, and q-factor sources & Monthly & Common-intersection factors & All registered comparator inputs acquired and frozen; the liquidity column and scale are identified empirically and its published extremes are reproduced by no recoverable vintage \\ % artifact: research/comparator_model_registry.csv
 Announcement components & Documented research dataset & Event & Monthly aggregation & Extension input pending \\
 \bottomrule
 \end{tabular}
@@ -388,7 +388,10 @@ criterion fails. Spanning is decided mechanically: the short-rate innovation is
 regressed by OLS on a constant and the registered non-short-rate comparator
 factors available on the same intersection, and the gate fails when the spanning
 \(R^2\) exceeds 0.90, equivalently when the residual standard deviation falls % artifact: research/inference_contract.md
-below 0.3162 of the raw factor standard deviation. Both statistics are scale % artifact: research/inference_contract.md
+below \(\sqrt{0.10}\) of the raw factor standard deviation. The \(R^2\) form is % artifact: research/inference_contract.md
+authoritative and the residual cutoff is the exact square root rather than a
+decimal rounded below it, so the two forms agree on every boundary case. Both
+statistics are scale
 free. H4b is influence stability, which fails when a leave-one-family refit
 reverses the sign or materiality of the rate-attributable fitted-premium spread
 or when a single portfolio reaches a standardized influence of one on the rate
@@ -487,12 +490,12 @@ ID & Regime & Start & End & Obs. & Primary instrument & Eligibility \\
 \path{normalisation} & First normalisation & 2016-01 & 2020-03 & 51 & Target range and balance-sheet normalisation & First pass with short-sample flag; standalone second pass blocked \\ % artifact: research/regime_registry.csv
 \path{pandemic_elb_qe} & Pandemic lower-bound and QE & 2020-04 & 2022-03 & 24 & Lower-bound target range and asset purchases & Below the 36-month floor; pooled interactions only \\ % artifact: research/regime_registry.csv
 \path{inflation_tightening} & Inflation-driven tightening & 2022-04 & 2024-09 & 30 & Federal funds target range & Below the 36-month floor; pooled interactions only \\ % artifact: research/regime_registry.csv
-\path{post_tightening_easing} & Post-tightening easing and normalisation & 2024-10 & 2026-06 & 21 & Federal funds target range & Below the 36-month floor; pooled interactions only \\ % artifact: research/regime_registry.csv
+\path{post_tightening_easing} & Post-tightening easing and normalisation & 2024-10 & 2026-06 registered, 2025-12 effective & 21 registered, 15 usable & Federal funds target range & Below the 36-month floor; pooled interactions only \\ % artifact: research/regime_registry.csv
 \bottomrule
 \end{tabular}
 
 \smallskip
-\small A regime begins in the first calendar month lying entirely under the new policy stance, so the month containing the policy action stays with the outgoing regime; the whole-transition-month rule is a declared sensitivity. Permitted boundary shifts are plus or minus three months. Observation counts end at the extension freeze month. Source: \artifact{research/regime_registry.csv}.
+\small A regime begins in the first calendar month lying entirely under the new policy stance, so the month containing the policy action stays with the outgoing regime; the whole-transition-month rule is a declared sensitivity. Permitted boundary shifts are plus or minus three months. Registered observation counts are those frozen in the regime registry, which ends the final regime at the rate-data freeze month 2026-06. Regime estimation uses the registered anomaly decile portfolios, which end 2025-12, so the last six months of the post-tightening easing window carry no test-asset observations and the usable count for that regime is 15 rather than 21. The declared post-2022 combination is affected in the same way and has 45 usable months rather than 51. The registry rows are not restated here; the effective endpoint is the binding constraint on every regime estimate. Source: \artifact{research/regime_registry.csv}, \artifact{research/anomaly_portfolio_availability.csv}, \artifact{configs/extensions.yaml}.
 \end{table}
 
 The high-frequency decomposition is optional rather than part of the main

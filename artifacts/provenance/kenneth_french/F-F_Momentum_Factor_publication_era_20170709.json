@@ -23,7 +23,7 @@
   "raw_path": "data/raw/kenneth_french/F-F_Momentum_Factor/F-F_Momentum_Factor_publication_era_20170709.zip",
   "raw_sha256": "138a951385aeca0b2c581c101e94ae20d6de47e6518ed40042149222df83427b",
   "redistribution_status": "public research data provided by the Kenneth French Data Library; raw archive bytes are retained locally and are not redistributed by this repository",
-  "retrieved_at_utc": "2026-08-01T00:06:49.381598+00:00",
+  "retrieved_at_utc": "2026-08-03T09:26:03.997286+00:00",
   "source_metadata_lines": [
     "This file was created by CMPT_ME_PRIOR_RETS using the 201705 CRSP database.  It",
     "contains a momentum factor, constructed from six value-weight portfolios formed",

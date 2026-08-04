@@ -62,6 +62,11 @@ regime_definition:
 # Frozen minimum regime-estimation eligibility requirements.
 # These thresholds are fixed before any regime estimate is produced and may not
 # be relaxed to accommodate a regime that turns out to be short.
+# The tier `condition` strings below are the documentary record only. They are
+# never parsed. The binding rule is the numeric threshold fields, which
+# short_rate_anomaly_regimes.config.classify_regime_eligibility evaluates, and a
+# configuration validator requires the declared tier ids to be exactly the ids
+# that classifier can return.
 regime_estimation_eligibility:
   minimum_months_for_regime_specific_estimation: 36
   minimum_months_for_standalone_second_pass: 60
@@ -76,6 +81,12 @@ regime_estimation_eligibility:
     - id: eligible_first_pass_with_short_sample_flag
       condition: 36 <= months < 60
       permitted: regime-specific first-pass betas with a short-sample flag; standalone second pass blocked
+      note: >-
+        This is the first-pass-only tier. Under the frozen configuration it is
+        reached through the short-sample band, but the classifier also assigns it
+        to a regime of at least 60 months that fails the test-asset or beta-rank
+        gate, since that regime keeps its first-pass betas while the standalone
+        second pass stays blocked. No threshold is relaxed by that fallback.
     - id: eligible_first_pass_and_standalone_second_pass
       condition: months >= 60 and test_assets >= 10 and beta_rank == number_of_priced_factors
       permitted: regime-specific first pass and standalone regime second pass

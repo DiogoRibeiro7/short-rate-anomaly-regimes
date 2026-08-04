@@ -1,0 +1,99 @@
+{
+  "comparison_window": {
+    "end": "2013-12",
+    "frequency": "M",
+    "months": 504,
+    "start": "1972-01"
+  },
+  "created_at_utc": "2026-08-03T09:52:47.284133+00:00",
+  "outputs": [
+    {
+      "path": "artifacts/data_quality/portfolio_source_compatibility.csv",
+      "sha256": "4fc1cfdec783e5248de2b65d273a86d550b2747e12d68e3e3f1a044ad4d52821"
+    },
+    {
+      "path": "artifacts/data_quality/reversal_holding_period_selection.csv",
+      "sha256": "47c8198027966c736fbbd33011eff4cd8e87578e9dfa770655e9433f2bc831f5"
+    }
+  ],
+  "published_reference": "article page 937 Table 2 Panel A high-minus-low decile spread statistics",
+  "script": "scripts/audit_portfolio_source_compatibility.py",
+  "tolerance_at_published_precision": 0.005,
+  "verified_inputs": {
+    "normalized_family_panels": [
+      {
+        "family": "book_to_market",
+        "manifest": "artifacts/provenance/portfolios/families/book_to_market_global_q_2025_retrieved_20260802.json",
+        "manifest_checksum_field": "normalized_sha256",
+        "path": "data/interim/portfolios/book_to_market_global_q_2025_retrieved_20260802.csv",
+        "sha256": "1ed644ab8b04b74ef262f04985ba47e02e077507d97630ca476d98a6666cb0fe"
+      },
+      {
+        "family": "earnings_to_price",
+        "manifest": "artifacts/provenance/portfolios/families/earnings_to_price_global_q_2025_retrieved_20260802.json",
+        "manifest_checksum_field": "normalized_sha256",
+        "path": "data/interim/portfolios/earnings_to_price_global_q_2025_retrieved_20260802.csv",
+        "sha256": "1ce72ca029f10ef4316966a37d7dc7d94da0475b74f39df909060de68204651c"
+      },
+      {
+        "family": "equity_duration",
+        "manifest": "artifacts/provenance/portfolios/families/equity_duration_global_q_2025_retrieved_20260802.json",
+        "manifest_checksum_field": "normalized_sha256",
+        "path": "data/interim/portfolios/equity_duration_global_q_2025_retrieved_20260802.csv",
+        "sha256": "bf3bba6be9db675349f164fd82d518eb1b77079a717d78053f25c63cae691359"
+      },
+      {
+        "family": "inventory_growth",
+        "manifest": "artifacts/provenance/portfolios/families/inventory_growth_global_q_2025_retrieved_20260802.json",
+        "manifest_checksum_field": "normalized_sha256",
+        "path": "data/interim/portfolios/inventory_growth_global_q_2025_retrieved_20260802.csv",
+        "sha256": "018854e864c3eac3e117785d52f548493bcd3d55c92cc90a1d6a0db445fabd5d"
+      },
+      {
+        "family": "investment_to_assets",
+        "manifest": "artifacts/provenance/portfolios/families/investment_to_assets_global_q_2025_retrieved_20260802.json",
+        "manifest_checksum_field": "normalized_sha256",
+        "path": "data/interim/portfolios/investment_to_assets_global_q_2025_retrieved_20260802.csv",
+        "sha256": "a5bcdbc373a17df728aa5c03a7e3c98cd3099ea8c690f70ece7b24a6ab426044"
+      },
+      {
+        "family": "long_term_reversal",
+        "manifest": "artifacts/provenance/portfolios/families/long_term_reversal_global_q_2025_retrieved_20260802.json",
+        "manifest_checksum_field": "normalized_sha256",
+        "path": "data/interim/portfolios/long_term_reversal_global_q_2025_retrieved_20260802.csv",
+        "sha256": "90e7f9c96d55b9e1865d72293eee81c39ad5563839ac196a2e3d3f39e05b2929"
+      },
+      {
+        "family": "ppe_investment",
+        "manifest": "artifacts/provenance/portfolios/families/ppe_investment_global_q_2025_retrieved_20260802.json",
+        "manifest_checksum_field": "normalized_sha256",
+        "path": "data/interim/portfolios/ppe_investment_global_q_2025_retrieved_20260802.csv",
+        "sha256": "04214950611d919cd54a844d83a829cd8094a57b4dca23935aca5ac393b3a6fd"
+      }
+    ],
+    "raw_archives": [
+      {
+        "archive": "vvg_monthly_2025",
+        "manifest": "artifacts/provenance/portfolios/vvg_monthly_2025_global_q_2025_retrieved_20260802.json",
+        "manifest_checksum_field": "raw_sha256",
+        "path": "data/raw/portfolios/global_q/vvg_monthly_2025_global_q_2025_retrieved_20260802.zip",
+        "sha256": "d5f7fb88c401195d9b31f0bd8853d6087a47b77ac3642e2fd9217b67ccb6a2ba"
+      }
+    ],
+    "reversal_archive_members": [
+      {
+        "member": "portf_rev_12_monthly_2025.csv",
+        "member_sha256": "d0258b9d413de6176cf6fc7f94169d7fe582b3432e3c97323f7ae7dbe5dadc2c"
+      },
+      {
+        "member": "portf_rev_1_monthly_2025.csv",
+        "member_sha256": "b23d4346919f11ce4730c3608dafbea94239bef05e198e656c41684f1c074417"
+      },
+      {
+        "member": "portf_rev_6_monthly_2025.csv",
+        "member_sha256": "fb64db5bd4996b143c32b8995dc11d3f0c6bd7662bac0878f369943f527e66e1"
+      }
+    ]
+  },
+  "vintage_label": "global_q_2025_retrieved_20260802"
+}

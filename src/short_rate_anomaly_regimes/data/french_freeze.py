@@ -20,9 +20,14 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from short_rate_anomaly_regimes.data.acquisition import HTTPSession, _session_with_retries
+from short_rate_anomaly_regimes.data.acquisition import (
+    HTTPSession,
+    _session_with_retries,
+    canonical_monthly_bytes,
+    load_normalized_month_panel,
+    write_raw_once,
+)
 from short_rate_anomaly_regimes.exceptions import DataAccessError, DataValidationError
-from short_rate_anomaly_regimes.provenance import sha256_file
 
 FRENCH_BASE_URL = "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp"
 
@@ -113,28 +118,6 @@ def parse_french_monthly_block(text: str) -> tuple[pd.DataFrame, tuple[str, ...]
     return frame, descriptive
 
 
-def _canonical_monthly_bytes(frame: pd.DataFrame) -> bytes:
-    lines = ["month," + ",".join(str(column) for column in frame.columns)]
-    for period, row in frame.iterrows():
-        rendered = ",".join("" if pd.isna(value) else f"{float(value):.10f}" for value in row)
-        lines.append(f"{period},{rendered}")
-    return ("\n".join(lines) + "\n").encode("utf-8")
-
-
-def _write_raw_once(path: Path, payload: bytes) -> str:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    incoming = hashlib.sha256(payload).hexdigest()
-    if path.exists():
-        existing = sha256_file(path)
-        if existing != incoming:
-            raise DataAccessError(
-                f"Refusing to overwrite an existing raw file with different bytes: {path}"
-            )
-        return existing
-    path.write_bytes(payload)
-    return incoming
-
-
 def freeze_french_archive(
     *,
     dataset: str,
@@ -168,7 +151,10 @@ def freeze_french_archive(
     Raises:
         DataAccessError: On a non-200 response, an empty or non-ZIP payload, or an
             attempt to overwrite an existing raw file with different bytes.
-        DataValidationError: When the archive contains no parsable member.
+        DataValidationError: When the archive contains no parsable member. The
+            archive member is extracted and parsed before any raw file is written,
+            so a malformed payload never occupies the immutable path and a later
+            retry with the valid payload still succeeds.
     """
     client = session or _session_with_retries(retries)
     response = client.get(url, timeout=timeout)
@@ -180,10 +166,8 @@ def freeze_french_archive(
     if not zipfile.is_zipfile(io.BytesIO(payload)):
         raise DataAccessError(f"Payload for {url} is not a ZIP archive")
 
-    file_name = f"{dataset}_CSV.zip"
-    raw_path = raw_root / dataset / f"{dataset}_{vintage_label}.zip"
-    raw_sha = _write_raw_once(raw_path, payload)
-
+    # The member is extracted and parsed before the raw bytes are committed, so a
+    # malformed HTTP 200 cannot permanently occupy the immutable path.
     with zipfile.ZipFile(io.BytesIO(payload)) as archive:
         members = [member for member in archive.infolist() if not member.is_dir()]
         if not members:
@@ -192,8 +176,12 @@ def freeze_french_archive(
         member_bytes = archive.read(member)
     text = member_bytes.decode("latin-1")
     frame, descriptive = parse_french_monthly_block(text)
+    normalized_bytes = canonical_monthly_bytes(frame)
 
-    normalized_bytes = _canonical_monthly_bytes(frame)
+    file_name = f"{dataset}_CSV.zip"
+    raw_path = raw_root / dataset / f"{dataset}_{vintage_label}.zip"
+    raw_sha = write_raw_once(raw_path, payload)
+
     normalized_path = normalized_root / f"{dataset}_{vintage_label}.csv"
     normalized_path.parent.mkdir(parents=True, exist_ok=True)
     normalized_path.write_bytes(normalized_bytes)
@@ -240,12 +228,31 @@ def freeze_french_archive(
 
 
 def load_normalized_french(path: Path) -> pd.DataFrame:
-    """Load a normalized French monthly panel indexed by month period."""
-    frame = pd.read_csv(path)
-    index = pd.PeriodIndex([pd.Period(str(value), freq="M") for value in frame["month"]], freq="M")
-    values = frame.drop(columns=["month"]).astype(float)
-    values.index = index
-    return values.sort_index()
+    """Load a normalized French monthly panel indexed by month period.
+
+    Args:
+        path: Path to a normalized French CSV written by this module.
+
+    Returns:
+        The month-indexed float panel.
+    """
+    return load_normalized_month_panel(path)
+
+
+def _vintage_verdict(
+    *,
+    months_with_value_difference: int,
+    months_beyond_tolerance: int,
+    months_with_changed_missingness: int,
+) -> str:
+    """Label one column's revision, letting a coverage change dominate the verdict."""
+    if months_with_changed_missingness:
+        return "revised_observation_coverage_changed"
+    if months_with_value_difference == 0:
+        return "identical_on_common_sample"
+    if months_beyond_tolerance == 0:
+        return "revised_within_publication_rounding"
+    return "revised_beyond_publication_rounding"
 
 
 def compare_vintages(
@@ -259,6 +266,15 @@ def compare_vintages(
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Compare two vintages of the same archive on their common sample.
 
+    A revision that adds or removes an observation is a revision, not a
+    coincidence of alignment, so a month that is present in exactly one vintage is
+    counted as a difference rather than masked. Such a month is reported in
+    ``months_only_in_historical`` and ``months_only_in_current``, is included in
+    ``months_with_any_difference`` and ``months_beyond_tolerance`` because an
+    appearing or disappearing observation is never a rounding difference, and
+    forces the verdict away from ``identical_on_common_sample``. The magnitude
+    columns remain defined on the months both vintages observe.
+
     Args:
         historical: Normalized panel from the publication-era vintage.
         current: Normalized panel from the current vintage.
@@ -268,7 +284,9 @@ def compare_vintages(
         tolerance: Half of the published increment for the archive.
 
     Returns:
-        A per-column summary frame and a frame of every differing month.
+        A per-column summary frame and a frame of every differing month, the
+        latter labelled by ``change_type`` as a value revision, an added
+        observation, or a removed observation.
 
     Raises:
         ValueError: If the two vintages share no column or no month.
@@ -283,10 +301,24 @@ def compare_vintages(
     for column in shared_columns:
         left = historical.loc[shared_months, column]
         right = current.loc[shared_months, column]
-        both_present = left.notna() & right.notna()
+        left_present = left.notna()
+        right_present = right.notna()
+        both_present = left_present & right_present
+        either_present = left_present | right_present
+        only_historical = left_present & ~right_present
+        only_current = right_present & ~left_present
+        missingness_differs = only_historical | only_current
+
         difference = (right - left).where(both_present)
         absolute = difference.abs()
-        changed = absolute > tolerance
+        changed = (absolute > tolerance).fillna(False)
+
+        months_only_in_historical = int(only_historical.sum())
+        months_only_in_current = int(only_current.sum())
+        months_with_changed_missingness = months_only_in_historical + months_only_in_current
+        months_with_value_difference = int((absolute > 0).sum())
+        months_beyond_tolerance = int(changed.sum())
+        observed_months = int(either_present.sum())
         summaries.append(
             {
                 "dataset": dataset,
@@ -294,36 +326,52 @@ def compare_vintages(
                 "historical_vintage": historical_label,
                 "current_vintage": current_label,
                 "common_months": int(both_present.sum()),
-                "months_with_any_difference": int((absolute > 0).sum()),
-                "months_beyond_tolerance": int(changed.sum()),
+                "months_only_in_historical": months_only_in_historical,
+                "months_only_in_current": months_only_in_current,
+                "months_with_changed_missingness": months_with_changed_missingness,
+                "missingness_identical": months_with_changed_missingness == 0,
+                "months_with_any_difference": (
+                    months_with_value_difference + months_with_changed_missingness
+                ),
+                "months_beyond_tolerance": (
+                    months_beyond_tolerance + months_with_changed_missingness
+                ),
                 "share_beyond_tolerance": (
-                    float(changed.sum() / both_present.sum())
-                    if both_present.sum()
+                    float(
+                        (months_beyond_tolerance + months_with_changed_missingness)
+                        / observed_months
+                    )
+                    if observed_months
                     else float("nan")
                 ),
                 "max_absolute_difference": float(absolute.max()) if both_present.any() else 0.0,
                 "mean_absolute_difference": float(absolute.mean()) if both_present.any() else 0.0,
                 "tolerance": tolerance,
-                "verdict": (
-                    "identical_on_common_sample"
-                    if int((absolute > 0).sum()) == 0
-                    else (
-                        "revised_within_publication_rounding"
-                        if int(changed.sum()) == 0
-                        else "revised_beyond_publication_rounding"
-                    )
+                "verdict": _vintage_verdict(
+                    months_with_value_difference=months_with_value_difference,
+                    months_beyond_tolerance=months_beyond_tolerance,
+                    months_with_changed_missingness=months_with_changed_missingness,
                 ),
             }
         )
-        for period in shared_months[changed.fillna(False).to_numpy()]:
+        for period in shared_months[(changed | missingness_differs).to_numpy()]:
+            historical_value = float(left.loc[period])
+            current_value = float(right.loc[period])
+            if bool(only_current.loc[period]):
+                change_type = "observation_added_by_current"
+            elif bool(only_historical.loc[period]):
+                change_type = "observation_removed_by_current"
+            else:
+                change_type = "value_revision"
             differing_rows.append(
                 {
                     "dataset": dataset,
                     "column": column,
                     "month": str(period),
-                    "historical_value": float(left.loc[period]),
-                    "current_value": float(right.loc[period]),
-                    "difference": float(right.loc[period] - left.loc[period]),
+                    "change_type": change_type,
+                    "historical_value": historical_value,
+                    "current_value": current_value,
+                    "difference": current_value - historical_value,
                 }
             )
     return (
@@ -334,6 +382,7 @@ def compare_vintages(
                 "dataset",
                 "column",
                 "month",
+                "change_type",
                 "historical_value",
                 "current_value",
                 "difference",

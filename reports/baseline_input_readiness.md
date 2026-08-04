@@ -70,12 +70,12 @@ The monthly aggregation of both baseline rates is verified exactly, not assumed.
 - `FEDFUNDS` equals the calendar-day mean of `DFF` rounded half-up to two
   decimals in **864 of 864** complete months.
 - `TB3MS` equals the mean of the available business-day `DTB3` observations
-  rounded half-up to two decimals in **869 of 869** complete months.
+  rounded half-up to two decimals in **846 of 846** complete months.
 - Two competing rules are decisively rejected: a business-day-only mean of `DFF`
   matches in 38 percent of months (max error 0.29), and month-end `DTB3` matches
   in 7 percent (max error 2.81).
 - `TB3MS` and an arithmetic aggregation of `DTB3` are **not identical**; they
-  differ in 840 of 869 months before rounding, bounded exactly by half a
+  differ in 817 of 846 months before rounding, bounded exactly by half a
   reporting increment.
 
 Detail: `reports/short_rate_source_report.md`,
@@ -183,7 +183,7 @@ all five statistics, so no q-factor comparator target can be labelled exact.
 | **R1b** first-pass betas | **Unblocked for reconstruction-labelled estimation** | Market factor, risk-free return, innovations, and 70 decile portfolios are aligned in the canonical panel. |
 | **R1c** cross-sectional risk prices | **Unblocked for reconstruction-labelled estimation** | Depends only on R1b inputs; the no-intercept OLS second pass and the Shanken correction are explicit in the article. |
 | **R1d** pricing errors and fit | **Unblocked for reconstruction-labelled estimation** | The article's fit definition is verified as `1 - var_N(alpha)/var_N(mean excess return)` (p.933, eq. 6), so the contract fallback is not needed. |
-| **R1e** comparator models | **Unblocked for reconstruction-labelled estimation** | All five registered comparator models are available: CAPM, FF3, C4, and FF5 at the publication-era French vintage, the q-factors at the 2025 vintage, and liquidity at a publication-era vintage. The liquidity input carries the tail incompatibility recorded in section 3.1. |
+| **R1e** comparator models | **Unblocked for reconstruction-labelled estimation** | All six registered comparator models are available, one primary and five secondary: CAPM, FF3, C4, and FF5 at the publication-era French vintage, the q-factor model at the 2025 vintage, and the liquidity model at a publication-era vintage. The liquidity input carries the tail incompatibility recorded in section 3.1. |
 
 ## 5. R1 targets still blocked
 
@@ -205,11 +205,17 @@ may be used, and no such attempt has been made.
 | `TB3MS` | `within_window_lag` | `not_reproduced_under_documented_reconstruction_exact_input_missing` |
 | `DTB3` monthly mean | both | `not_attempted_no_published_target_for_this_series` |
 
-Under `pre_window_lag`, 8 of 10 published statistics match at published precision
-for FEDFUNDS and 9 of 10 for TB3MS. The exceptions are the intercept in
-percentage points (which matches once converted to the article's decimal display
-units) and, for FEDFUNDS only, `t(slope)` at 147.2696 against a published 147.26,
-a relative difference of 0.007 percent.
+Under `pre_window_lag`, 9 of 10 published statistics match at published precision
+for FEDFUNDS and 10 of 10 for TB3MS. The single exception is the FEDFUNDS
+`t(slope)` at 147.2696 against a published 147.26, a relative difference of 0.007
+percent, which passes the registered relative band for t-ratios.
+
+The intercept is compared in the article's decimal rate units, as the design
+correction requires. An earlier revision of this report quoted 8 of 10 and 9 of
+10 because the comparison code emitted the percentage-point estimate against a
+decimal-unit published target, so the intercept row failed for every variant and
+never reached the classifier. That defect is fixed and regression-tested; the
+classification itself is unchanged.
 
 **This is not exact replication and is not labelled as such.** The article does
 not identify the source file it used, so source identity cannot be established.
@@ -360,9 +366,13 @@ vintage.
 
 - Baseline panel: 1972-01 to 2013-12, 504 months, complete.
 - Extension endpoint: **2025-12**, set by the anomaly portfolio panels, not the
-  2026-06 rate and factor data. `configs/extensions.yaml` records
-  `latest_common_month: 2026-06`, which no longer binds once portfolios enter the
-  panel; the effective common endpoint is 2025-12.
+  2026-06 rate and 2026-05 factor data. `configs/extensions.yaml` now records
+  `latest_common_month: 2025-12` and lists the seven acquired anomaly decile
+  families as the compatible portfolio sets, replacing the five 25-portfolio
+  double sorts that are not acquired at any vintage.
+- `research/regime_registry.csv` still ends `post_tightening_easing` and
+  `post_pandemic_cycle_combined` at 2026-06. Those rows are not owned by this
+  report and remain to be corrected to the 2025-12 panel endpoint.
 - Under the frozen regime-eligibility floors, standalone regime-specific second
   passes are available for `conventional_pre_elb` and `elb_qe` only. The three
   post-2020 regimes fall below the 36-month floor and enter pooled interactions
@@ -394,7 +404,7 @@ Record: `artifacts/data_quality/baseline_panel_validation.json`.
 | Gate | Status | Evidence |
 |---|---|---|
 | All raw public inputs have checksums and source metadata | **PASS** | `artifacts/provenance/` manifests for 4 FRED series, 6 French archive vintages, 2 q archives, 9 portfolio panels |
-| Short-rate aggregation is verified | **PASS** | 864/864 and 869/869 exact-decimal matches; two competing rules rejected |
+| Short-rate aggregation is verified | **PASS** | 864/864 and 846/846 exact-decimal matches; two competing rules rejected |
 | The timing convention is tested automatically | **PASS** | `tests/test_baseline_inputs.py::TestTimingConvention`, 7 tests including no-lookahead and shift-detection |
 | R1a is classified without conflating reconstruction and replication | **PASS** | Classification enforced in code and asserted in `TestReplicationClassification` |
 | Market and risk-free vintages are frozen | **PASS** | `publication_era_20170709` and `current_20260801`, both checksummed and compared |
@@ -411,8 +421,9 @@ Record: `artifacts/data_quality/baseline_panel_validation.json`.
 2. Acquire the three French 25-portfolio double sorts to unblock Table A.7.
 3. Configure `FRED_API_KEY` to convert declared FRED metadata into retrieved
    metadata.
-4. Update `configs/extensions.yaml` so the effective extension endpoint reflects
-   the 2025-12 portfolio constraint.
+4. Correct the regime rows in `research/regime_registry.csv` that still end at
+   2026-06 so that they respect the 2025-12 portfolio endpoint.
+   `configs/extensions.yaml` has already been updated.
 5. Ask the authors which liquidity series they used. That is the only way to
    close the `LIQ` extremes question.
 
@@ -422,10 +433,13 @@ The q-factor and Pastor-Stambaugh liquidity comparators were acquired after this
 report was first issued. Three things changed.
 
 - **R1e moved from partially blocked to unblocked** for reconstruction-labelled
-  estimation. All five registered comparator models are now available, so the H1
-  secondary adversarial comparison draws on a complete field instead of a
-  truncated one. A truncated field would have made that comparison easier to
-  pass and would have had to be disclosed as a limitation.
+  estimation. All six registered comparator models are now available, the CAPM
+  primary comparator plus the five secondary models, so the H1 secondary
+  adversarial comparison draws on a complete field instead of a truncated one. A
+  truncated field would have made that comparison easier to pass and would have
+  had to be disclosed as a limitation. `configs/baseline.yaml` now lists all six
+  under `comparators:`, so the configuration and
+  `research/comparator_model_registry.csv` agree.
 - **A correction.** An earlier record in this project stated that the article's
   footnote 18 URL for Stambaugh's page no longer resolves. It does resolve. The
   earlier claim came from PDF text extraction rendering the tilde as U+223C

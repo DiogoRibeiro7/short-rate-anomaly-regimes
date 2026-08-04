@@ -18,9 +18,12 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from short_rate_anomaly_regimes.data.acquisition import HTTPSession, _session_with_retries
+from short_rate_anomaly_regimes.data.acquisition import (
+    HTTPSession,
+    _session_with_retries,
+    write_raw_once,
+)
 from short_rate_anomaly_regimes.exceptions import DataAccessError, DataValidationError
-from short_rate_anomaly_regimes.provenance import sha256_file
 
 FRED_CSV_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
 
@@ -134,15 +137,51 @@ class SeriesFreezeRecord:
     declared_metadata_audit: dict[str, str] = field(default_factory=dict)
 
 
-def _normalize_fred_payload(payload: bytes) -> pd.DataFrame:
-    """Parse a FRED graph CSV into a canonical two-column monthly or daily frame."""
+def _finite_values(frame: pd.DataFrame) -> pd.Series:
+    """Return the finite subset of the value column, excluding nulls and infinities."""
+    values = frame["value"].astype(float)
+    return values[np.isfinite(values.to_numpy(dtype=float))]
+
+
+def _normalize_fred_payload(payload: bytes, series_id: str | None = None) -> pd.DataFrame:
+    """Parse a FRED graph CSV into a canonical two-column monthly or daily frame.
+
+    The value column of a FRED graph CSV is named after the series it carries, so
+    that header is the only evidence inside the payload that the endpoint returned
+    the series that was requested. The date column header carries no such evidence
+    and is not constrained: FRED stamps it ``observation_date`` today and stamped
+    it ``DATE`` in older files.
+
+    Args:
+        payload: Raw provider bytes.
+        series_id: FRED series identifier that was requested. When it is supplied,
+            the value-column header must name exactly that series. ``None``
+            normalizes the payload without checking which series it carries and is
+            reserved for callers that are not attributing the bytes to a series;
+            every freezing path supplies the requested identifier.
+
+    Returns:
+        A frame with a ``date`` column and a float ``value`` column, sorted by
+        date, in which the provider's missing-value code is a null.
+
+    Raises:
+        DataValidationError: If the payload does not have two columns, carries a
+            value column for a different series, repeats an observation date, or
+            contains no observation or no finite observation.
+    """
     frame = pd.read_csv(io.BytesIO(payload), dtype=str)
     if frame.shape[1] != 2:
         raise DataValidationError(f"Expected two FRED columns, found {frame.shape[1]}")
     date_column, value_column = frame.columns
+    observed_series = str(value_column).strip()
+    if series_id is not None and observed_series != series_id:
+        raise DataValidationError(
+            f"FRED payload carries series {observed_series!r} but {series_id!r} was requested"
+        )
     dates = pd.to_datetime(frame[date_column], errors="raise")
+    stripped = frame[value_column].str.strip()
     values = pd.to_numeric(
-        frame[value_column].str.strip().replace(FRED_MISSING_VALUE_CODE, np.nan),
+        stripped.where(stripped != FRED_MISSING_VALUE_CODE),
         errors="raise",
     )
     normalized = pd.DataFrame({"date": dates, "value": values.astype(float)})
@@ -151,6 +190,10 @@ def _normalize_fred_payload(payload: bytes) -> pd.DataFrame:
         raise DataValidationError("FRED payload contains duplicate observation dates")
     if normalized.empty:
         raise DataValidationError("FRED payload contains no observations")
+    if _finite_values(normalized).empty:
+        raise DataValidationError(
+            f"FRED payload for {observed_series} contains no finite observation"
+        )
     return normalized
 
 
@@ -179,21 +222,6 @@ def _observed_frequency(dates: pd.Series) -> str:
     return "daily_including_weekends"
 
 
-def _write_raw_once(path: Path, payload: bytes) -> str:
-    """Write raw bytes exactly once; never overwrite a differing existing file."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    incoming = hashlib.sha256(payload).hexdigest()
-    if path.exists():
-        existing = sha256_file(path)
-        if existing != incoming:
-            raise DataAccessError(
-                f"Refusing to overwrite an existing raw file with different bytes: {path}"
-            )
-        return existing
-    path.write_bytes(payload)
-    return incoming
-
-
 def audit_declared_metadata(series_id: str, frame: pd.DataFrame) -> dict[str, str]:
     """Check declared metadata against facts that the payload can establish."""
     declared = DECLARED_SERIES_METADATA[series_id]
@@ -201,7 +229,7 @@ def audit_declared_metadata(series_id: str, frame: pd.DataFrame) -> dict[str, st
     frequency_consistent = (
         declared["frequency"] == "monthly" and observed.startswith("monthly")
     ) or (declared["frequency"] == observed)
-    finite = frame["value"].dropna()
+    finite = _finite_values(frame)
     magnitude_consistent = bool(finite.abs().max() < 100.0 and finite.abs().max() > 1.0)
     return {
         "frequency_declared_vs_observed": "consistent" if frequency_consistent else "inconsistent",
@@ -244,7 +272,11 @@ def freeze_fred_series(
     Raises:
         DataAccessError: On a non-200 response, an empty payload, or an attempt to
             overwrite an existing raw file with different bytes.
-        DataValidationError: When the payload is not a well-formed FRED series.
+        DataValidationError: When the series is not registered, or when the payload
+            is not a well-formed FRED series for ``series_id``. The payload is
+            validated before any raw file is written, so a malformed response
+            never occupies the immutable path and a later retry with the valid
+            payload still succeeds.
     """
     if series_id not in DECLARED_SERIES_METADATA:
         raise DataValidationError(f"No declared metadata registered for series {series_id!r}")
@@ -257,17 +289,20 @@ def freeze_fred_series(
     if not payload:
         raise DataAccessError(f"Empty payload for {url}")
 
-    raw_path = raw_root / series_id / f"{series_id}_{retrieval_date}.csv"
-    raw_sha = _write_raw_once(raw_path, payload)
-
-    frame = _normalize_fred_payload(payload)
+    # The payload is parsed and validated before the raw bytes are committed, so a
+    # malformed HTTP 200 cannot permanently occupy the immutable path.
+    frame = _normalize_fred_payload(payload, series_id)
     normalized_bytes = _canonical_csv_bytes(frame)
+
+    raw_path = raw_root / series_id / f"{series_id}_{retrieval_date}.csv"
+    raw_sha = write_raw_once(raw_path, payload)
+
     normalized_path = normalized_root / f"{series_id}_{retrieval_date}.csv"
     normalized_path.parent.mkdir(parents=True, exist_ok=True)
     normalized_path.write_bytes(normalized_bytes)
 
     declared = DECLARED_SERIES_METADATA[series_id]
-    finite = frame["value"].dropna()
+    finite = _finite_values(frame)
     record = SeriesFreezeRecord(
         series_id=series_id,
         provider="Federal Reserve Bank of St. Louis (FRED)",

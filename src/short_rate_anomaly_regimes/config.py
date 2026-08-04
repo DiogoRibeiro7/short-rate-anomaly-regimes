@@ -145,9 +145,21 @@ class BaselineConfig(BaseModel):
     market_factor: MarketFactorConfig
     short_rate: ShortRateConfig
     portfolio_sets: list[str]
+    supplement_portfolio_sets: list[str] = Field(default_factory=list)
     asset_pricing: AssetPricingConfig
     comparators: list[str]
     reporting: BaselineReportingConfig
+
+    @model_validator(mode="after")
+    def validate_portfolio_sets_are_disjoint(self) -> BaselineConfig:
+        """Reject a supplement set that is also declared as a baseline test asset."""
+        overlap = sorted(set(self.portfolio_sets) & set(self.supplement_portfolio_sets))
+        if overlap:
+            raise ValueError(
+                "portfolio_sets and supplement_portfolio_sets must be disjoint; "
+                f"both declare {', '.join(overlap)}"
+            )
+        return self
 
 
 class ShockIdentificationConfig(BaseModel):
@@ -246,6 +258,24 @@ class RegimeIntervalConfig(BaseModel):
     sensitivity_start: str | None = None
     sensitivity_end: str | None = None
 
+    @model_validator(mode="after")
+    def validate_sensitivity_pair(self) -> RegimeIntervalConfig:
+        """Require the sensitivity boundaries to be declared as a complete pair.
+
+        Returns:
+            The validated regime interval.
+
+        Raises:
+            ValueError: If exactly one of the two sensitivity boundaries is declared.
+        """
+        declared = (self.sensitivity_start is not None, self.sensitivity_end is not None)
+        if any(declared) and not all(declared):
+            raise ValueError(
+                f"Regime {self.id} must declare both sensitivity_start and sensitivity_end "
+                "or neither; a single sensitivity boundary does not define an interval"
+            )
+        return self
+
 
 class RegimeTransitionRuleConfig(BaseModel):
     """Primary and sensitivity transition-month assignment rules."""
@@ -288,6 +318,39 @@ class RegimeDefinitionConfig(BaseModel):
     declared_combinations: list[RegimeCombinationConfig] = Field(default_factory=list)
     sensitivity: RegimeSensitivityConfig
 
+    @model_validator(mode="after")
+    def validate_declared_combinations(self) -> RegimeDefinitionConfig:
+        """Require every declared combination to name one adjacent run of configured regimes.
+
+        Returns:
+            The validated regime definition.
+
+        Raises:
+            ValueError: If regime ids are not unique, or a combination names an
+                unconfigured regime, repeats a member, or does not list a single
+                consecutive run of regimes in the configured order.
+        """
+        order = {regime.id: position for position, regime in enumerate(self.regimes)}
+        if len(order) != len(self.regimes):
+            raise ValueError("regime ids must be unique")
+        for combination in self.declared_combinations:
+            unknown = [member for member in combination.members if member not in order]
+            if unknown:
+                raise ValueError(
+                    f"Declared combination {combination.id} names unconfigured regimes: "
+                    f"{', '.join(unknown)}"
+                )
+            if len(set(combination.members)) != len(combination.members):
+                raise ValueError(f"Declared combination {combination.id} repeats a regime member")
+            positions = [order[member] for member in combination.members]
+            expected = list(range(positions[0], positions[0] + len(positions)))
+            if positions != expected:
+                raise ValueError(
+                    f"Declared combination {combination.id} must list one consecutive run of "
+                    "adjacent regimes in the configured regime order"
+                )
+        return self
+
 
 class RegimeEligibilityTierConfig(BaseModel):
     """One frozen regime-estimation eligibility tier."""
@@ -297,6 +360,29 @@ class RegimeEligibilityTierConfig(BaseModel):
     id: str
     condition: str
     permitted: str
+    note: str | None = None
+
+
+BLOCKED_TIER_ID_TEMPLATE = "blocked_for_regime_specific_estimation_below_{months}_months"
+FIRST_PASS_ONLY_TIER_ID = "eligible_first_pass_with_short_sample_flag"
+FIRST_AND_SECOND_PASS_TIER_ID = "eligible_first_pass_and_standalone_second_pass"
+
+
+def _tier_ids_for_floor(minimum_months_for_regime_specific_estimation: int) -> tuple[str, str, str]:
+    """Build the executable tier ids implied by the frozen first-pass month floor.
+
+    Args:
+        minimum_months_for_regime_specific_estimation: Frozen month floor below which
+            regime-specific estimation is blocked.
+
+    Returns:
+        The blocked, first-pass-only and first-and-second-pass tier ids, in that order.
+    """
+    return (
+        BLOCKED_TIER_ID_TEMPLATE.format(months=minimum_months_for_regime_specific_estimation),
+        FIRST_PASS_ONLY_TIER_ID,
+        FIRST_AND_SECOND_PASS_TIER_ID,
+    )
 
 
 class RegimeEstimationEligibilityConfig(BaseModel):
@@ -307,20 +393,31 @@ class RegimeEstimationEligibilityConfig(BaseModel):
     minimum_months_for_regime_specific_estimation: int = Field(gt=0)
     minimum_months_for_standalone_second_pass: int = Field(gt=0)
     minimum_test_assets_for_standalone_second_pass: int = Field(gt=0)
-    required_beta_matrix_rank: str
+    required_beta_matrix_rank: Literal["number_of_priced_factors"]
     short_sample_flag_band_months: list[int] = Field(min_length=2, max_length=2)
     below_minimum_treatment: str
     tiers: list[RegimeEligibilityTierConfig] = Field(min_length=1)
 
     @model_validator(mode="after")
     def validate_thresholds(self) -> RegimeEstimationEligibilityConfig:
-        """Require the second-pass floor to be at least the first-pass floor."""
+        """Require the second-pass floor to exceed the first-pass floor.
+
+        Equal floors would force the short-sample band to run backwards, such as
+        ``[36, 35]``, while the schema still requires a two-endpoint band.
+
+        Returns:
+            The validated eligibility configuration.
+
+        Raises:
+            ValueError: If the floors are not strictly ordered or the short-sample
+                band does not span exactly the two floors.
+        """
         if (
             self.minimum_months_for_standalone_second_pass
-            < self.minimum_months_for_regime_specific_estimation
+            <= self.minimum_months_for_regime_specific_estimation
         ):
             raise ValueError(
-                "minimum_months_for_standalone_second_pass must be at least "
+                "minimum_months_for_standalone_second_pass must be strictly greater than "
                 "minimum_months_for_regime_specific_estimation"
             )
         lower, upper = self.short_sample_flag_band_months
@@ -335,6 +432,93 @@ class RegimeEstimationEligibilityConfig(BaseModel):
                 "minimum_months_for_standalone_second_pass"
             )
         return self
+
+    @model_validator(mode="after")
+    def validate_tier_ids(self) -> RegimeEstimationEligibilityConfig:
+        """Require the declared tiers to be exactly the tiers the classifier can return.
+
+        The human-readable ``condition`` strings stay in the configuration as the
+        documentary record, but they are never parsed. This validator ties the frozen
+        tier list to :func:`classify_regime_eligibility`, so a tier that no code can
+        assign, or a classifier outcome that no tier declares, fails configuration
+        loading instead of silently drifting apart.
+
+        Returns:
+            The validated eligibility configuration.
+
+        Raises:
+            ValueError: If the declared tier ids differ from the executable tier ids.
+        """
+        expected = _tier_ids_for_floor(self.minimum_months_for_regime_specific_estimation)
+        declared = tuple(tier.id for tier in self.tiers)
+        if declared != expected:
+            raise ValueError(
+                "regime_estimation_eligibility.tiers must declare exactly the executable "
+                f"tier ids in order: {', '.join(expected)}"
+            )
+        return self
+
+
+def eligibility_tier_ids(
+    eligibility_config: RegimeEstimationEligibilityConfig,
+) -> tuple[str, str, str]:
+    """Return the eligibility tier ids implied by the frozen numeric thresholds.
+
+    Args:
+        eligibility_config: Frozen regime-estimation eligibility thresholds.
+
+    Returns:
+        The blocked, first-pass-only and first-and-second-pass tier ids, in that order.
+    """
+    return _tier_ids_for_floor(eligibility_config.minimum_months_for_regime_specific_estimation)
+
+
+def classify_regime_eligibility(
+    months: int,
+    test_assets: int,
+    beta_rank: int,
+    n_priced_factors: int,
+    eligibility_config: RegimeEstimationEligibilityConfig,
+) -> str:
+    """Classify one regime into its frozen estimation-eligibility tier.
+
+    The tier follows only from the frozen numeric thresholds. A regime shorter than
+    ``minimum_months_for_regime_specific_estimation`` is blocked from regime-specific
+    estimation. A regime that also clears
+    ``minimum_months_for_standalone_second_pass``,
+    ``minimum_test_assets_for_standalone_second_pass`` and the full beta-matrix rank
+    requirement earns the standalone second pass. Every other regime is first pass only:
+    that covers the short-sample band and, defensively, a long regime that fails the
+    test-asset or rank gate, because the frozen design permits its first-pass betas
+    while blocking the standalone second pass.
+
+    Args:
+        months: Monthly observations available in the regime.
+        test_assets: Test assets available for the regime second pass.
+        beta_rank: Rank of the estimated regime beta matrix.
+        n_priced_factors: Number of priced factors in the confirmatory model.
+        eligibility_config: Frozen regime-estimation eligibility thresholds.
+
+    Returns:
+        The id of the frozen eligibility tier that applies to the regime.
+
+    Raises:
+        ValueError: If any count is negative or no factor is priced.
+    """
+    if min(months, test_assets, beta_rank) < 0:
+        raise ValueError("months, test_assets and beta_rank must not be negative")
+    if n_priced_factors <= 0:
+        raise ValueError("n_priced_factors must be positive")
+    blocked, first_pass_only, first_and_second_pass = eligibility_tier_ids(eligibility_config)
+    if months < eligibility_config.minimum_months_for_regime_specific_estimation:
+        return blocked
+    if (
+        months >= eligibility_config.minimum_months_for_standalone_second_pass
+        and test_assets >= eligibility_config.minimum_test_assets_for_standalone_second_pass
+        and beta_rank == n_priced_factors
+    ):
+        return first_and_second_pass
+    return first_pass_only
 
 
 class RegimeConfig(BaseModel):

@@ -135,31 +135,51 @@ def validate_baseline_panel(
     checks["no_observation_after_frozen_endpoint"] = bool(index.max() <= endpoint)
     checks["no_observation_before_window_start"] = bool(index.min() >= start)
 
+    # Bounds alone allow a panel truncated at either end to pass. The frozen
+    # window is exact, so the first and last keys must equal it; otherwise a
+    # source missing its earliest or latest month would silently shorten the
+    # baseline without any check firing.
+    checks["panel_starts_exactly_at_window_start"] = bool(index.min() == start)
+    checks["panel_ends_exactly_at_window_end"] = bool(index.max() == endpoint)
+    expected_window = pd.period_range(start, endpoint, freq="M")
+    checks["panel_covers_the_whole_frozen_window"] = list(index) == list(expected_window)
+    details["expected_window_months"] = str(len(expected_window))
+    details["observed_window_months"] = str(len(index))
+
     checks["no_missing_values"] = not bool(panel.isna().to_numpy().any())
     checks["no_infinite_values"] = not bool(np.isinf(panel.to_numpy(dtype=float)).any())
 
-    # A forward fill would create runs of exactly repeated float values across
-    # consecutive months in return columns. Genuine returns never do this.
     return_columns = [
         column
         for column in panel.columns
         if column.startswith(("portfolio_excess_return__", "market_excess_return"))
     ]
-    repeated = {
-        column: int((panel[column].diff() == 0).sum())
-        for column in return_columns
-        if int((panel[column].diff() == 0).sum()) > 0
-    }
-    checks["no_implicit_forward_filling"] = not repeated
-    details["repeated_consecutive_return_values"] = str(repeated)
 
-    # Unit consistency. Monthly percent returns and annualized percentage-point
-    # rates occupy different but overlapping ranges, so each is checked against
-    # its own declared band rather than a single global band.
-    return_values = panel[return_columns].to_numpy(dtype=float)
-    checks["return_units_are_percent_per_month"] = bool(
-        np.nanmax(np.abs(return_values)) > 1.0 and np.nanmax(np.abs(return_values)) < 200.0
+    # Two adjacent months carrying the same value is not evidence of forward
+    # filling. Provider returns are published to two decimals, so equal
+    # neighbours occur naturally. The reliable test is whether every panel value
+    # still equals its frozen source at the same month, which is established by
+    # the source-equality checks below; a carried-forward value would differ from
+    # its source. The repeated-value count is retained as a descriptive detail
+    # only, with no pass or fail attached.
+    details["repeated_consecutive_return_values"] = str(
+        {
+            column: int((panel[column].diff() == 0).sum())
+            for column in return_columns
+            if int((panel[column].diff() == 0).sum()) > 0
+        }
     )
+
+    # Unit consistency, evaluated per column. A panel-wide maximum lets a
+    # decimal-scale column hide behind any other column that exceeds one percent,
+    # so each return column is checked against the declared band on its own.
+    off_scale_return_columns = [
+        column
+        for column in return_columns
+        if not (1.0 < float(np.nanmax(np.abs(panel[column].to_numpy(dtype=float)))) < 200.0)
+    ]
+    checks["return_units_are_percent_per_month"] = not off_scale_return_columns
+    details["return_columns_outside_declared_units"] = str(off_scale_return_columns)
     level_columns = [c for c in panel.columns if c.startswith("short_rate_level__")]
     if level_columns:
         level_values = panel[level_columns].to_numpy(dtype=float)
@@ -174,18 +194,33 @@ def validate_baseline_panel(
         panel["risk_free_return"].max() < 5.0 and panel["risk_free_return"].min() >= 0.0
     )
 
-    # No accidental timing shift in the rate innovation.
-    innovation_ok = True
-    for name, (intercept, slope) in ar_parameters.items():
-        column = f"short_rate_innovation__{name}"
-        if column not in panel.columns:
+    # No accidental timing shift in the rate innovation. Every innovation column
+    # present in the panel must be verifiable: an unverifiable column is a
+    # failure, not something to skip, because skipping would let a
+    # timing-shifted or arbitrary innovation ride through unchecked. The reverse
+    # direction, a declared parameter whose column is absent, is harmless.
+    innovation_columns = [
+        column for column in panel.columns if column.startswith("short_rate_innovation__")
+    ]
+    unverifiable_innovations = [
+        column
+        for column in innovation_columns
+        if column.removeprefix("short_rate_innovation__") not in ar_parameters
+        or column.removeprefix("short_rate_innovation__") not in short_rate_levels
+    ]
+    innovation_ok = not unverifiable_innovations
+    for column in innovation_columns:
+        name = column.removeprefix("short_rate_innovation__")
+        if name not in ar_parameters or name not in short_rate_levels:
             continue
+        intercept, slope = ar_parameters[name]
         levels = short_rate_levels[name]
         current = levels.reindex(index).to_numpy(dtype=float)
         lagged = levels.reindex(index - 1).to_numpy(dtype=float)
         manual = current - intercept - slope * lagged
         innovation_ok &= bool(np.allclose(panel[column].to_numpy(dtype=float), manual, atol=1e-9))
     checks["innovation_has_no_timing_shift"] = innovation_ok
+    details["unverifiable_innovation_columns"] = str(unverifiable_innovations)
 
     # No accidental timing shift in the market factor.
     checks["market_factor_has_no_timing_shift"] = bool(
@@ -197,19 +232,40 @@ def validate_baseline_panel(
     )
 
     # The excess-return step is exactly the raw return minus the same-month
-    # risk-free return.
-    excess_ok = True
+    # risk-free return. As with the innovations, a portfolio column that cannot
+    # be traced back to a frozen source is a failure rather than a skip.
     risk_free = panel["risk_free_return"].to_numpy(dtype=float)
-    for family, frame in raw_portfolio_returns.items():
-        for column in frame.columns:
-            panel_column = f"portfolio_excess_return__{family}__{column}"
-            if panel_column not in panel.columns:
-                continue
-            expected_values = frame[column].reindex(index).to_numpy(dtype=float) - risk_free
-            excess_ok &= bool(
-                np.allclose(panel[panel_column].to_numpy(dtype=float), expected_values, atol=1e-9)
-            )
+    available_sources = {
+        f"portfolio_excess_return__{family}__{column}": frame[column]
+        for family, frame in raw_portfolio_returns.items()
+        for column in frame.columns
+    }
+    portfolio_columns = [
+        column for column in panel.columns if column.startswith("portfolio_excess_return__")
+    ]
+    untraceable_portfolios = [
+        column for column in portfolio_columns if column not in available_sources
+    ]
+    excess_ok = not untraceable_portfolios
+    for column in portfolio_columns:
+        source = available_sources.get(column)
+        if source is None:
+            continue
+        expected_values = source.reindex(index).to_numpy(dtype=float) - risk_free
+        excess_ok &= bool(
+            np.allclose(panel[column].to_numpy(dtype=float), expected_values, atol=1e-9)
+        )
     checks["excess_returns_use_same_month_risk_free"] = excess_ok
+    details["untraceable_portfolio_columns"] = str(untraceable_portfolios)
+
+    # Forward filling is detectable precisely because a carried-forward value
+    # would no longer equal its frozen source. The gate is therefore the
+    # conjunction of the source-equality checks rather than a value heuristic.
+    checks["no_implicit_forward_filling"] = bool(
+        checks["market_factor_has_no_timing_shift"]
+        and checks["excess_returns_use_same_month_risk_free"]
+        and checks["innovation_has_no_timing_shift"]
+    )
 
     return PanelValidationReport(
         rows=len(panel),

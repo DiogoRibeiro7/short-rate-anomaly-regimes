@@ -17,6 +17,7 @@ from short_rate_anomaly_regimes.data.comparator_freeze import (
     freeze_comparator_file,
     load_normalized_comparator,
 )
+from short_rate_anomaly_regimes.exceptions import DataValidationError
 
 RAW_ROOT = Path("data/raw/comparators")
 NORMALIZED_ROOT = Path("data/interim/comparators")
@@ -98,8 +99,31 @@ TOLERANCE = 0.005
 
 
 def _statistics(series: pd.Series) -> dict[str, float]:
-    window = series.index.intersection(WINDOW)
-    values = series.loc[window].dropna()
+    """Compute the Table 1 statistics on the full baseline window.
+
+    The series is reindexed onto the complete window rather than intersected
+    with it, so a month that is absent from the candidate file or null inside the
+    window is a hard failure rather than a silent reduction of the sample. Every
+    candidate is therefore ranked against the article on the same months.
+
+    Args:
+        series: Monthly factor series indexed by month period.
+
+    Returns:
+        The mean, standard deviation, minimum, maximum, first-order
+        autocorrelation, and month count over the window.
+
+    Raises:
+        DataValidationError: If any month of the window is absent or null.
+    """
+    values = series.reindex(WINDOW)
+    missing = values.index[values.isna()]
+    if len(missing):
+        raise DataValidationError(
+            f"The candidate series is missing {len(missing)} of {len(WINDOW)} months inside "
+            f"{WINDOW[0]}..{WINDOW[-1]} (first {missing[0]}); the published Table 1 statistics "
+            f"are defined on the full window and cannot be compared on a shorter sample"
+        )
     return {
         "mean": float(values.mean()),
         "sd": float(values.std(ddof=1)),

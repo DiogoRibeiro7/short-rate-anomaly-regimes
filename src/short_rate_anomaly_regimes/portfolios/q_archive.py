@@ -19,9 +19,14 @@ from pathlib import Path
 import pandas as pd
 import requests
 
-from short_rate_anomaly_regimes.data.acquisition import HTTPSession, _session_with_retries
+from short_rate_anomaly_regimes.data.acquisition import (
+    HTTPSession,
+    _session_with_retries,
+    canonical_monthly_bytes,
+    load_normalized_month_panel,
+    write_raw_once,
+)
 from short_rate_anomaly_regimes.exceptions import DataAccessError, DataValidationError
-from short_rate_anomaly_regimes.provenance import sha256_file
 
 Q_ARCHIVE_BASE_URL = "https://global-q.org/uploads/1/2/2/6/122679606"
 
@@ -194,6 +199,10 @@ def freeze_q_archive(
     Raises:
         DataAccessError: On a non-200 response, an empty or non-ZIP payload, or an
             attempt to overwrite an existing raw file with different bytes.
+        DataValidationError: When the archive carries no member or only empty
+            members. The archive is inspected before any raw file is written, so a
+            hollow payload is neither recorded as a successful freeze nor left
+            occupying the immutable path.
     """
     url = f"{Q_ARCHIVE_BASE_URL}/{archive}.zip"
     client = session or _q_session(retries)
@@ -206,20 +215,16 @@ def freeze_q_archive(
     if not zipfile.is_zipfile(io.BytesIO(payload)):
         raise DataAccessError(f"Payload for {url} is not a ZIP archive")
 
-    raw_path = raw_root / f"{archive}_{vintage_label}.zip"
-    raw_path.parent.mkdir(parents=True, exist_ok=True)
-    incoming = hashlib.sha256(payload).hexdigest()
-    if raw_path.exists():
-        existing = sha256_file(raw_path)
-        if existing != incoming:
-            raise DataAccessError(
-                f"Refusing to overwrite an existing raw file with different bytes: {raw_path}"
-            )
-    else:
-        raw_path.write_bytes(payload)
-
     with zipfile.ZipFile(io.BytesIO(payload)) as handle:
-        member_count = len([item for item in handle.infolist() if not item.is_dir()])
+        members = [item for item in handle.infolist() if not item.is_dir()]
+    if not members:
+        raise DataValidationError(f"Archive {archive} contains no files")
+    if all(member.file_size == 0 for member in members):
+        raise DataValidationError(f"Archive {archive} contains only empty files")
+    member_count = len(members)
+
+    raw_path = raw_root / f"{archive}_{vintage_label}.zip"
+    raw_sha = write_raw_once(raw_path, payload)
 
     record = QArchiveRecord(
         archive=archive,
@@ -228,7 +233,7 @@ def freeze_q_archive(
         vintage_label=vintage_label,
         retrieved_at_utc=datetime.now(UTC).isoformat(),
         raw_path=raw_path.as_posix(),
-        raw_sha256=incoming,
+        raw_sha256=raw_sha,
         member_count=member_count,
         redistribution_status=(
             "public author-provided research data; the page states no registration "
@@ -294,14 +299,6 @@ def reshape_family_panel(
     return returns, counts, hashlib.sha256(member_bytes).hexdigest()
 
 
-def _canonical_panel_bytes(frame: pd.DataFrame) -> bytes:
-    lines = ["month," + ",".join(str(column) for column in frame.columns)]
-    for period, row in frame.iterrows():
-        rendered = ",".join("" if pd.isna(value) else f"{float(value):.10f}" for value in row)
-        lines.append(f"{period},{rendered}")
-    return ("\n".join(lines) + "\n").encode("utf-8")
-
-
 def freeze_family_panel(
     payload: bytes,
     *,
@@ -318,7 +315,7 @@ def freeze_family_panel(
         member=specification["member"],
         rank_column=specification["rank_column"],
     )
-    normalized_bytes = _canonical_panel_bytes(returns)
+    normalized_bytes = canonical_monthly_bytes(returns)
     normalized_path = normalized_root / f"{family}_{vintage_label}.csv"
     normalized_path.parent.mkdir(parents=True, exist_ok=True)
     normalized_path.write_bytes(normalized_bytes)
@@ -358,9 +355,12 @@ def freeze_family_panel(
 
 
 def load_family_panel(path: Path) -> pd.DataFrame:
-    """Load a normalized decile panel indexed by month period."""
-    frame = pd.read_csv(path)
-    index = pd.PeriodIndex([pd.Period(str(value), freq="M") for value in frame["month"]], freq="M")
-    values = frame.drop(columns=["month"]).astype(float)
-    values.index = index
-    return values.sort_index()
+    """Load a normalized decile panel indexed by month period.
+
+    Args:
+        path: Path to a normalized decile-panel CSV written by this module.
+
+    Returns:
+        The month-indexed float panel.
+    """
+    return load_normalized_month_panel(path)

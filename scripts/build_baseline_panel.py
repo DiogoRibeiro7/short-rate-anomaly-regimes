@@ -17,6 +17,7 @@ from short_rate_anomaly_regimes.data.baseline_panel import (
 )
 from short_rate_anomaly_regimes.data.french_freeze import load_normalized_french
 from short_rate_anomaly_regimes.data.short_rate_freeze import load_normalized_series
+from short_rate_anomaly_regimes.exceptions import DataValidationError
 from short_rate_anomaly_regimes.portfolios.q_archive import FAMILY_MEMBERS, load_family_panel
 from short_rate_anomaly_regimes.rates.baseline_reconstruction import (
     TimingVariant,
@@ -112,6 +113,32 @@ def main() -> None:
         ar_parameters=ar_parameters,
         market_excess_return=market,
     )
+
+    # Abort before touching any output. Publishing a panel that failed
+    # validation, and publishing checksums for it, would put invalid data in
+    # front of every downstream analysis. The previous outputs are left in place
+    # rather than being replaced by an unvalidated build.
+    if not report.passed:
+        failed = sorted(name for name, value in report.checks.items() if not value)
+        VALIDATION_JSON.parent.mkdir(parents=True, exist_ok=True)
+        VALIDATION_JSON.write_text(
+            json.dumps(
+                {
+                    **asdict(report),
+                    "passed": False,
+                    "source_vintage_id": SOURCE_VINTAGE_ID,
+                    "panel_written": False,
+                    "failed_checks": failed,
+                },
+                indent=2,
+                sort_keys=True,
+            ),
+            encoding="utf-8",
+        )
+        raise DataValidationError(
+            "Canonical panel validation failed; no panel was written. "
+            f"Failed checks: {', '.join(failed)}"
+        )
 
     output = panel.copy()
     output.insert(0, "source_vintage_id", SOURCE_VINTAGE_ID)

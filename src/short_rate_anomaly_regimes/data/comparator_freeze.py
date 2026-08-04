@@ -21,9 +21,14 @@ import numpy as np
 import pandas as pd
 import requests
 
-from short_rate_anomaly_regimes.data.acquisition import HTTPSession, _session_with_retries
+from short_rate_anomaly_regimes.data.acquisition import (
+    HTTPSession,
+    _session_with_retries,
+    canonical_monthly_bytes,
+    load_normalized_month_panel,
+    write_raw_once,
+)
 from short_rate_anomaly_regimes.exceptions import DataAccessError, DataValidationError
-from short_rate_anomaly_regimes.provenance import sha256_file
 
 #: The q-factor host refuses the default requests user agent.
 COMPARATOR_USER_AGENT = (
@@ -32,9 +37,6 @@ COMPARATOR_USER_AGENT = (
 
 #: Pastor and Stambaugh publish an unavailable observation as this sentinel.
 LIQUIDITY_MISSING_VALUE_CODE = -99.0
-
-#: The q-factor file publishes no sentinel; absent months are omitted.
-Q_FACTOR_MISSING_VALUE_CODE = "none; absent months are omitted rather than coded"
 
 _LIQUIDITY_ROW = re.compile(r"^\s*(\d{6})\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
 
@@ -80,7 +82,8 @@ def parse_q_factor_csv(payload: bytes) -> tuple[pd.DataFrame, tuple[str, ...]]:
         carries no header commentary.
 
     Raises:
-        DataValidationError: If the year, month, or factor columns are missing.
+        DataValidationError: If the year, month, or factor columns are missing, if
+            the file carries no monthly observation, or if a month repeats.
     """
     frame = pd.read_csv(io.BytesIO(payload))
     required = {"year", "month"}
@@ -90,6 +93,8 @@ def parse_q_factor_csv(payload: bytes) -> tuple[pd.DataFrame, tuple[str, ...]]:
     factor_columns = [column for column in frame.columns if column not in required]
     if not factor_columns:
         raise DataValidationError("q-factor file carries no factor columns")
+    if frame.empty:
+        raise DataValidationError("q-factor file contains no monthly observations")
     index = pd.PeriodIndex(
         [
             pd.Period(year=int(year), month=int(month), freq="M")
@@ -149,28 +154,6 @@ def parse_liquidity_text(payload: bytes) -> tuple[pd.DataFrame, tuple[str, ...]]
     if frame.index.has_duplicates:
         raise DataValidationError("Liquidity file contains duplicate months")
     return frame.mask(frame == LIQUIDITY_MISSING_VALUE_CODE), commentary
-
-
-def _canonical_monthly_bytes(frame: pd.DataFrame) -> bytes:
-    lines = ["month," + ",".join(str(column) for column in frame.columns)]
-    for period, row in frame.iterrows():
-        rendered = ",".join("" if pd.isna(value) else f"{float(value):.10f}" for value in row)
-        lines.append(f"{period},{rendered}")
-    return ("\n".join(lines) + "\n").encode("utf-8")
-
-
-def _write_raw_once(path: Path, payload: bytes) -> str:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    incoming = hashlib.sha256(payload).hexdigest()
-    if path.exists():
-        existing = sha256_file(path)
-        if existing != incoming:
-            raise DataAccessError(
-                f"Refusing to overwrite an existing raw file with different bytes: {path}"
-            )
-        return existing
-    path.write_bytes(payload)
-    return incoming
 
 
 def freeze_comparator_file(
@@ -237,11 +220,14 @@ def freeze_comparator_file(
     else:
         raise DataValidationError(f"Unsupported comparator parser {parser!r}")
 
+    # The payload is parsed above, before the raw bytes are committed, so a
+    # malformed HTTP 200 cannot permanently occupy the immutable path.
+    normalized_bytes = canonical_monthly_bytes(frame)
+
     suffix = Path(file_name).suffix or ".txt"
     raw_path = raw_root / dataset / f"{dataset}_{vintage_label}{suffix}"
-    raw_sha = _write_raw_once(raw_path, payload)
+    raw_sha = write_raw_once(raw_path, payload)
 
-    normalized_bytes = _canonical_monthly_bytes(frame)
     normalized_path = normalized_root / f"{dataset}_{vintage_label}.csv"
     normalized_path.parent.mkdir(parents=True, exist_ok=True)
     normalized_path.write_bytes(normalized_bytes)
@@ -291,9 +277,12 @@ def _comparator_session(retries: int) -> requests.Session:
 
 
 def load_normalized_comparator(path: Path) -> pd.DataFrame:
-    """Load a normalized comparator panel indexed by month period."""
-    frame = pd.read_csv(path)
-    index = pd.PeriodIndex([pd.Period(str(value), freq="M") for value in frame["month"]], freq="M")
-    values = frame.drop(columns=["month"]).astype(float)
-    values.index = index
-    return values.sort_index()
+    """Load a normalized comparator panel indexed by month period.
+
+    Args:
+        path: Path to a normalized comparator CSV written by this module.
+
+    Returns:
+        The month-indexed float panel.
+    """
+    return load_normalized_month_panel(path)

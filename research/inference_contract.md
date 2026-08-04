@@ -116,7 +116,18 @@ The criterion is fully specified so it can be executed without discretion.
   `s_span = standard_deviation(residual) / standard_deviation(rate_innovation)`,
   which satisfies `s_span = sqrt(1 - R2_span)`.
 - Decision rule: the spanning gate **passes** when `R2_span <= 0.90`,
-  equivalently `s_span >= 0.3162`. It **fails** when `R2_span > 0.90`.
+  equivalently `s_span >= sqrt(0.10) = 0.31622776601683794`. It **fails** when
+  `R2_span > 0.90`. The `R2_span` form is authoritative and the residual-ratio
+  cutoff is the exact value `sqrt(0.10)`, never a decimal rounded below it.
+- Numerical tolerance: `1e-12`, applied in the lenient direction to both forms.
+  This is required, not cosmetic. `s_span` is computed as
+  `standard_deviation(residual) / standard_deviation(rate_innovation)`, which
+  equals `sqrt(1 - R2_span)` only up to floating-point rounding: at exactly
+  `R2_span = 0.90` the computed ratio lands one unit in the last place below
+  `sqrt(0.10)`, so without a declared tolerance the two forms would disagree on
+  the boundary even with both constants at full precision. With the tolerance
+  applied the two forms classify every boundary case identically. This mirrors
+  the numerical tolerance already declared for the rank gate.
 - Rationale: a factor whose variation is more than 90 percent reproduced by the
   existing traded-factor set retains less than one tenth of its variance as
   independent identifying variation and cannot be separately identified from

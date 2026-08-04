@@ -12,6 +12,12 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from short_rate_anomaly_regimes.data import comparator_freeze, french_freeze, short_rate_freeze
+from short_rate_anomaly_regimes.data.acquisition import (
+    canonical_monthly_bytes,
+    load_normalized_month_panel,
+    write_raw_once,
+)
 from short_rate_anomaly_regimes.data.comparator_freeze import (
     ComparatorFreezeRecord,
     freeze_comparator_file,
@@ -28,10 +34,12 @@ from short_rate_anomaly_regimes.data.french_freeze import (
 )
 from short_rate_anomaly_regimes.data.short_rate_freeze import (
     SeriesFreezeRecord,
+    _canonical_csv_bytes,
     freeze_fred_series,
     load_normalized_series,
 )
 from short_rate_anomaly_regimes.exceptions import DataAccessError, DataValidationError
+from short_rate_anomaly_regimes.portfolios import q_archive
 from short_rate_anomaly_regimes.portfolios.q_archive import (
     freeze_family_panel,
     freeze_q_archive,
@@ -203,6 +211,49 @@ class TestFredFreeze:
                 session=session,
             )
 
+    def test_payload_for_another_series_is_rejected(self, tmp_path: Path) -> None:
+        session = FakeSession(FakeResponse(b"observation_date,TB3MS\n1972-01-01,3.50\n"))
+        with pytest.raises(DataValidationError, match="carries series 'TB3MS'"):
+            freeze_fred_series(
+                series_id="FEDFUNDS",
+                retrieval_date="2026-08-01",
+                raw_root=tmp_path / "raw",
+                normalized_root=tmp_path / "interim",
+                manifest_root=tmp_path / "manifest",
+                session=session,
+            )
+        assert not (tmp_path / "raw").exists()
+
+    def test_legacy_date_header_is_accepted(self, tmp_path: Path) -> None:
+        payload = b"DATE,FEDFUNDS\n1972-01-01,3.50\n1972-02-01,3.29\n1972-03-01,3.83\n"
+        record = self._freeze(tmp_path, payload=payload)
+        assert record.observation_count == 3
+
+    def test_payload_without_a_finite_observation_is_rejected(self, tmp_path: Path) -> None:
+        payload = b"observation_date,FEDFUNDS\n1972-01-01,.\n1972-02-01,.\n"
+        session = FakeSession(FakeResponse(payload))
+        with pytest.raises(DataValidationError, match="no finite observation"):
+            freeze_fred_series(
+                series_id="FEDFUNDS",
+                retrieval_date="2026-08-01",
+                raw_root=tmp_path / "raw",
+                normalized_root=tmp_path / "interim",
+                manifest_root=tmp_path / "manifest",
+                session=session,
+            )
+        assert not (tmp_path / "raw").exists()
+
+    def test_malformed_payload_leaves_the_raw_path_free_for_a_retry(self, tmp_path: Path) -> None:
+        raw_path = tmp_path / "raw" / "FEDFUNDS" / "FEDFUNDS_2026-08-01.csv"
+        with pytest.raises(DataValidationError):
+            self._freeze(tmp_path, payload=b"observation_date,FEDFUNDS\n1972-01-01,.\n")
+        assert not raw_path.exists()
+        assert not (tmp_path / "manifest").exists()
+
+        record = self._freeze(tmp_path)
+        assert raw_path.read_bytes() == FRED_PAYLOAD
+        assert record.raw_sha256 == hashlib.sha256(FRED_PAYLOAD).hexdigest()
+
     def test_missing_values_are_counted(self, tmp_path: Path) -> None:
         payload = b"observation_date,DTB3\n1972-01-03,3.50\n1972-01-04,.\n1972-01-05,3.60\n"
         session = FakeSession(FakeResponse(payload))
@@ -342,6 +393,120 @@ class TestFrenchFreeze:
         assert len(differences) == 1
         assert differences.iloc[0]["month"] == "1972-02"
 
+    def test_added_observation_is_counted_and_cannot_read_as_identical(
+        self, tmp_path: Path
+    ) -> None:
+        record = self._freeze(tmp_path, "v1")
+        historical = load_normalized_french(Path(record.normalized_path))
+        current = historical.copy()
+        revised_month = pd.Period("1972-04", freq="M")
+        current.loc[revised_month, "HML"] = 0.44
+        summary, differences = compare_vintages(
+            historical=historical,
+            current=current,
+            dataset="F-F_Research_Data_Factors",
+            historical_label="v1",
+            current_label="v2",
+        )
+        hml = summary[summary["column"] == "HML"].iloc[0]
+        assert hml["verdict"] != "identical_on_common_sample"
+        assert hml["verdict"] == "revised_observation_coverage_changed"
+        assert hml["months_only_in_current"] == 1
+        assert hml["months_only_in_historical"] == 0
+        assert hml["months_with_changed_missingness"] == 1
+        assert bool(hml["missingness_identical"]) is False
+        assert hml["months_with_any_difference"] == 1
+        assert hml["months_beyond_tolerance"] == 1
+        assert hml["common_months"] == 3
+        added = differences[differences["column"] == "HML"]
+        assert len(added) == 1
+        assert added.iloc[0]["change_type"] == "observation_added_by_current"
+        assert added.iloc[0]["month"] == "1972-04"
+
+    def test_removed_observation_is_counted_as_a_difference(self, tmp_path: Path) -> None:
+        record = self._freeze(tmp_path, "v1")
+        historical = load_normalized_french(Path(record.normalized_path))
+        current = historical.copy()
+        current.loc[pd.Period("1972-02", freq="M"), "SMB"] = float("nan")
+        summary, differences = compare_vintages(
+            historical=historical,
+            current=current,
+            dataset="F-F_Research_Data_Factors",
+            historical_label="v1",
+            current_label="v2",
+        )
+        smb = summary[summary["column"] == "SMB"].iloc[0]
+        assert smb["verdict"] == "revised_observation_coverage_changed"
+        assert smb["months_only_in_historical"] == 1
+        assert smb["months_only_in_current"] == 0
+        assert smb["months_beyond_tolerance"] == 1
+        assert smb["share_beyond_tolerance"] == pytest.approx(0.25)
+        removed = differences[differences["column"] == "SMB"]
+        assert len(removed) == 1
+        assert removed.iloc[0]["change_type"] == "observation_removed_by_current"
+
+    def test_columns_without_missingness_changes_stay_identical(self, tmp_path: Path) -> None:
+        record = self._freeze(tmp_path, "v1")
+        historical = load_normalized_french(Path(record.normalized_path))
+        current = historical.copy()
+        current.loc[pd.Period("1972-04", freq="M"), "HML"] = 0.44
+        summary, _ = compare_vintages(
+            historical=historical,
+            current=current,
+            dataset="F-F_Research_Data_Factors",
+            historical_label="v1",
+            current_label="v2",
+        )
+        untouched = summary[summary["column"] == "RF"].iloc[0]
+        assert untouched["verdict"] == "identical_on_common_sample"
+        assert untouched["months_with_changed_missingness"] == 0
+        assert bool(untouched["missingness_identical"]) is True
+
+    def test_value_revision_is_labelled_as_such(self, tmp_path: Path) -> None:
+        record = self._freeze(tmp_path, "v1")
+        historical = load_normalized_french(Path(record.normalized_path))
+        current = historical.copy()
+        revised = current["SMB"].to_numpy(dtype=float).copy()
+        revised[list(current.index).index(pd.Period("1972-02", freq="M"))] += 0.50
+        current["SMB"] = revised
+        _, differences = compare_vintages(
+            historical=historical,
+            current=current,
+            dataset="F-F_Research_Data_Factors",
+            historical_label="v1",
+            current_label="v2",
+        )
+        assert list(differences["change_type"]) == ["value_revision"]
+
+    def test_malformed_member_leaves_the_raw_path_free_for_a_retry(self, tmp_path: Path) -> None:
+        raw_path = tmp_path / "raw" / "F-F_Research_Data_Factors"
+        raw_path = raw_path / "F-F_Research_Data_Factors_publication_era.zip"
+        with pytest.raises(DataValidationError, match="No monthly YYYYMM rows"):
+            self._freeze(tmp_path, "publication_era", text="truncated response\n")
+        assert not raw_path.exists()
+        assert not (tmp_path / "manifest").exists()
+
+        record = self._freeze(tmp_path, "publication_era")
+        assert raw_path.exists()
+        assert record.raw_sha256 == hashlib.sha256(raw_path.read_bytes()).hexdigest()
+
+    def test_empty_archive_leaves_the_raw_path_free_for_a_retry(self, tmp_path: Path) -> None:
+        raw_path = tmp_path / "raw" / "F-F_Research_Data_Factors"
+        raw_path = raw_path / "F-F_Research_Data_Factors_publication_era.zip"
+        with pytest.raises(DataValidationError, match="contains no files"):
+            freeze_french_archive(
+                dataset="F-F_Research_Data_Factors",
+                url="https://example.invalid/x.zip",
+                vintage_label="publication_era",
+                archive_date="2017-07-09",
+                raw_root=tmp_path / "raw",
+                normalized_root=tmp_path / "interim",
+                manifest_root=tmp_path / "manifest",
+                session=FakeSession(FakeResponse(_zip_bytes({}))),
+            )
+        assert not raw_path.exists()
+        assert self._freeze(tmp_path, "publication_era").monthly_observations == 4
+
     def test_disjoint_vintages_are_rejected(self, tmp_path: Path) -> None:
         record = self._freeze(tmp_path, "v1")
         frame = load_normalized_french(Path(record.normalized_path))
@@ -451,6 +616,53 @@ class TestQArchive:
                 session=session,
             )
 
+    def test_empty_archive_is_rejected_and_leaves_no_freeze(self, tmp_path: Path) -> None:
+        with pytest.raises(DataValidationError, match="contains no files"):
+            freeze_q_archive(
+                archive="vvg_monthly_2025",
+                vintage_label="test",
+                raw_root=tmp_path / "raw",
+                manifest_root=tmp_path / "manifest",
+                session=FakeSession(FakeResponse(_zip_bytes({}))),
+            )
+        assert not (tmp_path / "raw").exists()
+        assert not (tmp_path / "manifest").exists()
+
+    def test_archive_of_only_empty_members_is_rejected(self, tmp_path: Path) -> None:
+        with pytest.raises(DataValidationError, match="only empty files"):
+            freeze_q_archive(
+                archive="vvg_monthly_2025",
+                vintage_label="test",
+                raw_root=tmp_path / "raw",
+                manifest_root=tmp_path / "manifest",
+                session=FakeSession(
+                    FakeResponse(_zip_bytes({"vvg_monthly_2025/portf_bm_monthly_2025.csv": ""}))
+                ),
+            )
+        assert not (tmp_path / "raw").exists()
+        assert not (tmp_path / "manifest").exists()
+
+    def test_hollow_archive_leaves_the_raw_path_free_for_a_retry(self, tmp_path: Path) -> None:
+        raw_path = tmp_path / "raw" / "vvg_monthly_2025_test.zip"
+        with pytest.raises(DataValidationError):
+            freeze_q_archive(
+                archive="vvg_monthly_2025",
+                vintage_label="test",
+                raw_root=tmp_path / "raw",
+                manifest_root=tmp_path / "manifest",
+                session=FakeSession(FakeResponse(_zip_bytes({}))),
+            )
+        record, _ = freeze_q_archive(
+            archive="vvg_monthly_2025",
+            vintage_label="test",
+            raw_root=tmp_path / "raw",
+            manifest_root=tmp_path / "manifest",
+            session=FakeSession(FakeResponse(self._payload())),
+        )
+        assert raw_path.read_bytes() == self._payload()
+        assert record.raw_sha256 == hashlib.sha256(self._payload()).hexdigest()
+        assert record.member_count == 1
+
     def test_overwriting_with_different_bytes_is_refused(self, tmp_path: Path) -> None:
         freeze_q_archive(
             archive="vvg_monthly_2025",
@@ -533,6 +745,43 @@ class TestEdgeCases:
                 manifest_root=tmp_path / "manifest",
                 session=FakeSession(FakeResponse(b"")),
             )
+
+
+class TestSharedAcquisitionHelpers:
+    """Every freeze module must share one raw writer, serializer, and panel loader."""
+
+    def test_no_freeze_module_keeps_a_private_copy_of_the_helpers(self) -> None:
+        for module in (french_freeze, comparator_freeze, q_archive):
+            assert not hasattr(module, "_write_raw_once")
+            assert not hasattr(module, "_canonical_monthly_bytes")
+        assert not hasattr(q_archive, "_canonical_panel_bytes")
+        assert not hasattr(short_rate_freeze, "_write_raw_once")
+
+    def test_public_loaders_stay_importable_and_agree(self, tmp_path: Path) -> None:
+        panel = pd.DataFrame(
+            {"a": [1.0, float("nan")], "b": [3.0, 4.0]},
+            index=pd.PeriodIndex(["1972-01", "1972-02"], freq="M"),
+        )
+        path = tmp_path / "panel.csv"
+        path.write_bytes(canonical_monthly_bytes(panel))
+        expected = load_normalized_month_panel(path)
+        for loader in (load_normalized_french, load_normalized_comparator, load_family_panel):
+            loaded = loader(path)
+            pd.testing.assert_frame_equal(loaded, expected)
+        assert bool(pd.isna(expected.at[pd.Period("1972-02", freq="M"), "a"]))
+
+    def test_short_rate_keeps_its_own_date_value_serializer(self) -> None:
+        frame = pd.DataFrame({"date": pd.to_datetime(["1972-01-01"]), "value": [3.5]})
+        assert _canonical_csv_bytes(frame) == b"date,value\n1972-01-01,3.5000000000\n"
+
+    def test_shared_writer_refuses_differing_bytes(self, tmp_path: Path) -> None:
+        path = tmp_path / "nested" / "raw.bin"
+        digest = write_raw_once(path, b"abc")
+        assert digest == hashlib.sha256(b"abc").hexdigest()
+        assert write_raw_once(path, b"abc") == digest
+        with pytest.raises(DataAccessError, match="Refusing to overwrite"):
+            write_raw_once(path, b"abd")
+        assert path.read_bytes() == b"abc"
 
 
 Q_FACTOR_CSV = (
@@ -676,3 +925,21 @@ class TestComparatorFreeze:
         payload = b"year,month,R_ME\n1972,1,0.5\n1972,1,0.6\n"
         with pytest.raises(DataValidationError, match="duplicate months"):
             parse_q_factor_csv(payload)
+
+    def test_header_only_q_factor_file_is_rejected(self) -> None:
+        with pytest.raises(DataValidationError, match="no monthly observations"):
+            parse_q_factor_csv(b"year,month,R_F,R_MKT\n")
+
+    def test_header_only_payload_leaves_the_raw_path_free_for_a_retry(self, tmp_path: Path) -> None:
+        raw_path = tmp_path / "raw" / "q_factors" / "q_factors_test_vintage.csv"
+        with pytest.raises(DataValidationError, match="no monthly observations"):
+            self._freeze(tmp_path, "q_factors", b"year,month,R_F,R_MKT\n", "q_factor_csv")
+        assert not raw_path.exists()
+        assert not (tmp_path / "manifest").exists()
+
+        record = self._freeze(tmp_path, "q_factors", Q_FACTOR_CSV, "q_factor_csv")
+        assert raw_path.read_bytes() == Q_FACTOR_CSV
+        assert record.monthly_observations == 3
+
+    def test_the_unused_q_factor_missing_value_constant_is_gone(self) -> None:
+        assert not hasattr(comparator_freeze, "Q_FACTOR_MISSING_VALUE_CODE")

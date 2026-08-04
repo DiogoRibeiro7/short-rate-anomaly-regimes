@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Literal
@@ -23,6 +24,52 @@ RobustnessFamily = Literal[
     "comparator_factor_models",
 ]
 
+REGISTERED_SPANNING_REGRESSORS: tuple[str, ...] = (
+    "Mkt-RF",
+    "SMB",
+    "HML",
+    "UMD",
+    "RMW",
+    "CMA",
+    "LIQ",
+    "ME",
+    "IA",
+    "ROE",
+)
+"""Registered non-short-rate comparator factors in the frozen regressor order."""
+
+MARKET_REFERENCE_REGRESSOR = "Mkt-RF"
+"""Minimal regressor set used for the descriptive market-only spanning reference."""
+
+MAX_SPANNING_R_SQUARED = 0.90
+"""Confirmatory upper bound on `R2_span` for the H4a factor-spanning gate."""
+
+MIN_SPANNING_RESIDUAL_RATIO = math.sqrt(0.10)
+"""Equivalent lower bound on `s_span`, computed at full double precision.
+
+The declared cutoff is the exact value `sqrt(0.10)`, never a decimal rounded
+below it such as `0.3162`, which would let a factor whose residual ratio lies
+between the rounded literal and the true bound fail the `R2_span` form of the
+rule while passing the `s_span` form.
+"""
+
+SPANNING_DECISION_TOLERANCE = 1e-12
+"""Declared numerical tolerance applied to both forms of the spanning rule.
+
+`s_span` is computed from residual and target standard deviations, so it agrees
+with `sqrt(1 - R2_span)` only to within floating-point rounding. Without a
+declared tolerance the two algebraically equivalent forms of the frozen rule can
+disagree by one unit in the last place exactly at `R2_span = 0.90`. The
+tolerance is applied in the lenient direction for both forms, which matches the
+closed pass region `R2_span <= 0.90`, and mirrors the numerical tolerance the
+rank gate already declares. It is far below any estimation resolution.
+"""
+
+MIN_STANDARDIZED_RATE_DISPERSION_SHARE = 0.10
+"""Minimum standardized rate-exposure dispersion as a share of the market value."""
+
+_RATE_INNOVATION_COLUMN = "rate_innovation"
+
 
 @dataclass(frozen=True, slots=True)
 class WeakFactorReport:
@@ -35,9 +82,66 @@ class WeakFactorReport:
     condition_number: float
     beta_dispersion: dict[str, float]
     standardized_exposure_dispersion: dict[str, float]
-    factor_spanning: pd.DataFrame
+    factor_redundancy: pd.DataFrame
     irrelevant_factors: tuple[str, ...]
     unidentified: bool
+
+
+@dataclass(frozen=True, slots=True)
+class RateSpanningCriterion:
+    """Result of the frozen numerical factor-spanning criterion for H4a.
+
+    Attributes:
+        executed_regressors: Registered comparator factors actually used, in the
+            frozen order, after dropping factors absent from the intersection.
+        r2_span: OLS coefficient of determination of the short-rate innovation on
+            a constant plus `executed_regressors`.
+        s_span: Residual standard-deviation ratio
+            `sd(residual) / sd(rate_innovation)`, equal to `sqrt(1 - r2_span)`.
+        passes: Confirmatory decision, `r2_span <= MAX_SPANNING_R_SQUARED` up to
+            `SPANNING_DECISION_TOLERANCE`.
+        passes_residual_ratio_form: The same decision expressed as
+            `s_span >= MIN_SPANNING_RESIDUAL_RATIO` up to the same tolerance.
+            It is always equal to `passes`.
+        market_only_regressors: Regressors used for the descriptive reference.
+        market_only_r2_span: Descriptive `R2_span` against `Mkt-RF` alone.
+        market_only_s_span: Descriptive `s_span` against `Mkt-RF` alone.
+        n_months: Number of intersection months used by both regressions.
+    """
+
+    executed_regressors: tuple[str, ...]
+    r2_span: float
+    s_span: float
+    passes: bool
+    passes_residual_ratio_form: bool
+    market_only_regressors: tuple[str, ...]
+    market_only_r2_span: float
+    market_only_s_span: float
+    n_months: int
+
+
+@dataclass(frozen=True, slots=True)
+class H4aIdentificationConclusion:
+    """Aggregated confirmatory decision for H4a cross-sectional identification.
+
+    Attributes:
+        passes: True only when every confirmatory H4a gate passes.
+        gate_failures: Registry identifiers of the gates that failed, in
+            registry order.
+        rank_gate_passes: Result of the `rank_gate` diagnostic.
+        standardized_dispersion_passes: Result of the
+            `standardized_rate_exposure_dispersion` diagnostic.
+        standardized_dispersion_share: Standardized rate-exposure dispersion
+            divided by standardized market-exposure dispersion.
+        spanning: Full result of the `rate_spanning_criterion` diagnostic.
+    """
+
+    passes: bool
+    gate_failures: tuple[str, ...]
+    rank_gate_passes: bool
+    standardized_dispersion_passes: bool
+    standardized_dispersion_share: float
+    spanning: RateSpanningCriterion
 
 
 @dataclass(frozen=True, slots=True)
@@ -124,7 +228,7 @@ def weak_factor_report(
         for factor, dispersion in standardized_exposure_dispersion.items()
         if dispersion <= irrelevant_dispersion_threshold
     )
-    spanning = factor_spanning_tests(factors.loc[:, list(betas.columns)])
+    redundancy = factor_redundancy_diagnostics(factors.loc[:, list(betas.columns)])
     unidentified = rank < len(betas.columns) or bool(irrelevant_factors)
     return WeakFactorReport(
         rank=rank,
@@ -134,16 +238,37 @@ def weak_factor_report(
         condition_number=condition_number,
         beta_dispersion=beta_dispersion,
         standardized_exposure_dispersion=standardized_exposure_dispersion,
-        factor_spanning=spanning,
+        factor_redundancy=redundancy,
         irrelevant_factors=irrelevant_factors,
         unidentified=unidentified,
     )
 
 
-def factor_spanning_tests(factors: pd.DataFrame) -> pd.DataFrame:
-    """Regress each factor on the others to diagnose spanning and redundancy."""
+def factor_redundancy_diagnostics(factors: pd.DataFrame) -> pd.DataFrame:
+    """Regress each factor on the others to describe numerical redundancy.
+
+    This is a DESCRIPTIVE collinearity screen only. It is not the H4a
+    factor-spanning gate and must never be reported as confirmatory: it uses a
+    near-degeneracy bound (`r_squared >= 0.99`) that supports the rank and
+    conditioning narrative, and it regresses every column on every other column
+    rather than the short-rate innovation on the registered comparator set. The
+    single confirmatory spanning rule is `rate_spanning_criterion`.
+
+    Args:
+        factors: Factor panel whose columns are diagnosed against one another.
+
+    Returns:
+        One row per factor with `factor`, `r_squared`, `residual_std`, and the
+        descriptive `numerically_redundant` flag. An empty table with those
+        columns is returned when fewer than two factors are supplied.
+
+    Raises:
+        ValueError: If the factor panel has no complete observations.
+    """
     if factors.shape[1] < 2:
-        return pd.DataFrame(columns=["factor", "r_squared", "residual_std", "spanned"])
+        return pd.DataFrame(
+            columns=["factor", "r_squared", "residual_std", "numerically_redundant"]
+        )
     clean = factors.astype(float).dropna()
     if clean.empty:
         raise ValueError("Factor panel has no complete observations")
@@ -156,7 +281,7 @@ def factor_spanning_tests(factors: pd.DataFrame) -> pd.DataFrame:
                     "factor": str(factor_name),
                     "r_squared": 1.0,
                     "residual_std": 0.0,
-                    "spanned": True,
+                    "numerically_redundant": True,
                 }
             )
             continue
@@ -169,10 +294,187 @@ def factor_spanning_tests(factors: pd.DataFrame) -> pd.DataFrame:
                 "factor": str(factor_name),
                 "r_squared": float(model.rsquared),
                 "residual_std": residual_std,
-                "spanned": bool(float(model.rsquared) >= 0.99 or residual_std <= 1e-8),
+                "numerically_redundant": bool(
+                    float(model.rsquared) >= 0.99 or residual_std <= 1e-8
+                ),
             }
         )
     return pd.DataFrame(rows)
+
+
+def rate_spanning_criterion(
+    *,
+    rate_innovation: pd.Series,
+    comparator_factors: pd.DataFrame,
+) -> RateSpanningCriterion:
+    """Execute the frozen numerical factor-spanning criterion for H4a.
+
+    The criterion is fixed in `research/inference_contract.md` and registered as
+    `rate_spanning_criterion` in `research/weak_factor_registry.csv`. The
+    short-rate innovation entering the tested model is regressed by OLS on a
+    constant plus every registered non-short-rate comparator factor available on
+    the common intersection, in the frozen order `Mkt-RF, SMB, HML, UMD, RMW,
+    CMA, LIQ, ME, IA, ROE`. Registered factors absent from the intersection are
+    dropped and the executed list is returned so it can be stored with the
+    artifact. The gate passes when `R2_span <= 0.90`, equivalently when
+    `s_span >= sqrt(0.10)`. Both statistics are scale free, so the decision is
+    invariant to rescaling the short-rate innovation.
+
+    The descriptive market-only reference against `Mkt-RF` alone is computed on
+    the same intersection and carries no threshold.
+
+    Args:
+        rate_innovation: Short-rate innovation entering the tested model,
+            indexed by the frozen intersection months.
+        comparator_factors: Comparator factor panel indexed by month. Only
+            columns named in `REGISTERED_SPANNING_REGRESSORS` are used.
+
+    Returns:
+        The executed regressor list, `r2_span`, `s_span`, the confirmatory
+        decision in both equivalent forms, the descriptive market-only
+        reference statistics, and the number of intersection months used.
+
+    Raises:
+        ValueError: If either input is empty, if no registered comparator factor
+            is available, if `Mkt-RF` is absent so the required descriptive
+            reference cannot be reported, if the intersection has too few months
+            to estimate the regression, if the short-rate innovation has no
+            variation on the intersection, or if the `R2_span` and `s_span`
+            forms of the frozen decision rule disagree.
+    """
+    if rate_innovation.empty:
+        raise ValueError("Short-rate innovation cannot be empty")
+    if comparator_factors.empty:
+        raise ValueError("Comparator factor panel cannot be empty")
+    executed = tuple(
+        name for name in REGISTERED_SPANNING_REGRESSORS if name in comparator_factors.columns
+    )
+    if not executed:
+        raise ValueError(
+            "Comparator panel contains no registered spanning regressor; expected any of: "
+            + ", ".join(REGISTERED_SPANNING_REGRESSORS)
+        )
+    if MARKET_REFERENCE_REGRESSOR not in executed:
+        raise ValueError(
+            f"Comparator panel is missing {MARKET_REFERENCE_REGRESSOR!r}, so the required "
+            "descriptive market-only spanning reference cannot be reported"
+        )
+    target = pd.to_numeric(rate_innovation, errors="raise").astype(float)
+    aligned = pd.concat(
+        [
+            target.rename(_RATE_INNOVATION_COLUMN),
+            comparator_factors.loc[:, list(executed)].astype(float),
+        ],
+        axis=1,
+        join="inner",
+    )
+    clean = aligned.dropna()
+    n_months = int(clean.shape[0])
+    if n_months <= len(executed) + 1:
+        raise ValueError(
+            f"Intersection has {n_months} complete months, which is insufficient for a "
+            f"spanning regression on {len(executed)} regressors and a constant"
+        )
+    rate_std = float(clean[_RATE_INNOVATION_COLUMN].std(ddof=1))
+    if rate_std <= 0.0:
+        raise ValueError("Short-rate innovation has no variation on the intersection")
+    r2_span, s_span = _spanning_statistics(clean, list(executed), rate_std)
+    market_r2_span, market_s_span = _spanning_statistics(
+        clean, [MARKET_REFERENCE_REGRESSOR], rate_std
+    )
+    passes = bool(r2_span <= MAX_SPANNING_R_SQUARED + SPANNING_DECISION_TOLERANCE)
+    passes_residual_ratio_form = bool(
+        s_span >= MIN_SPANNING_RESIDUAL_RATIO - SPANNING_DECISION_TOLERANCE
+    )
+    if passes != passes_residual_ratio_form:
+        raise ValueError(
+            "Frozen spanning rule is inconsistent between its equivalent forms: "
+            f"R2_span={r2_span!r} against {MAX_SPANNING_R_SQUARED!r} gives {passes}, "
+            f"s_span={s_span!r} against {MIN_SPANNING_RESIDUAL_RATIO!r} gives "
+            f"{passes_residual_ratio_form}"
+        )
+    return RateSpanningCriterion(
+        executed_regressors=executed,
+        r2_span=r2_span,
+        s_span=s_span,
+        passes=passes,
+        passes_residual_ratio_form=passes_residual_ratio_form,
+        market_only_regressors=(MARKET_REFERENCE_REGRESSOR,),
+        market_only_r2_span=market_r2_span,
+        market_only_s_span=market_s_span,
+        n_months=n_months,
+    )
+
+
+def classify_h4a_identification_strength(
+    *,
+    weak_report: WeakFactorReport,
+    spanning: RateSpanningCriterion,
+    rate_factor: str,
+    market_factor: str,
+) -> H4aIdentificationConclusion:
+    """Aggregate every confirmatory H4a gate into one identification decision.
+
+    H4a fails when the beta matrix is rank deficient, when standardized
+    short-rate exposure dispersion falls below 10 percent of standardized market
+    exposure dispersion, or when the frozen factor-spanning criterion fails. The
+    spanning result is a required argument, so an H4a classification cannot be
+    produced, and therefore cannot pass, without the spanning gate being
+    executed.
+
+    Args:
+        weak_report: Weak-factor report for the same asset and factor set.
+        spanning: Executed result of `rate_spanning_criterion`.
+        rate_factor: Column name of the short-rate factor in `weak_report`.
+        market_factor: Column name of the market factor in `weak_report`.
+
+    Returns:
+        The aggregated H4a decision with the registry identifier of every gate
+        that failed.
+
+    Raises:
+        ValueError: If either factor name is absent from the standardized
+            exposure dispersion mapping, or if standardized market exposure
+            dispersion is zero so the declared share is undefined.
+    """
+    dispersion = weak_report.standardized_exposure_dispersion
+    missing = [name for name in (rate_factor, market_factor) if name not in dispersion]
+    if missing:
+        raise ValueError(
+            "Standardized exposure dispersion is missing factors: " + ", ".join(sorted(missing))
+        )
+    market_dispersion = float(dispersion[market_factor])
+    if market_dispersion <= 0.0:
+        raise ValueError(
+            f"Standardized market exposure dispersion for {market_factor!r} is zero, so the "
+            "standardized rate-exposure dispersion share is undefined"
+        )
+    share = float(dispersion[rate_factor]) / market_dispersion
+    rank_gate_passes = bool(weak_report.rank >= weak_report.n_factors)
+    dispersion_passes = bool(share >= MIN_STANDARDIZED_RATE_DISPERSION_SHARE)
+    failures: list[str] = []
+    if not rank_gate_passes:
+        failures.append("rank_gate")
+    if not dispersion_passes:
+        failures.append("standardized_rate_exposure_dispersion")
+    if not spanning.passes:
+        failures.append("rate_spanning_criterion")
+    return H4aIdentificationConclusion(
+        passes=not failures,
+        gate_failures=tuple(failures),
+        rank_gate_passes=rank_gate_passes,
+        standardized_dispersion_passes=dispersion_passes,
+        standardized_dispersion_share=share,
+        spanning=spanning,
+    )
+
+
+def _spanning_statistics(
+    clean: pd.DataFrame, regressors: list[str], rate_std: float
+) -> tuple[float, float]:
+    design = sm.add_constant(clean.loc[:, regressors], has_constant="add")
+    model = sm.OLS(clean[_RATE_INNOVATION_COLUMN], design).fit()
+    return float(model.rsquared), float(model.resid.std(ddof=1)) / rate_std
 
 
 def holm_correction(p_values: pd.Series) -> pd.DataFrame:
@@ -266,9 +568,24 @@ def classify_robustness(
     economic_table: pd.DataFrame,
     *,
     rules: RobustnessDecisionRules = DEFAULT_ROBUSTNESS_DECISION_RULES,
+    h4a: H4aIdentificationConclusion | None = None,
 ) -> RobustnessConclusion:
-    """Classify robustness using predeclared decision rules."""
+    """Classify robustness using predeclared decision rules.
+
+    Args:
+        weak_report: Weak-factor report for the tested system.
+        economic_table: Economic-change table across registered specifications.
+        rules: Predeclared robustness thresholds.
+        h4a: Aggregated H4a identification decision. When supplied, any failed
+            H4a gate, including the frozen factor-spanning criterion, forces the
+            `unidentified` verdict before any economic rule is consulted.
+
+    Returns:
+        The robustness verdict together with the rule failures that produced it.
+    """
     failures: list[str] = []
+    if h4a is not None and not h4a.passes:
+        return RobustnessConclusion(verdict="unidentified", rule_failures=h4a.gate_failures)
     if weak_report.unidentified:
         return RobustnessConclusion(verdict="unidentified", rule_failures=("weak_identification",))
     if rules.require_no_sign_reversal and economic_table["sign_reversal"].any():
@@ -299,11 +616,25 @@ def write_robustness_outputs(
     diagnostics_path: Path,
     table_path: Path,
     report_path: Path,
+    h4a: H4aIdentificationConclusion | None = None,
 ) -> None:
-    """Write robustness diagnostics, tables, and a concise markdown report."""
+    """Write robustness diagnostics, tables, and a concise markdown report.
+
+    Args:
+        weak_report: Weak-factor report for the tested system.
+        specification_results: Registered specifications with Holm p-values.
+        economic_results: Economic-change table across those specifications.
+        conclusion: Robustness verdict to record.
+        diagnostics_path: Destination for the JSON diagnostics payload.
+        table_path: Destination for the specification table.
+        report_path: Destination for the markdown report.
+        h4a: Aggregated H4a decision. When supplied, the executed spanning
+            regressor list and both spanning statistics are stored with the
+            artifact as the frozen criterion requires.
+    """
     for path in (diagnostics_path, table_path, report_path):
         path.parent.mkdir(parents=True, exist_ok=True)
-    diagnostics_payload = {
+    diagnostics_payload: dict[str, object] = {
         "weak_factor": {
             "rank": weak_report.rank,
             "n_assets": weak_report.n_assets,
@@ -317,6 +648,26 @@ def write_robustness_outputs(
         },
         "classification": asdict(conclusion),
     }
+    if h4a is not None:
+        diagnostics_payload["h4a_identification_strength"] = {
+            "passes": h4a.passes,
+            "gate_failures": list(h4a.gate_failures),
+            "rank_gate_passes": h4a.rank_gate_passes,
+            "standardized_dispersion_passes": h4a.standardized_dispersion_passes,
+            "standardized_dispersion_share": h4a.standardized_dispersion_share,
+            "rate_spanning_criterion": {
+                "executed_regressors": list(h4a.spanning.executed_regressors),
+                "r2_span": h4a.spanning.r2_span,
+                "s_span": h4a.spanning.s_span,
+                "passes": h4a.spanning.passes,
+                "max_r2_span": MAX_SPANNING_R_SQUARED,
+                "min_s_span": MIN_SPANNING_RESIDUAL_RATIO,
+                "market_only_regressors": list(h4a.spanning.market_only_regressors),
+                "market_only_r2_span": h4a.spanning.market_only_r2_span,
+                "market_only_s_span": h4a.spanning.market_only_s_span,
+                "n_months": h4a.spanning.n_months,
+            },
+        }
     diagnostics_path.write_text(
         json.dumps(diagnostics_payload, indent=2, sort_keys=True), encoding="utf-8"
     )

@@ -1,0 +1,74 @@
+{
+  "ar_model": {
+    "daily_aggregation_rule_for_DTB3": "available_observation_mean",
+    "estimator": "ordinary_least_squares",
+    "innovation_definition": "u_t, the residual of the fitted AR(1) level equation",
+    "level_units": "percent_per_annum",
+    "order": 1,
+    "specification": "r_t = a + rho * r_{t-1} + u_t"
+  },
+  "columns": [
+    "FEDFUNDS__within_window_lag",
+    "FEDFUNDS__pre_window_lag",
+    "TB3MS__within_window_lag",
+    "TB3MS__pre_window_lag",
+    "DTB3_MONTHLY_MEAN__within_window_lag",
+    "DTB3_MONTHLY_MEAN__pre_window_lag"
+  ],
+  "created_at_utc": "2026-08-03T09:52:54.647018+00:00",
+  "estimation_window": {
+    "end": "2013-12",
+    "frequency": "M",
+    "months": 504,
+    "start": "1972-01"
+  },
+  "index_convention": "month-start timestamp",
+  "index_end": "2013-12-01",
+  "index_name": "month",
+  "index_start": "1972-01-01",
+  "inputs": [
+    {
+      "manifest": "artifacts/provenance/short_rate/FEDFUNDS_2026-08-01.json",
+      "normalized_path": "data/interim/fred/FEDFUNDS_2026-08-01.csv",
+      "normalized_sha256": "b492202f08be4d5e817e8f2a374c33d86dfc32882b48cd4f1aeccc82f05c0bb2",
+      "series_id": "FEDFUNDS",
+      "vintage_label": "fred_current_retrieved_2026-08-01"
+    },
+    {
+      "manifest": "artifacts/provenance/short_rate/TB3MS_2026-08-01.json",
+      "normalized_path": "data/interim/fred/TB3MS_2026-08-01.csv",
+      "normalized_sha256": "d4d1ff30c9d423b2cc7162bddd669eddb48a18ef84aea5536b5493f4a3255381",
+      "series_id": "TB3MS",
+      "vintage_label": "fred_current_retrieved_2026-08-01"
+    },
+    {
+      "manifest": "artifacts/provenance/short_rate/DTB3_2026-08-01.json",
+      "normalized_path": "data/interim/fred/DTB3_2026-08-01.csv",
+      "normalized_sha256": "96ff78b8c8a352bc5085f23c5e6754a396ed55700ec38e1863165f22663025af",
+      "series_id": "DTB3",
+      "vintage_label": "fred_current_retrieved_2026-08-01"
+    }
+  ],
+  "non_null_by_column": {
+    "DTB3_MONTHLY_MEAN__pre_window_lag": 504,
+    "DTB3_MONTHLY_MEAN__within_window_lag": 503,
+    "FEDFUNDS__pre_window_lag": 504,
+    "FEDFUNDS__within_window_lag": 503,
+    "TB3MS__pre_window_lag": 504,
+    "TB3MS__within_window_lag": 503
+  },
+  "output_format": "parquet",
+  "output_path": "data/processed/factors/short_rate_innovations_baseline.parquet",
+  "output_sha256": "82818383c54bab1101c3c6de8ed89ff9f5e0d7cea6a0ba8fdba63dc5ec2c36e2",
+  "replication_mode_by_series": {
+    "DTB3_MONTHLY_MEAN": "sensitivity_only",
+    "FEDFUNDS": "documented_reconstruction",
+    "TB3MS": "documented_reconstruction"
+  },
+  "rows": 504,
+  "script": "scripts/reconstruct_rate_innovations.py",
+  "timing_variants": [
+    "within_window_lag",
+    "pre_window_lag"
+  ]
+}

@@ -1,0 +1,9 @@
+vintage,factor,months_compared,months_differing_between_archives,max_absolute_difference,expected_to_differ,verdict
+publication_era_20170709,Mkt-RF,504,0,0.0,False,identical_between_archives
+publication_era_20170709,SMB,504,499,3.4799999999999986,True,differs_by_construction_as_expected
+publication_era_20170709,HML,504,0,0.0,False,identical_between_archives
+publication_era_20170709,RF,504,0,0.0,False,identical_between_archives
+current_20260801,Mkt-RF,504,99,0.08000000000000007,False,UNEXPECTED_divergence_between_archives
+current_20260801,SMB,504,492,3.52,True,differs_by_construction_as_expected
+current_20260801,HML,504,0,0.0,False,identical_between_archives
+current_20260801,RF,504,0,0.0,False,identical_between_archives

@@ -24,7 +24,7 @@
   "raw_path": "data/raw/comparators/q_factors/q_factors_global_q_2025_retrieved_20260802.csv",
   "raw_sha256": "8b2e2f1364890f8f5876da20e6bfad0acd8d272425de3b65c725f54b51128f6a",
   "redistribution_status": "public author-provided research data; the download page states no registration or licensing condition. Raw bytes are retained locally and are not redistributed by this repository.",
-  "retrieved_at_utc": "2026-08-02T20:45:01.939437+00:00",
+  "retrieved_at_utc": "2026-08-03T09:25:52.869583+00:00",
   "source_metadata_lines": [],
   "source_url": "https://global-q.org/uploads/1/2/2/6/122679606/q5_factors_monthly_2025.csv",
   "units": "percent_per_month",

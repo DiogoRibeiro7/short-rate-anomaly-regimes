@@ -248,25 +248,84 @@ def unit_scale_audit(levels: pd.Series, innovations: pd.Series) -> dict[str, flo
     }
 
 
+#: Published statistic name mapped to the reconstructed attribute it must be
+#: compared against, together with the units of that comparison.
+#:
+#: The article prints the AR intercept in decimal rate units while printing the
+#: Table 1 innovation statistics in percent, so a published ``intercept`` target
+#: must be compared against the reconstructed intercept expressed in decimal rate
+#: units. Comparing it against the percentage-point estimate would fail for every
+#: variant purely because of the unit convention. Every other statistic is
+#: compared in its own native units, and the slope, both t-ratios, and R-squared
+#: are scale invariant.
+PUBLISHED_STATISTIC_COMPARISON: dict[str, tuple[str, str]] = {
+    "intercept": ("intercept_decimal_rate_units", "decimal_rate_units"),
+    "intercept_decimal_rate_units": ("intercept_decimal_rate_units", "decimal_rate_units"),
+    "slope": ("slope", "dimensionless"),
+    "t_intercept": ("t_intercept", "dimensionless"),
+    "t_slope": ("t_slope", "dimensionless"),
+    "r_squared": ("r_squared", "dimensionless"),
+    "mean": ("mean", "annualized_percentage_points"),
+    "standard_deviation": ("standard_deviation", "annualized_percentage_points"),
+    "minimum": ("minimum", "annualized_percentage_points"),
+    "maximum": ("maximum", "annualized_percentage_points"),
+    "autocorrelation_1": ("autocorrelation_1", "dimensionless"),
+}
+
+#: Statistics that decide the coefficient layer of an R1a classification.
+COEFFICIENT_STATISTICS = frozenset(
+    {"intercept", "intercept_decimal_rate_units", "slope", "r_squared"}
+)
+
+#: Statistics that decide the descriptive layer of an R1a classification.
+DESCRIPTIVE_STATISTICS = frozenset(
+    {"mean", "standard_deviation", "minimum", "maximum", "autocorrelation_1"}
+)
+
+
 def compare_with_published(
     reconstruction: ARReconstruction,
     published: dict[str, float],
 ) -> pd.DataFrame:
-    """Compare reconstructed statistics with the article's published values."""
-    computed = {
+    """Compare reconstructed statistics with the article's published values.
+
+    Each published statistic is compared against the reconstructed quantity named
+    in :data:`PUBLISHED_STATISTIC_COMPARISON`, in the units recorded there. The
+    emitted frame records both the value actually compared and, where the two
+    differ, the same estimate in annualized percentage points, so the unit
+    conversion is visible rather than implicit.
+
+    Args:
+        reconstruction: The estimated AR(1) reconstruction.
+        published: Published statistic names mapped to their printed values.
+
+    Returns:
+        One row per published statistic that the reconstruction can supply.
+
+    Raises:
+        KeyError: If a published statistic has no registered comparison rule.
+    """
+    computed: dict[str, float] = {
         "intercept": reconstruction.intercept,
         "intercept_decimal_rate_units": reconstruction.intercept_decimal_rate_units,
         "slope": reconstruction.slope,
         "t_intercept": reconstruction.intercept_t_ratio,
         "t_slope": reconstruction.slope_t_ratio,
         "r_squared": reconstruction.r_squared,
-        **{key: value for key, value in reconstruction.descriptives.items() if key in published},
+        **{
+            key: float(value)
+            for key, value in reconstruction.descriptives.items()
+            if key in PUBLISHED_STATISTIC_COMPARISON
+        },
     }
     records = []
     for statistic, published_value in published.items():
-        if statistic not in computed:
+        if statistic not in PUBLISHED_STATISTIC_COMPARISON:
             continue
-        value = float(computed[statistic])
+        computed_key, comparison_units = PUBLISHED_STATISTIC_COMPARISON[statistic]
+        if computed_key not in computed:
+            continue
+        value = float(computed[computed_key])
         difference = value - published_value
         tolerance = PUBLISHED_ROUNDING_TOLERANCE[statistic]
         relative_ok = (
@@ -280,8 +339,13 @@ def compare_with_published(
                 "replication_mode": reconstruction.replication_mode,
                 "timing_variant": reconstruction.timing_variant,
                 "statistic": statistic,
+                "compared_attribute": computed_key,
+                "comparison_units": comparison_units,
                 "published_value": published_value,
                 "reconstructed_value": value,
+                "reconstructed_value_percentage_points": (
+                    reconstruction.intercept if computed_key.startswith("intercept") else value
+                ),
                 "difference": difference,
                 "absolute_difference": abs(difference),
                 "published_rounding_tolerance": tolerance,
@@ -303,18 +367,28 @@ def classify_replication_target(
     A documented reconstruction can never be classified as exact replication, no
     matter how closely it matches, because the article does not identify the
     source file it used.
+
+    An empty layer never counts as a match. A frame carrying no coefficient rows
+    is treated as unmatched rather than vacuously true, so a comparison that
+    silently dropped its coefficients cannot earn a reproduction label.
+
+    Args:
+        comparison: Output of :func:`compare_with_published`.
+        replication_mode: Replication label carried by the reconstruction.
+        exact_input_available: Whether the article identifies the source file.
+
+    Returns:
+        The classification string for this rate-series target.
     """
     if comparison.empty:
         return "not_attempted"
-    coefficient_rows = comparison[
-        comparison["statistic"].isin({"intercept_decimal_rate_units", "slope", "r_squared"})
-    ]
-    coefficients_match = bool(coefficient_rows["within_published_rounding"].all())
-    descriptive_rows = comparison[
-        comparison["statistic"].isin(
-            {"mean", "standard_deviation", "minimum", "maximum", "autocorrelation_1"}
-        )
-    ]
+    coefficient_rows = comparison[comparison["statistic"].isin(COEFFICIENT_STATISTICS)]
+    coefficients_match = (
+        bool(coefficient_rows["within_published_rounding"].all())
+        if not coefficient_rows.empty
+        else False
+    )
+    descriptive_rows = comparison[comparison["statistic"].isin(DESCRIPTIVE_STATISTICS)]
     descriptives_match = (
         bool(descriptive_rows["within_published_rounding"].all())
         if not descriptive_rows.empty

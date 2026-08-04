@@ -37,12 +37,28 @@ short_rate:
       rates. See artifacts/tables/factors/ar1_published_target_comparison.csv.
     intercept_comparison_units: decimal_rate_units
 
+# The article's baseline test assets are seven value-weighted decile families
+# (article pages 936-937), stacked as the 70-portfolio system. The size-sorted
+# 25-portfolio double sorts previously listed here are Internet Appendix Section
+# 2.6 / Table A.7 supplement robustness sets, are not acquired, and are not the
+# baseline test assets. Listing them here also left
+# _compatible_extension_portfolio_sets with an empty intersection against
+# configs/extensions.yaml, which silently removed the temporal-extension
+# portfolio requirement.
 portfolio_sets:
+  - book_to_market
+  - earnings_to_price
+  - equity_duration
+  - long_term_reversal
+  - investment_to_assets
+  - ppe_investment
+  - inventory_growth
+
+# Supplement-only robustness sets, not acquired and not baseline test assets.
+supplement_portfolio_sets:
   - size_book_to_market_25
   - size_asset_growth_25
   - size_long_term_reversal_25
-  - size_equity_duration_25
-  - size_inventory_growth_25
 
 asset_pricing:
   time_series:
@@ -64,6 +80,7 @@ comparators:
   - carhart_4
   - fama_french_5
   - q_factor
+  - liquidity
 
 reporting:
   decimals: 4

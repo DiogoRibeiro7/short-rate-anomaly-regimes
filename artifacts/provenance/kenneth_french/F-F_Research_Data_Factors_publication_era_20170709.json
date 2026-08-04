@@ -26,7 +26,7 @@
   "raw_path": "data/raw/kenneth_french/F-F_Research_Data_Factors/F-F_Research_Data_Factors_publication_era_20170709.zip",
   "raw_sha256": "cb60eb74fa068ff567d87d01b393a96bd0ef4f0fb9346dd7d0aec7e38711da0f",
   "redistribution_status": "public research data provided by the Kenneth French Data Library; raw archive bytes are retained locally and are not redistributed by this repository",
-  "retrieved_at_utc": "2026-08-01T00:06:47.242438+00:00",
+  "retrieved_at_utc": "2026-08-03T09:26:01.555492+00:00",
   "source_metadata_lines": [
     "This file was created by CMPT_ME_BEME_RETS using the 201705 CRSP database.",
     "The 1-month TBill return is from Ibbotson and Associates, Inc."

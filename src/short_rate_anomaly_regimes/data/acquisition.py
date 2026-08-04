@@ -85,6 +85,70 @@ def _session_with_retries(retries: int) -> requests.Session:
     return session
 
 
+def write_raw_once(path: Path, payload: bytes) -> str:
+    """Write raw provider bytes exactly once at an immutable path.
+
+    Every freeze module shares this writer so that one rule governs all immutable
+    paths: the bytes are written by the first successful acquisition, and a later
+    acquisition may only reproduce them.
+
+    Args:
+        path: Immutable destination for the raw provider bytes.
+        payload: Raw provider bytes.
+
+    Returns:
+        The SHA-256 hexadecimal digest of the bytes now stored at ``path``.
+
+    Raises:
+        DataAccessError: If ``path`` already exists and holds different bytes.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    incoming = hashlib.sha256(payload).hexdigest()
+    if path.exists():
+        existing = sha256_file(path)
+        if existing != incoming:
+            raise DataAccessError(
+                f"Refusing to overwrite an existing raw file with different bytes: {path}"
+            )
+        return existing
+    path.write_bytes(payload)
+    return incoming
+
+
+def canonical_monthly_bytes(frame: pd.DataFrame) -> bytes:
+    """Serialize a month-indexed panel deterministically for checksum comparison.
+
+    Args:
+        frame: Panel indexed by monthly periods whose columns are numeric.
+
+    Returns:
+        UTF-8 bytes of a ``month,<columns>`` CSV in which every value is rendered
+        with ten decimals and every missing observation is an empty field.
+    """
+    lines = ["month," + ",".join(str(column) for column in frame.columns)]
+    for period, row in frame.iterrows():
+        rendered = ",".join("" if pd.isna(value) else f"{float(value):.10f}" for value in row)
+        lines.append(f"{period},{rendered}")
+    return ("\n".join(lines) + "\n").encode("utf-8")
+
+
+def load_normalized_month_panel(path: Path) -> pd.DataFrame:
+    """Load a canonical month-indexed panel written by :func:`canonical_monthly_bytes`.
+
+    Args:
+        path: Path to a normalized CSV whose first column is ``month``.
+
+    Returns:
+        The panel indexed by monthly periods and sorted by month, with float
+        columns and an empty field decoded as a missing observation.
+    """
+    frame = pd.read_csv(path)
+    index = pd.PeriodIndex([pd.Period(str(value), freq="M") for value in frame["month"]], freq="M")
+    values = frame.drop(columns=["month"]).astype(float)
+    values.index = index
+    return values.sort_index()
+
+
 def _default_interim_path(raw_path: Path) -> Path:
     parts = list(raw_path.parts)
     for index, part in enumerate(parts):
@@ -134,15 +198,7 @@ def _require_zip_payload(payload: bytes) -> None:
 
 
 def _write_immutable_raw_file(path: Path, payload: bytes) -> str:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if path.exists():
-        existing_hash = sha256_file(path)
-        incoming_hash = hashlib.sha256(payload).hexdigest()
-        if existing_hash != incoming_hash:
-            raise DataAccessError(f"Refusing to overwrite nonidentical raw file: {path}")
-        return existing_hash
-    path.write_bytes(payload)
-    return sha256_file(path)
+    return write_raw_once(path, payload)
 
 
 def _parse_fred_csv(payload: bytes, interim_path: Path) -> None:

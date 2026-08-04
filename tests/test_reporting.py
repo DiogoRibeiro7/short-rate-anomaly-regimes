@@ -10,6 +10,7 @@ from short_rate_anomaly_regimes.reporting.audit import (
     audit_summary,
     build_missing_input_audit,
     compare_statistic,
+    is_accessible_access_status,
     load_table_targets,
     render_replication_report,
     tolerance_from_rule,
@@ -283,6 +284,39 @@ asset_pricing:
     assert "Weak-factor and influence diagnostics have not produced a baseline verdict." in report
     assert "All audited targets are reproduced within the frozen tolerance rules." in report
     assert "future_extension" not in report
+
+
+def test_is_accessible_access_status_reads_the_acquired_vocabulary() -> None:
+    assert is_accessible_access_status("present_private_file")
+    assert is_accessible_access_status(
+        "acquired_at_two_vintages_exact_file_not_named_by_the_article"
+    )
+    assert is_accessible_access_status("acquired_documented_reconstruction_series_frozen")
+    assert is_accessible_access_status("acquired_from_the_named_original_source_at_a_post_vintage")
+    assert is_accessible_access_status("named_source_located_not_acquired")
+    assert not is_accessible_access_status("not_located")
+    assert not is_accessible_access_status("not_confirmed_and_not_assumed")
+    assert not is_accessible_access_status("selected_source_pending_file_and_terms")
+    assert not is_accessible_access_status("")
+
+
+def test_render_replication_report_counts_acquired_sources_as_accessible(tmp_path: Path) -> None:
+    data_access = tmp_path / "data_access.csv"
+    data_access.write_text(
+        "source_id,exact_definition_verified,access_status,strict_replication_role,notes\n"
+        "acquired_factor,false,acquired_at_two_vintages,required,Frozen at two vintages\n"
+        "private_article,true,present_private_file,required,Local private file\n"
+        "absent_portfolio,false,not_located,required,No archive member exposes this panel\n",
+        encoding="utf-8",
+    )
+    records = build_missing_input_audit((_target(),), missing_reason="Missing input.")
+
+    report = render_replication_report(records, data_access_path=data_access)
+
+    assert "Accessible or located strict-replication evidence rows: `2`" in report
+    assert "Inaccessible or pending strict-replication evidence rows: `1`" in report
+    assert "Pending `absent_portfolio`" in report
+    assert "Pending `acquired_factor`" not in report
 
 
 def test_write_audit_rejects_unallowed_status(tmp_path: Path) -> None:

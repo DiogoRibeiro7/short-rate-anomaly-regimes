@@ -86,8 +86,8 @@ comparison.
 |---|---|---|---|---|---|---|
 | `FEDFUNDS` | `DFF` | calendar-day mean | 864 | 0.005000 | 1.0000 | reproduced within primary tolerance |
 | `FEDFUNDS` | `DFF` | business-day mean | 864 | 0.285714 | 0.3831 | **not** reproduced |
-| `TB3MS` | `DTB3` | mean of available observations | 869 | 0.005000 | 1.0000 | reproduced within primary tolerance |
-| `TB3MS` | `DTB3` | month-end last observation | 869 | 2.810000 | 0.0725 | **not** reproduced |
+| `TB3MS` | `DTB3` | mean of available observations | 846 | 0.005000 | 1.0000 | reproduced within primary tolerance |
+| `TB3MS` | `DTB3` | month-end last observation | 846 | 2.810000 | 0.0745 | **not** reproduced |
 
 ### 3.2 Exact-decimal confirmation
 
@@ -100,7 +100,7 @@ equals the daily mean rounded half-up to two decimals.
 |---|---|---|---|---|
 | `FEDFUNDS` | `DFF` | calendar-day mean | 864 / 864 | monthly series is the rounded daily mean for every complete month |
 | `FEDFUNDS` | `DFF` | business-day mean | 329 / 864 | not the rounded daily mean |
-| `TB3MS` | `DTB3` | mean of available observations | 869 / 869 | monthly series is the rounded daily mean for every complete month |
+| `TB3MS` | `DTB3` | mean of available observations | 846 / 846 | monthly series is the rounded daily mean for every complete month |
 
 This confirms both required statements exactly, not approximately:
 
@@ -122,7 +122,7 @@ The instruction not to assume that `TB3MS` and an arithmetic aggregation of
 
 They are **not identical**. The published `TB3MS` value equals the `DTB3` monthly
 mean only after rounding to the published two decimals. Before rounding, the two
-differ in 840 of 869 complete months, with a mean absolute difference of 0.0025
+differ in 817 of 846 complete months, with a mean absolute difference of 0.0025
 and a maximum of 0.0050 percentage points. The differences are bounded exactly by
 half a reporting increment and are fully explained by publication rounding.
 
@@ -137,9 +137,13 @@ materially different series.
 
 ### 3.4 Coverage note
 
-`TB3MS` begins 1934-01 while `DTB3` begins 1954-01, so 241 months of `TB3MS` have
-no daily counterpart and cannot be audited. Those months lie entirely before the
-1972-01 baseline start and do not affect any replication target.
+`TB3MS` begins 1934-01 while `DTB3` begins 1954-01, so 264 months of `TB3MS` have
+no auditable daily counterpart: 241 precede the daily series entirely, and a
+further 23 are months whose first business days are market holidays, so the daily
+series does not cover the month boundary and the month is not classified as
+complete. All 264 lie before the 1972-01 baseline start or leave the aggregation
+rule already established by the 846 audited months, and none affects a replication
+target.
 
 ## 4. Replication-eligibility consequences
 

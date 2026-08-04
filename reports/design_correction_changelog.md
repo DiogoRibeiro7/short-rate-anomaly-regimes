@@ -65,7 +65,10 @@ what it now forbids.
   - estimator: OLS;
   - statistics: `R2_span` and `s_span = sd(residual)/sd(rate innovation)`, which
     satisfy `s_span = sqrt(1 - R2_span)`;
-  - decision: pass when `R2_span <= 0.90`, equivalently `s_span >= 0.3162`;
+  - decision: pass when `R2_span <= 0.90`, equivalently
+    `s_span >= sqrt(0.10) = 0.31622776601683794`, with the `R2_span` form
+    authoritative and the residual cutoff stated as the exact square root
+    rather than a decimal rounded below it;
   - secondary descriptive reporting: the same statistic against `Mkt-RF` alone.
 - Both statistics are scale free, so the gate is invariant to rescaling the
   short-rate factor.

@@ -26,7 +26,7 @@
   "raw_path": "data/raw/kenneth_french/F-F_Research_Data_Factors/F-F_Research_Data_Factors_current_20260801.zip",
   "raw_sha256": "80b88699a18ac408e2456d25b1004e340f3f7f8d41d5b476a0285bc53c6f0436",
   "redistribution_status": "public research data provided by the Kenneth French Data Library; raw archive bytes are retained locally and are not redistributed by this repository",
-  "retrieved_at_utc": "2026-08-01T00:06:48.175982+00:00",
+  "retrieved_at_utc": "2026-08-03T09:26:02.552851+00:00",
   "source_metadata_lines": [
     "This file was created using the 202605 CRSP database.",
     "The 1-month TBill rate data until 202405 are from Ibbotson Associates. Starting from 202406, the 1-month TBill rate is from ICE BofA US 1-Month Treasury Bill Index.",

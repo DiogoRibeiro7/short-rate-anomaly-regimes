@@ -108,6 +108,9 @@ artifacts/**
 !artifacts/provenance/comparators/*.json
 !artifacts/data_quality/comparator_source_compatibility.csv
 !artifacts/data_quality/liquidity_column_selection.csv
+!artifacts/data_quality/french_shared_factor_consistency.csv
+!artifacts/provenance/short_rate_innovations_baseline.json
+!artifacts/provenance/portfolio_compatibility_audit.json
 !artifacts/figures/
 !artifacts/figures/.gitkeep
 !artifacts/figures/extension/

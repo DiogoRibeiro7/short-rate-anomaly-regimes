@@ -2,17 +2,27 @@ data_freeze:
   baseline_start: "1972-01"
   baseline_end: "2013-12"
   extension_start: "2014-01"
-  latest_common_month: "2026-06"
+  # Set by the acquired anomaly decile panels, which end 2025-12. The rate series
+  # run to 2026-06 and the Kenneth French factors to 2026-05, so the portfolio
+  # sample, not the rate or factor data, is the binding common endpoint. See
+  # research/anomaly_portfolio_availability.csv and
+  # reports/baseline_input_readiness.md.
+  latest_common_month: "2025-12"
   retrieval_date: "2026-07-31"
   baseline_vintage_label: locked_original_1972_2013
   extension_vintage_label: extension_retrieved_2026_07_31
   revision_policy: audit_separately
+  # The seven acquired anomaly decile families. The 25-portfolio double sorts
+  # previously listed here are not acquired at any vintage, so they cannot carry
+  # a post-publication extension.
   compatible_portfolio_sets:
-    - size_book_to_market_25
-    - size_long_term_reversal_25
-    - size_asset_growth_25
-    - size_equity_duration_25
-    - size_inventory_growth_25
+    - book_to_market
+    - earnings_to_price
+    - equity_duration
+    - long_term_reversal
+    - investment_to_assets
+    - ppe_investment
+    - inventory_growth
 
 shock_decomposition:
   enabled: true

@@ -408,7 +408,7 @@ def test_temporal_extension_writes_blocked_report(tmp_path: Path) -> None:
     assert "blocked temporal extension report" in str(result.exception)
     report = report_path.read_text(encoding="utf-8")
     assert "Verdict: `blocked_missing_input`" in report
-    assert "Latest common month: `2026-06`" in report
+    assert "Latest common month: `2025-12`" in report
 
 
 def test_run_regimes_writes_blocked_report(tmp_path: Path) -> None:

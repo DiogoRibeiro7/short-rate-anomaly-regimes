@@ -22,6 +22,7 @@ MANIFEST_ROOT = Path("artifacts/provenance/kenneth_french")
 SUMMARY_CSV = Path("artifacts/provenance/french_freeze_summary.csv")
 VINTAGE_SUMMARY_CSV = Path("artifacts/data_quality/french_vintage_summary.csv")
 VINTAGE_DIFFERENCES_CSV = Path("artifacts/data_quality/french_vintage_differences.csv")
+SHARED_FACTOR_CONSISTENCY_CSV = Path("artifacts/data_quality/french_shared_factor_consistency.csv")
 
 HISTORICAL_LABEL = "publication_era_20170709"
 CURRENT_LABEL = "current_20260801"
@@ -123,10 +124,65 @@ def main() -> None:
     summary_frame = pd.concat(summaries, ignore_index=True)
     summary_frame.to_csv(VINTAGE_SUMMARY_CSV, index=False)
     pd.concat(differences, ignore_index=True).to_csv(VINTAGE_DIFFERENCES_CSV, index=False)
+
+    consistency = _shared_factor_consistency(baseline_window)
+    consistency.to_csv(SHARED_FACTOR_CONSISTENCY_CSV, index=False)
+
     print()
     print(summary_frame.to_string(index=False))
     print()
+    print(consistency.to_string(index=False))
+    print()
     print(json.dumps({"summary": str(VINTAGE_SUMMARY_CSV)}, indent=2))
+
+
+def _shared_factor_consistency(window: pd.PeriodIndex) -> pd.DataFrame:
+    """Check whether factors shared by two archives agree within each vintage.
+
+    ``Mkt-RF``, ``SMB``, ``HML``, and ``RF`` appear in both the three-factor and
+    the five-factor archive. A factor that is the same series by definition must
+    agree between the two files at a given vintage; where it does not, the
+    revision counts reported against that vintage are not comparable across the
+    two archives. ``SMB`` is expected to differ because the five-factor file
+    builds it from the three 2x3 sorts rather than from the three-factor
+    construction.
+
+    Args:
+        window: Baseline months over which the comparison is made.
+
+    Returns:
+        One row per vintage and shared factor.
+    """
+    rows = []
+    for vintage in (HISTORICAL_LABEL, CURRENT_LABEL):
+        three = load_normalized_french(NORMALIZED_ROOT / f"F-F_Research_Data_Factors_{vintage}.csv")
+        five = load_normalized_french(
+            NORMALIZED_ROOT / f"F-F_Research_Data_5_Factors_2x3_{vintage}.csv"
+        )
+        common = three.index.intersection(five.index).intersection(window)
+        for column in ("Mkt-RF", "SMB", "HML", "RF"):
+            difference = (three.loc[common, column] - five.loc[common, column]).abs()
+            differing = int((difference > 0).sum())
+            rows.append(
+                {
+                    "vintage": vintage,
+                    "factor": column,
+                    "months_compared": len(common),
+                    "months_differing_between_archives": differing,
+                    "max_absolute_difference": float(difference.max()),
+                    "expected_to_differ": column == "SMB",
+                    "verdict": (
+                        "identical_between_archives"
+                        if differing == 0
+                        else (
+                            "differs_by_construction_as_expected"
+                            if column == "SMB"
+                            else "UNEXPECTED_divergence_between_archives"
+                        )
+                    ),
+                }
+            )
+    return pd.DataFrame.from_records(rows)
 
 
 if __name__ == "__main__":

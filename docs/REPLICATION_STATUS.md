@@ -20,7 +20,7 @@ This project has not produced empirical replication results yet. The current rep
 - Manuscript-output scaffolding is implemented for the required outline, full extension-paper draft, reproducibility statement, data access statement, hypothesis registry, robustness appendix, table-level replication appendix, artifact-map validation, numeric-claim traceability, empirical-paragraph context declarations, table/figure artifact-source checks, title checks, and restricted causal-language checks. The current manuscript-output report is `blocked_missing_input` because empirical tables and extension panels are absent.
 - Adversarial release checks are implemented for restricted-path detection, processed-data redistribution warnings, sanitized environment manifests, SBOM generation from `poetry.lock`, source and public-artifact checksums, deterministic source archive packaging, archive manifests, data-acquisition guidance, release notes, and code/econometric audit reports. The current release gate reports `0` critical issues and `1` major unresolved issue; source-code release and a source-only tag are permitted, while empirical-results release and empirical-result tagging remain blocked by missing factor and extension-panel artifacts.
 - Empirical input acquisition is complete for the rate, market, risk-free, and anomaly-portfolio layers. Four FRED rate series, six Kenneth French archive vintages, and two Hou-Xue-Zhang testing-portfolio archives are frozen with raw and normalized checksums, retrieval timestamps, observation ranges, units, frequency, source notes, vintage information, and redistribution status under `artifacts/provenance/`.
-- The monthly aggregation of both baseline rate series is verified exactly rather than assumed: `FEDFUNDS` equals the rounded calendar-day mean of `DFF` in 864 of 864 complete months, `TB3MS` equals the rounded mean of available business-day `DTB3` observations in 869 of 869, and two competing aggregation rules are rejected.
+- The monthly aggregation of both baseline rate series is verified exactly rather than assumed: `FEDFUNDS` equals the rounded calendar-day mean of `DFF` in 864 of 864 complete months, `TB3MS` equals the rounded mean of available business-day `DTB3` observations in 846 of 846, and two competing aggregation rules are rejected.
 - The article's unstated AR(1) timing convention is resolved from the published statistics and tested automatically. R1a is classified per rate series as `approximately_reproduced_under_documented_reconstruction`; it is not, and may not be, labelled exact replication, because the article names a provider without a series code or vintage.
 - The canonical baseline panel exists at `data/processed/baseline_panel.parquet`: 504 months from 1972-01 to 2013-12, 78 columns, passing all 14 validation checks for keys, ordering, gaps, endpoint, missingness, infinities, forward filling, units, and timing alignment.
 - The overall input-readiness verdict is `PARTIAL`. See `reports/baseline_input_readiness.md` for the per-target breakdown of which replication stages can proceed.
@@ -49,13 +49,22 @@ The following inputs are still marked as missing or pending in `research/data_ac
 
 ## Status Labels
 
-Replication claims must use the labels defined in `research/replication_protocol.md`:
+Replication claims must use the labels defined in `research/replication_protocol.md`.
+
+Base labels:
 
 - `reproduced`;
 - `approximately_reproduced`;
 - `not_reproducible_missing_input`;
 - `contradicted`;
 - `not_attempted`.
+
+Authorised reconstruction-qualified sub-labels. Each refines exactly one base label, is still exactly one label for the statistic, and is used whenever the article does not identify the source file, so that no reconstruction can be read as exact replication. The first three are the exact strings returned by `classify_replication_target` in `src/short_rate_anomaly_regimes/rates/baseline_reconstruction.py` when no exact input is available; the fourth is emitted by `scripts/reconstruct_rate_innovations.py`:
+
+- `approximately_reproduced_under_documented_reconstruction`, refining `approximately_reproduced`;
+- `approximately_reproduced_coefficients_only_under_documented_reconstruction`, refining `approximately_reproduced`;
+- `not_reproduced_under_documented_reconstruction_exact_input_missing`, refining `not_reproducible_missing_input`;
+- `not_attempted_no_published_target_for_this_series`, refining `not_attempted`.
 
 Any result that uses substituted data, reconstructed portfolios, revised series, or unverifiable conventions must not be labelled as exact replication.
 

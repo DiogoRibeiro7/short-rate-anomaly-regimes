@@ -59,8 +59,11 @@ The numerical factor-spanning criterion is fixed in
 `research/inference_contract.md`. The short-rate factor passes when the spanning
 coefficient of determination against the registered non-short-rate comparator
 factor set satisfies `R2_span <= 0.90`, equivalently a residual
-standard-deviation ratio `s_span >= 0.3162`. Both statistics are scale free, so
-the criterion is unaffected by rescaling the short-rate innovation.
+standard-deviation ratio `s_span >= sqrt(0.10) = 0.31622776601683794`. The
+residual cutoff is the exact value `sqrt(0.10)` rather than a decimal rounded
+below it, so the two forms classify every boundary case identically. Both
+statistics are scale free, so the criterion is unaffected by rescaling the
+short-rate innovation.
 
 ## Rationale
 

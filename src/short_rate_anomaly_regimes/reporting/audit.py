@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Literal
@@ -39,6 +40,27 @@ DISCREPANCY_INVESTIGATION_ORDER: tuple[DiscrepancyCause, ...] = (
 )
 
 ALLOWED_STATUSES = tuple(status.value for status in ReplicationStatus)
+
+ACCESS_AVAILABILITY_TOKENS: tuple[str, ...] = ("present", "acquired", "located")
+_AVAILABILITY_PATTERNS: tuple[re.Pattern[str], ...] = tuple(
+    re.compile(rf"(?<!not_){token}") for token in ACCESS_AVAILABILITY_TOKENS
+)
+
+
+def is_accessible_access_status(access_status: object) -> bool:
+    """Report whether a data-access status asserts the input is in hand.
+
+    The data-access matrix records availability with several vocabularies:
+    ``present_...`` for the private article files, ``acquired_...`` for every
+    frozen public download, and ``..._located`` for a named source that has been
+    identified. A plain substring test would both miss the whole ``acquired_...``
+    family and misread negations such as ``not_located`` or ``not_acquired`` as
+    availability, so each token is matched only when it is not directly negated.
+    """
+    text = str(access_status).strip().lower()
+    if not text:
+        return False
+    return any(pattern.search(text) is not None for pattern in _AVAILABILITY_PATTERNS)
 
 
 @dataclass(frozen=True, slots=True)
@@ -403,12 +425,9 @@ def _render_evidence_availability(
         lines.append("- Data-access matrix is unavailable.")
         return "\n".join(lines)
     strict_rows = data_access[data_access["strict_replication_role"] != "extension"]
-    accessible = strict_rows[
-        strict_rows["access_status"].astype("string").str.contains("present|located", na=False)
-    ]
-    inaccessible = strict_rows[
-        ~strict_rows["access_status"].astype("string").str.contains("present|located", na=False)
-    ]
+    accessible_mask = strict_rows["access_status"].map(is_accessible_access_status).astype(bool)
+    accessible = strict_rows[accessible_mask]
+    inaccessible = strict_rows[~accessible_mask]
     lines.append(f"- Accessible or located strict-replication evidence rows: `{len(accessible)}`")
     lines.append(
         f"- Inaccessible or pending strict-replication evidence rows: `{len(inaccessible)}`"

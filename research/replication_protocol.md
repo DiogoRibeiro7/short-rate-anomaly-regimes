@@ -10,6 +10,44 @@ Every article statistic receives exactly one label.
 - `contradicted` when the same definition and estimator yield a materially different result after independent checks;
 - `not_attempted` when an earlier dependency has not passed.
 
+### Reconstruction-qualified sub-labels
+
+When the article does not identify the source file it used, source identity
+cannot be established and numerical proximity is not source identity. Targets
+estimated from a documented reconstruction therefore carry one of the authorised
+sub-labels below instead of a bare base label. Each sub-label refines exactly one
+base label, is still exactly one label for the statistic, and may never be
+reported as exact replication.
+
+These are the exact strings emitted by
+`short_rate_anomaly_regimes.rates.baseline_reconstruction.classify_replication_target`
+when no exact input is available:
+
+- `approximately_reproduced_under_documented_reconstruction` refines
+  `approximately_reproduced`, and applies when the coefficient layer and the
+  descriptive layer both fall within the declared tolerances;
+- `approximately_reproduced_coefficients_only_under_documented_reconstruction`
+  refines `approximately_reproduced`, and applies when the coefficient layer
+  falls within tolerance and the descriptive layer does not;
+- `not_reproduced_under_documented_reconstruction_exact_input_missing` refines
+  `not_reproducible_missing_input`, and applies when the coefficient layer does
+  not fall within tolerance while the exact input remains unavailable. It is not
+  a contradiction, because `contradicted` requires a completed source-compatible
+  attempt.
+
+When an exact input is available the same function returns the base labels
+`reproduced`, `approximately_reproduced`, or `contradicted`, and it returns
+`not_attempted` for an empty comparison.
+
+One further sub-label is emitted by `scripts/reconstruct_rate_innovations.py`:
+
+- `not_attempted_no_published_target_for_this_series` refines `not_attempted`,
+  and applies to a registered sensitivity series for which the article publishes
+  no target at all.
+
+No label outside this closed set, base or sub-label, may appear in a replication
+claim, an audit artifact, or the manuscript.
+
 ## Evidence chain
 
 Each table target must link to
