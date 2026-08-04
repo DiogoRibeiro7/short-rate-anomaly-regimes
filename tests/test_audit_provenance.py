@@ -371,9 +371,9 @@ class TestManifestVerification:
 #: acquired. They are marked ``integration`` and skipped elsewhere rather than
 #: weakened, because verifying a checksum against a file that is not present
 #: would be no verification at all.
-_ACQUIRED_DATA_PRESENT = (
-    REPOSITORY_ROOT / "data" / "interim" / "portfolios"
-).is_dir() and (REPOSITORY_ROOT / "data" / "interim" / "fred").is_dir()
+_ACQUIRED_DATA_PRESENT = (REPOSITORY_ROOT / "data" / "interim" / "portfolios").is_dir() and (
+    REPOSITORY_ROOT / "data" / "interim" / "fred"
+).is_dir()
 
 requires_acquired_data = pytest.mark.skipif(
     not _ACQUIRED_DATA_PRESENT,
