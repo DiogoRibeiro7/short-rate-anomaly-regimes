@@ -127,6 +127,12 @@ artifacts/**
 !artifacts/provenance/h4c_precision.json
 !artifacts/provenance/h1_materiality.json
 !artifacts/provenance/weak_factor_diagnostics.json
+!artifacts/tables/extension/
+!artifacts/tables/extension/.gitkeep
+!artifacts/tables/extension/*.csv
+!artifacts/provenance/extension_panels.json
+!artifacts/provenance/extension_panel_column_metadata.csv
+!artifacts/provenance/temporal_extension.json
 !artifacts/provenance/portfolio_compatibility_audit.json
 !artifacts/figures/
 !artifacts/figures/.gitkeep

@@ -1,0 +1,29 @@
+{
+  "endpoint_note": "2025-12 is the binding common endpoint because the anomaly decile panels end there while the rate and factor data run to 2026-06 and 2026-05",
+  "extension": {
+    "end": "2025-12",
+    "months": 144,
+    "path": "data/processed/extension/monthly_panel.parquet",
+    "sha256": "e51abf8662938740243f315066c63cb78ffd3f25ac906d5058cb4ad3f658351a",
+    "start": "2014-01",
+    "vintage": "current"
+  },
+  "replication_status": "documented_reconstruction",
+  "revised_history": {
+    "end": "2013-12",
+    "months": 504,
+    "path": "data/processed/extension/revised_history_panel.parquet",
+    "purpose": "shares months with the locked baseline panel and vintage with the extension panel, so the vintage effect and the temporal effect can be separated",
+    "sha256": "01ce15eeb3fbdaddcb2c7fab690463f32257599e6c563448d8a645d40ef08308",
+    "start": "1972-01",
+    "vintage": "current"
+  },
+  "script": "scripts/build_extension_panels.py",
+  "vintages": {
+    "fred": "2026-08-01",
+    "french": "current_20260801",
+    "liquidity": "current_20260802",
+    "portfolios": "global_q_2025_retrieved_20260802",
+    "q_factors": "global_q_2025_retrieved_20260802"
+  }
+}

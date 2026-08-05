@@ -1,0 +1,4 @@
+comparison,description,lambda_rate_change,rmse_relative_change,max_abs_spread_change
+vintage_effect_locked_vs_revised_history,"same months, publication-era against current vintage",0.001091121852085819,0.010839512727265204,0.02367454117506007
+temporal_effect_revised_history_vs_refitted_extension,"same vintage, baseline months against extension months",0.614827558013483,0.8896646010113816,0.9806491989402213
+combined_locked_baseline_vs_refitted_extension,confounds vintage and time; reported for completeness only,0.6159186798655689,0.910147644504307,0.9875609501360927

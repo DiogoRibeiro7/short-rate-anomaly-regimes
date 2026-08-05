@@ -1,0 +1,18 @@
+{
+  "bounds": {
+    "fitted_premium": 0.25,
+    "rmse_deterioration": 0.1
+  },
+  "inputs": {
+    "data/processed/baseline_panel.parquet": "f1354c66d8983bfed626dc9dbc62204d31d236f1117b700158e3b9b04f8a1cc0",
+    "data/processed/extension/monthly_panel.parquet": "e51abf8662938740243f315066c63cb78ffd3f25ac906d5058cb4ad3f658351a",
+    "data/processed/extension/revised_history_panel.parquet": "01ce15eeb3fbdaddcb2c7fab690463f32257599e6c563448d8a645d40ef08308"
+  },
+  "outputs": {
+    "artifacts/diagnostics/h2_temporal_stability.json": "170f9211306cbafff2cd2be77317ed6e5a6b0be141f51ffcde989d58894eaf3a",
+    "artifacts/tables/extension/fitted_premium_spreads.csv": "1bce0b15ae68137e9a9eabf31850295e41f1a225e22cafb426c50b86f5d8bc88",
+    "artifacts/tables/extension/temporal_evaluation.csv": "599330fd28fcd24ed1e62773c9e941c5f5bccd7d4f6f7e8a5e51559d18abeb1f",
+    "artifacts/tables/extension/vintage_decomposition.csv": "23e98e9ee40a41d427bdef31c26f80bc9801f15d67fa20eeff20de392b9fa435"
+  },
+  "script": "scripts/run_temporal_extension.py"
+}

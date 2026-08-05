@@ -1,0 +1,25 @@
+{
+  "classification": "post_publication_compatibility_unsupported",
+  "frozen_ar_intercept": 0.04625557239964617,
+  "frozen_ar_slope": 0.9905271145667265,
+  "gates": {
+    "fitted_premium_magnitude_within_0_25": false,
+    "rmse_deterioration_within_10_percent": false,
+    "sign_compatibility": false
+  },
+  "hypothesis": "H2",
+  "lambda_rate": {
+    "locked_baseline": -0.6984645567038997,
+    "refitted_extension": -0.08254587683833087,
+    "revised_history": -0.6973734348518139
+  },
+  "replication_status": "documented_reconstruction",
+  "rmse_relative_change_vs_locked_baseline": 0.910147644504307,
+  "rmse_relative_change_vs_revised_history": 0.8896646010113816,
+  "standardized_rate_exposure_dispersion_share": {
+    "locked_baseline": 0.254,
+    "note": "the H4a dispersion gate floor is 0.10; the extension window clears it more comfortably than the baseline, so the temporal result is not attributable to a weakly identified factor",
+    "refitted_extension": 0.58
+  },
+  "vintage_isolation": "the temporal gates compare the refitted extension with the revised-history baseline, which shares its vintage, so revised historical data cannot enter the temporal verdict"
+}
