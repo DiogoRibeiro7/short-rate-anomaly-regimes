@@ -1,0 +1,35 @@
+{
+  "holm_status": "The registered secondary comparator family uses Holm adjustment for secondary p-values. The materiality gates executed here are deterministic threshold comparisons on point estimates, so no p-value is generated in this pass and Holm adjustment therefore does not yet apply. No p-value is invented to fill the slot.",
+  "hypothesis": "H1",
+  "inputs": {
+    "artifacts/estimates/cross_section/baseline_pricing_errors.parquet": "c0587e7baf221c302f93bf4296f29df68550c09a6a8a1ab133725459bf0f88e3",
+    "artifacts/tables/cross_section/baseline_risk_prices.csv": "3a74666591854e87377174568f1a9b08a0e2bb5d0dbd18ea939559747d781e89"
+  },
+  "multiplicity_family": "baseline_pricing",
+  "outputs": {
+    "artifacts/diagnostics/h1_materiality.json": "8913f3270478dc071b59232e92d4306a469d31f8451090b5f700dda70525a53c",
+    "artifacts/tables/robustness/h1_primary_comparison.csv": "c37120d7cfd7df8a9b3c0b272931e114204e234ca8b15a7f702a6799d67ead5d",
+    "artifacts/tables/robustness/h1_secondary_adversarial.csv": "80aefa83104dd8922f15cd0b3be1e2a03cce33b2be20980b9007444a5f902f36"
+  },
+  "primary_comparator": "capm",
+  "primary_comparator_selection_rule": "chosen ex ante as primary comparator independently of observed RMSE",
+  "replication_status": "documented_reconstruction",
+  "script": "scripts/run_h1_materiality.py",
+  "strongest_comparator_selection_rule": "selected after observing baseline cross-sectional RMSE; lowest RMSE among the registered non-short-rate comparators on the same asset set; not used to choose the primary comparator",
+  "strongest_observed_comparator": {
+    "all_seven_families_joint": "carhart_4",
+    "book_to_market": "fama_french_5",
+    "earnings_to_price": "fama_french_5",
+    "equity_duration": "fama_french_5",
+    "inventory_growth": "fama_french_5",
+    "investment_to_assets": "liquidity",
+    "long_term_reversal": "carhart_4",
+    "ppe_investment": "liquidity"
+  },
+  "threshold_source": "research/economic_thresholds.md",
+  "thresholds": {
+    "mae_relative_reduction": 0.1,
+    "max_absolute_error_reduction": 0.25,
+    "rmse_relative_reduction": 0.1
+  }
+}

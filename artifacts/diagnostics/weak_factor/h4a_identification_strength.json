@@ -1,0 +1,294 @@
+{
+  "beta_source": "artifacts/estimates/time_series/baseline_first_pass_betas.parquet",
+  "confirmatory_portfolio_set": "all_seven_families_joint",
+  "family": "weak_factor_diagnostics",
+  "gate_failures": [],
+  "hypothesis": "H4a",
+  "market_factor": "RM",
+  "model": "market_plus_fedfunds_innovation",
+  "n_months": 504,
+  "passes": true,
+  "rate_factor": "FFR_innovation",
+  "rate_spanning_criterion": {
+    "executed_regressors": [
+      "Mkt-RF",
+      "SMB",
+      "HML",
+      "UMD",
+      "RMW",
+      "CMA",
+      "LIQ",
+      "ME",
+      "IA",
+      "ROE"
+    ],
+    "market_only_r2_span": 0.01861406097141305,
+    "market_only_regressors": [
+      "Mkt-RF"
+    ],
+    "market_only_s_span": 0.9906492512633245,
+    "n_months": 504,
+    "passes": true,
+    "passes_residual_ratio_form": true,
+    "r2_span": 0.055964486499023525,
+    "registered_regressors": [
+      "Mkt-RF",
+      "SMB",
+      "HML",
+      "UMD",
+      "RMW",
+      "CMA",
+      "LIQ",
+      "ME",
+      "IA",
+      "ROE"
+    ],
+    "s_span": 0.9716148997936248
+  },
+  "script": "scripts/run_weak_factor_diagnostics.py",
+  "systems": [
+    {
+      "beta_dispersion": {
+        "FFR_innovation": 0.22903643493273818,
+        "RM": 0.11452637551627236
+      },
+      "condition_number": 4.1590225960595175,
+      "gate_failures": [],
+      "n_assets": 70,
+      "n_factors": 2,
+      "passes": true,
+      "portfolio_set": "all_seven_families_joint",
+      "rank": 2,
+      "rank_gate_passes": true,
+      "rank_numerical_tolerance": 1.260284646150959e-13,
+      "role": "confirmatory",
+      "singular_values": [
+        8.108310661123166,
+        1.9495711970416842
+      ],
+      "spanning_passes": true,
+      "standardized_dispersion_passes": true,
+      "standardized_dispersion_share": 0.25397249405003436,
+      "standardized_exposure_dispersion": {
+        "FFR_innovation": 0.13409774968657792,
+        "RM": 0.5280010742429443
+      }
+    },
+    {
+      "beta_dispersion": {
+        "FFR_innovation": 0.2359181283751915,
+        "RM": 0.0769451813060975
+      },
+      "condition_number": 4.16823547450893,
+      "gate_failures": [],
+      "n_assets": 10,
+      "n_factors": 2,
+      "passes": true,
+      "portfolio_set": "book_to_market",
+      "rank": 2,
+      "rank_gate_passes": true,
+      "rank_numerical_tolerance": 6.667333780748255e-15,
+      "role": "descriptive",
+      "singular_values": [
+        3.002700193053256,
+        0.7203768144617625
+      ],
+      "spanning_passes": true,
+      "standardized_dispersion_passes": true,
+      "standardized_dispersion_share": 0.38937450523546013,
+      "standardized_exposure_dispersion": {
+        "FFR_innovation": 0.1381268885654505,
+        "RM": 0.3547404534920006
+      }
+    },
+    {
+      "beta_dispersion": {
+        "FFR_innovation": 0.25612809948209825,
+        "RM": 0.11792407546303711
+      },
+      "condition_number": 3.704374959107254,
+      "gate_failures": [],
+      "n_assets": 10,
+      "n_factors": 2,
+      "passes": true,
+      "portfolio_set": "earnings_to_price",
+      "rank": 2,
+      "rank_gate_passes": true,
+      "rank_numerical_tolerance": 6.584344626185378e-15,
+      "role": "descriptive",
+      "singular_values": [
+        2.9653252004967396,
+        0.8004927236662285
+      ],
+      "spanning_passes": true,
+      "standardized_dispersion_passes": true,
+      "standardized_dispersion_share": 0.2758305543744631,
+      "standardized_exposure_dispersion": {
+        "FFR_innovation": 0.14995955461032168,
+        "RM": 0.5436654940218806
+      }
+    },
+    {
+      "beta_dispersion": {
+        "FFR_innovation": 0.2757391369289185,
+        "RM": 0.11905238648145385
+      },
+      "condition_number": 3.538959432536652,
+      "gate_failures": [],
+      "n_assets": 10,
+      "n_factors": 2,
+      "passes": true,
+      "portfolio_set": "equity_duration",
+      "rank": 2,
+      "rank_gate_passes": true,
+      "rank_numerical_tolerance": 6.6958654197444774e-15,
+      "role": "descriptive",
+      "singular_values": [
+        3.015549700928422,
+        0.8521006692543348
+      ],
+      "spanning_passes": true,
+      "standardized_dispersion_passes": true,
+      "standardized_dispersion_share": 0.29413583041830227,
+      "standardized_exposure_dispersion": {
+        "FFR_innovation": 0.1614415530592152,
+        "RM": 0.5488673475435575
+      }
+    },
+    {
+      "beta_dispersion": {
+        "FFR_innovation": 0.24598794583497344,
+        "RM": 0.10432692085502593
+      },
+      "condition_number": 4.164980642117838,
+      "gate_failures": [],
+      "n_assets": 10,
+      "n_factors": 2,
+      "passes": true,
+      "portfolio_set": "inventory_growth",
+      "rank": 2,
+      "rank_gate_passes": true,
+      "rank_numerical_tolerance": 6.81085590504511e-15,
+      "role": "descriptive",
+      "singular_values": [
+        3.06733681160353,
+        0.736458839828804
+      ],
+      "spanning_passes": true,
+      "standardized_dispersion_passes": true,
+      "standardized_dispersion_share": 0.29943672320427195,
+      "standardized_exposure_dispersion": {
+        "FFR_innovation": 0.1440226311424249,
+        "RM": 0.48097851726815244
+      }
+    },
+    {
+      "beta_dispersion": {
+        "FFR_innovation": 0.2152056655952883,
+        "RM": 0.14341247288084435
+      },
+      "condition_number": 4.718146347182836,
+      "gate_failures": [],
+      "n_assets": 10,
+      "n_factors": 2,
+      "passes": true,
+      "portfolio_set": "investment_to_assets",
+      "rank": 2,
+      "rank_gate_passes": true,
+      "rank_numerical_tolerance": 6.9377758620778025e-15,
+      "role": "descriptive",
+      "singular_values": [
+        3.124496478723361,
+        0.6622296658069902
+      ],
+      "spanning_passes": true,
+      "standardized_dispersion_passes": true,
+      "standardized_dispersion_share": 0.19056994184105425,
+      "standardized_exposure_dispersion": {
+        "FFR_innovation": 0.1260000204098765,
+        "RM": 0.6611746805011224
+      }
+    },
+    {
+      "beta_dispersion": {
+        "FFR_innovation": 0.21550978648548844,
+        "RM": 0.14383107346167906
+      },
+      "condition_number": 4.658172669007106,
+      "gate_failures": [],
+      "n_assets": 10,
+      "n_factors": 2,
+      "passes": true,
+      "portfolio_set": "long_term_reversal",
+      "rank": 2,
+      "rank_gate_passes": true,
+      "rank_numerical_tolerance": 6.948738232073464e-15,
+      "role": "descriptive",
+      "singular_values": [
+        3.1294334912661173,
+        0.671815691180284
+      ],
+      "spanning_passes": true,
+      "standardized_dispersion_passes": true,
+      "standardized_dispersion_share": 0.19028383699797252,
+      "standardized_exposure_dispersion": {
+        "FFR_innovation": 0.12617807909744075,
+        "RM": 0.6631045552165589
+      }
+    },
+    {
+      "beta_dispersion": {
+        "FFR_innovation": 0.17733198809541367,
+        "RM": 0.09985268171287882
+      },
+      "condition_number": 5.940418007672007,
+      "gate_failures": [],
+      "n_assets": 10,
+      "n_factors": 2,
+      "passes": true,
+      "portfolio_set": "ppe_investment",
+      "rank": 2,
+      "rank_gate_passes": true,
+      "rank_numerical_tolerance": 7.0478381421755254e-15,
+      "role": "descriptive",
+      "singular_values": [
+        3.1740641230869264,
+        0.5343166287267404
+      ],
+      "spanning_passes": true,
+      "standardized_dispersion_passes": true,
+      "standardized_dispersion_share": 0.22553553343248595,
+      "standardized_exposure_dispersion": {
+        "FFR_innovation": 0.10382549203590899,
+        "RM": 0.460350927659872
+      }
+    }
+  ],
+  "thresholds": {
+    "dfbeta_influence": {
+      "max_abs_standardized_dfbeta": 1.0,
+      "rule": "the gate fails when any absolute standardized DFBETA reaches the bound",
+      "source": "research/inference_contract.md, research/weak_factor_registry.csv"
+    },
+    "leave_one_family_fitted_premium": {
+      "material_fitted_premium_spread_monthly_pp": 0.25,
+      "rule": "no sign reversal and no loss of materiality in any refit",
+      "source": "research/economic_thresholds.md, research/inference_contract.md"
+    },
+    "rank_gate": {
+      "numerical_tolerance": "max(n_assets, n_factors) * machine_epsilon * largest_singular_value",
+      "rule": "rank must equal the number of priced factors",
+      "source": "research/inference_contract.md, research/weak_factor_registry.csv"
+    },
+    "rate_spanning_criterion": {
+      "decision_tolerance": 1e-12,
+      "max_r2_span": 0.9,
+      "min_s_span": 0.31622776601683794,
+      "source": "research/inference_contract.md, research/economic_thresholds.md"
+    },
+    "standardized_rate_exposure_dispersion": {
+      "min_share_of_market_dispersion": 0.1,
+      "source": "research/inference_contract.md, research/weak_factor_registry.csv"
+    }
+  }
+}

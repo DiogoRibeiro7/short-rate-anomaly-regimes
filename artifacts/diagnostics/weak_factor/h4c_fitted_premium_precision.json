@@ -1,0 +1,121 @@
+{
+  "block_length": 6,
+  "block_length_failure_reasons": [],
+  "block_length_selected_by": "politis_white",
+  "classification": "h4c_passed_interval_excludes_at_least_one_economic_direction",
+  "diagnostics": {
+    "bootstrap_mean_bias": 0.02334574720826082,
+    "max_interval_width_95": 0.8667343260585584
+  },
+  "draws": 10000,
+  "economic_direction_bound": 0.25,
+  "estimand": "rate_attributable_fitted_premium_spread_decile_10_minus_decile_01",
+  "failing_families": [],
+  "hypothesis": "H4c",
+  "per_family": [
+    {
+      "economic_direction_bound": 0.25,
+      "estimand": "rate_attributable_fitted_premium_spread_decile_10_minus_decile_01",
+      "family": "book_to_market",
+      "h4c_gate": "pass",
+      "interval_spans_both_directions": false,
+      "lower_90": 0.07041316883909021,
+      "lower_95": 0.022276436467632128,
+      "point_estimate": 0.535266327357221,
+      "replication_status": "documented_reconstruction",
+      "upper_90": 0.7613909443624504,
+      "upper_95": 0.8320649802061216
+    },
+    {
+      "economic_direction_bound": 0.25,
+      "estimand": "rate_attributable_fitted_premium_spread_decile_10_minus_decile_01",
+      "family": "earnings_to_price",
+      "h4c_gate": "pass",
+      "interval_spans_both_directions": false,
+      "lower_90": 0.033717289396241336,
+      "lower_95": -0.0064413772469656605,
+      "point_estimate": 0.407112063670076,
+      "replication_status": "documented_reconstruction",
+      "upper_90": 0.6321918211945449,
+      "upper_95": 0.6952572963164685
+    },
+    {
+      "economic_direction_bound": 0.25,
+      "estimand": "rate_attributable_fitted_premium_spread_decile_10_minus_decile_01",
+      "family": "equity_duration",
+      "h4c_gate": "pass",
+      "interval_spans_both_directions": false,
+      "lower_90": -0.6614884439097313,
+      "lower_95": -0.7265054207281083,
+      "point_estimate": -0.4617386038024659,
+      "replication_status": "documented_reconstruction",
+      "upper_90": -0.03458030809973842,
+      "upper_95": 0.006302039033338027
+    },
+    {
+      "economic_direction_bound": 0.25,
+      "estimand": "rate_attributable_fitted_premium_spread_decile_10_minus_decile_01",
+      "family": "long_term_reversal",
+      "h4c_gate": "pass",
+      "interval_spans_both_directions": false,
+      "lower_90": -0.6238287742062688,
+      "lower_95": -0.7079325792654669,
+      "point_estimate": -0.29918287132093957,
+      "replication_status": "documented_reconstruction",
+      "upper_90": 0.10802879573948013,
+      "upper_95": 0.15880174679309145
+    },
+    {
+      "economic_direction_bound": 0.25,
+      "estimand": "rate_attributable_fitted_premium_spread_decile_10_minus_decile_01",
+      "family": "investment_to_assets",
+      "h4c_gate": "pass",
+      "interval_spans_both_directions": false,
+      "lower_90": -0.4855583551069172,
+      "lower_95": -0.5342403835072871,
+      "point_estimate": -0.3283480827585184,
+      "replication_status": "documented_reconstruction",
+      "upper_90": -0.05168866436831349,
+      "upper_95": -0.023856694620574506
+    },
+    {
+      "economic_direction_bound": 0.25,
+      "estimand": "rate_attributable_fitted_premium_spread_decile_10_minus_decile_01",
+      "family": "ppe_investment",
+      "h4c_gate": "pass",
+      "interval_spans_both_directions": false,
+      "lower_90": -0.43250802912839564,
+      "lower_95": -0.4828570154701661,
+      "point_estimate": -0.29808069496297707,
+      "replication_status": "documented_reconstruction",
+      "upper_90": -0.029689555434833873,
+      "upper_95": 0.0012375522084444388
+    },
+    {
+      "economic_direction_bound": 0.25,
+      "estimand": "rate_attributable_fitted_premium_spread_decile_10_minus_decile_01",
+      "family": "inventory_growth",
+      "h4c_gate": "pass",
+      "interval_spans_both_directions": false,
+      "lower_90": -0.3944220789625777,
+      "lower_95": -0.45242063561155826,
+      "point_estimate": -0.1907630266549685,
+      "replication_status": "documented_reconstruction",
+      "upper_90": 0.06088801921126034,
+      "upper_95": 0.09310993115097776
+    }
+  ],
+  "raw_politis_white_lengths": [
+    2.387510010790168,
+    5.31827605400174
+  ],
+  "regime_labels_resampled": false,
+  "replication_status": "documented_reconstruction",
+  "resampled_variables": [
+    "market_excess_return",
+    "portfolio_excess_returns",
+    "short_rate_level"
+  ],
+  "seed": 20260727,
+  "successful_draws": 10000
+}

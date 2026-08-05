@@ -1,0 +1,99 @@
+{
+  "confirmatory_portfolio_set": "all_seven_families_joint",
+  "estimators": {
+    "dfbeta_construction": "leave-one-portfolio-out refit of the second pass only, first-pass betas held fixed, standardized by the full-system Shanken standard error of lambda_rate",
+    "h4a_betas": "loaded from the stored baseline first pass",
+    "h4b_first_pass": "ols_with_intercept",
+    "h4b_first_pass_covariance": "newey_west",
+    "h4b_hac_lags": 5,
+    "h4b_second_pass": "no_intercept_ols_article_equation_4",
+    "h4b_uncertainty": "shanken_1992",
+    "max_abs_beta_difference_recomputed_vs_stored": 0.0
+  },
+  "hypotheses": [
+    "H4a",
+    "H4b"
+  ],
+  "inputs": {
+    "artifacts/estimates/time_series/baseline_first_pass_betas.parquet": "ef1ee06ceba52d49d95d27f6c34d3ab177dce1ba7a06abe0a4092ef80a36f4b7",
+    "artifacts/tables/cross_section/baseline_risk_prices.csv": "3a74666591854e87377174568f1a9b08a0e2bb5d0dbd18ea939559747d781e89",
+    "data/processed/baseline_panel.parquet": "f1354c66d8983bfed626dc9dbc62204d31d236f1117b700158e3b9b04f8a1cc0",
+    "data/processed/comparator_factors.parquet": "43d96e181c25a2de895f1da5eff30f37b8a2aba0c131cd315da645fd360bfb77"
+  },
+  "model": "market_plus_fedfunds_innovation",
+  "multiplicity_family": "weak_factor_diagnostics",
+  "outputs": {
+    "artifacts/diagnostics/weak_factor/h4a_identification_strength.json": "6379f40616410fcef279320570a12f65668a3f5d97ab520fcd11417949792a28",
+    "artifacts/diagnostics/weak_factor/h4b_influence_stability.json": "a27a17c6c206edb486080ea790f4c9343b08a3ca473e5593c618f155623bde62",
+    "artifacts/tables/robustness/dfbeta_influence.csv": "6cef5e8e63244a7124dbbf6b93c1949d02d757c0482eda0c79cf0e9230a5fce5",
+    "artifacts/tables/robustness/leave_one_family.csv": "c416e6a8eb7c686577ad9ada0267d8024bca692995bb1ee159a99b9b775855e2"
+  },
+  "script": "scripts/run_weak_factor_diagnostics.py",
+  "spanning_regression": {
+    "comparator_column_rename": {
+      "RM": "Mkt-RF"
+    },
+    "dependent_variable": "short_rate_innovation__fedfunds",
+    "estimator": "ols_with_constant",
+    "executed_regressors": [
+      "Mkt-RF",
+      "SMB",
+      "HML",
+      "UMD",
+      "RMW",
+      "CMA",
+      "LIQ",
+      "ME",
+      "IA",
+      "ROE"
+    ],
+    "market_only_regressors": [
+      "Mkt-RF"
+    ],
+    "n_months": 504,
+    "registered_regressors": [
+      "Mkt-RF",
+      "SMB",
+      "HML",
+      "UMD",
+      "RMW",
+      "CMA",
+      "LIQ",
+      "ME",
+      "IA",
+      "ROE"
+    ]
+  },
+  "thresholds": {
+    "dfbeta_influence": {
+      "max_abs_standardized_dfbeta": 1.0,
+      "rule": "the gate fails when any absolute standardized DFBETA reaches the bound",
+      "source": "research/inference_contract.md, research/weak_factor_registry.csv"
+    },
+    "leave_one_family_fitted_premium": {
+      "material_fitted_premium_spread_monthly_pp": 0.25,
+      "rule": "no sign reversal and no loss of materiality in any refit",
+      "source": "research/economic_thresholds.md, research/inference_contract.md"
+    },
+    "rank_gate": {
+      "numerical_tolerance": "max(n_assets, n_factors) * machine_epsilon * largest_singular_value",
+      "rule": "rank must equal the number of priced factors",
+      "source": "research/inference_contract.md, research/weak_factor_registry.csv"
+    },
+    "rate_spanning_criterion": {
+      "decision_tolerance": 1e-12,
+      "max_r2_span": 0.9,
+      "min_s_span": 0.31622776601683794,
+      "source": "research/inference_contract.md, research/economic_thresholds.md"
+    },
+    "standardized_rate_exposure_dispersion": {
+      "min_share_of_market_dispersion": 0.1,
+      "source": "research/inference_contract.md, research/weak_factor_registry.csv"
+    }
+  },
+  "window": {
+    "end": "2013-12",
+    "months": 504,
+    "start": "1972-01"
+  }
+}

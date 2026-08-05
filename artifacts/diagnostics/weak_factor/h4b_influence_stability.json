@@ -1,0 +1,589 @@
+{
+  "baseline": {
+    "family_fitted_premium_spreads": {
+      "book_to_market": 0.5352663273572212,
+      "earnings_to_price": 0.40711206367007624,
+      "equity_duration": -0.46173860380246506,
+      "inventory_growth": -0.1907630266549669,
+      "investment_to_assets": -0.3283480827585187,
+      "long_term_reversal": -0.2991828713209408,
+      "ppe_investment": -0.2980806949629772
+    },
+    "lambda_market": 0.6012277352967575,
+    "lambda_rate": -0.6984645567038997,
+    "n_assets": 70,
+    "shanken_se_lambda_rate": 0.2442575678446596,
+    "shanken_t_lambda_rate": -2.859541110096134
+  },
+  "confirmatory_portfolio_set": "all_seven_families_joint",
+  "dfbeta_influence": {
+    "lambda_rate_full": -0.6984645567038997,
+    "max_abs_standardized_dfbeta": 0.08964518429621536,
+    "max_abs_standardized_dfbeta_asset": "inventory_growth__decile_05",
+    "n_assets": 70,
+    "n_assets_reaching_threshold": 0,
+    "passes": true,
+    "portfolio_set": "all_seven_families_joint",
+    "shanken_se_lambda_rate_full": 0.2442575678446596
+  },
+  "family": "weak_factor_diagnostics",
+  "fitted_premium_spread_definition": "spread = pi_rate(decile_10) - pi_rate(decile_01) with pi_rate(i) = beta_rate(i) * lambda_rate",
+  "gate_failures": [],
+  "hypothesis": "H4b",
+  "leave_one_family_fitted_premium": {
+    "passes": true,
+    "systems": [
+      {
+        "evaluated_families": [
+          {
+            "baseline_material": true,
+            "baseline_spread": 0.40711206367007624,
+            "family": "earnings_to_price",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": 0.40011776120428094,
+            "sign_reversal": false,
+            "spread_change": -0.006994302465795299
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.46173860380246506,
+            "family": "equity_duration",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.45380580164962664,
+            "sign_reversal": false,
+            "spread_change": 0.007932802152838425
+          },
+          {
+            "baseline_material": false,
+            "baseline_spread": -0.1907630266549669,
+            "family": "inventory_growth",
+            "materiality_lost": false,
+            "refit_material": false,
+            "refit_spread": -0.18748566293430668,
+            "sign_reversal": false,
+            "spread_change": 0.0032773637206602035
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.3283480827585187,
+            "family": "investment_to_assets",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.32270696816178146,
+            "sign_reversal": false,
+            "spread_change": 0.005641114596737218
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.2991828713209408,
+            "family": "long_term_reversal",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.2940428234536793,
+            "sign_reversal": false,
+            "spread_change": 0.005140047867261466
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.2980806949629772,
+            "family": "ppe_investment",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.29295958280287393,
+            "sign_reversal": false,
+            "spread_change": 0.005121112160103247
+          }
+        ],
+        "lambda_market": 0.6002330258351217,
+        "lambda_rate": -0.6864647345242658,
+        "materiality_losses": 0,
+        "max_abs_pi_rate_change": 0.00745544609535731,
+        "n_assets": 60,
+        "omitted_family": "book_to_market",
+        "passes": true,
+        "portfolio_set": "all_seven_families_joint__minus__book_to_market",
+        "shanken_se_lambda_rate": 0.23410831194976087,
+        "sign_reversals": 0
+      },
+      {
+        "evaluated_families": [
+          {
+            "baseline_material": true,
+            "baseline_spread": 0.5352663273572212,
+            "family": "book_to_market",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": 0.530931173878319,
+            "sign_reversal": false,
+            "spread_change": -0.004335153478902232
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.46173860380246506,
+            "family": "equity_duration",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.4579989556828069,
+            "sign_reversal": false,
+            "spread_change": 0.0037396481196581566
+          },
+          {
+            "baseline_material": false,
+            "baseline_spread": -0.1907630266549669,
+            "family": "inventory_growth",
+            "materiality_lost": false,
+            "refit_material": false,
+            "refit_spread": -0.18921802567810314,
+            "sign_reversal": false,
+            "spread_change": 0.0015450009768637474
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.3283480827585187,
+            "family": "investment_to_assets",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.3256887723171362,
+            "sign_reversal": false,
+            "spread_change": 0.0026593104413824564
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.2991828713209408,
+            "family": "long_term_reversal",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.29675977164299416,
+            "sign_reversal": false,
+            "spread_change": 0.0024230996779466274
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.2980806949629772,
+            "family": "ppe_investment",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.2956665218762028,
+            "sign_reversal": false,
+            "spread_change": 0.002414173086774385
+          }
+        ],
+        "lambda_market": 0.6021034544081997,
+        "lambda_rate": -0.6928076511633723,
+        "materiality_losses": 0,
+        "max_abs_pi_rate_change": 0.003514614941170502,
+        "n_assets": 60,
+        "omitted_family": "earnings_to_price",
+        "passes": true,
+        "portfolio_set": "all_seven_families_joint__minus__earnings_to_price",
+        "shanken_se_lambda_rate": 0.23638508602998584,
+        "sign_reversals": 0
+      },
+      {
+        "evaluated_families": [
+          {
+            "baseline_material": true,
+            "baseline_spread": 0.5352663273572212,
+            "family": "book_to_market",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": 0.5193470234869819,
+            "sign_reversal": false,
+            "spread_change": -0.01591930387023932
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": 0.40711206367007624,
+            "family": "earnings_to_price",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": 0.39500418331301623,
+            "sign_reversal": false,
+            "spread_change": -0.012107880357060008
+          },
+          {
+            "baseline_material": false,
+            "baseline_spread": -0.1907630266549669,
+            "family": "inventory_growth",
+            "materiality_lost": false,
+            "refit_material": false,
+            "refit_spread": -0.18508956200136034,
+            "sign_reversal": false,
+            "spread_change": 0.005673464653606547
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.3283480827585187,
+            "family": "investment_to_assets",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.3185827143101594,
+            "sign_reversal": false,
+            "spread_change": 0.00976536844835929
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.2991828713209408,
+            "family": "long_term_reversal",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.29028490259414985,
+            "sign_reversal": false,
+            "spread_change": 0.008897968726790939
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.2980806949629772,
+            "family": "ppe_investment",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.28921550595623263,
+            "sign_reversal": false,
+            "spread_change": 0.008865189006744545
+          }
+        ],
+        "lambda_market": 0.5994367474000474,
+        "lambda_rate": -0.6776915901403953,
+        "materiality_losses": 0,
+        "max_abs_pi_rate_change": 0.011216712872199941,
+        "n_assets": 60,
+        "omitted_family": "equity_duration",
+        "passes": true,
+        "portfolio_set": "all_seven_families_joint__minus__equity_duration",
+        "shanken_se_lambda_rate": 0.24054374407107282,
+        "sign_reversals": 0
+      },
+      {
+        "evaluated_families": [
+          {
+            "baseline_material": true,
+            "baseline_spread": 0.5352663273572212,
+            "family": "book_to_market",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": 0.5761781964470677,
+            "sign_reversal": false,
+            "spread_change": 0.04091186908984645
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": 0.40711206367007624,
+            "family": "earnings_to_price",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": 0.4382287519474837,
+            "sign_reversal": false,
+            "spread_change": 0.031116688277407434
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.46173860380246506,
+            "family": "equity_duration",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.4970305479188897,
+            "sign_reversal": false,
+            "spread_change": -0.03529194411642461
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.3283480827585187,
+            "family": "investment_to_assets",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.3534446245941375,
+            "sign_reversal": false,
+            "spread_change": -0.025096541835618824
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.2991828713209408,
+            "family": "long_term_reversal",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.3220502362938881,
+            "sign_reversal": false,
+            "spread_change": -0.022867364972947335
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.2980806949629772,
+            "family": "ppe_investment",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.32086381758297555,
+            "sign_reversal": false,
+            "spread_change": -0.022783122619998375
+          }
+        ],
+        "lambda_market": 0.5948384694573848,
+        "lambda_rate": -0.7518501127295398,
+        "materiality_losses": 0,
+        "max_abs_pi_rate_change": 0.033168252767557416,
+        "n_assets": 60,
+        "omitted_family": "inventory_growth",
+        "passes": true,
+        "portfolio_set": "all_seven_families_joint__minus__inventory_growth",
+        "shanken_se_lambda_rate": 0.27402250601198486,
+        "sign_reversals": 0
+      },
+      {
+        "evaluated_families": [
+          {
+            "baseline_material": true,
+            "baseline_spread": 0.5352663273572212,
+            "family": "book_to_market",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": 0.5239486404769982,
+            "sign_reversal": false,
+            "spread_change": -0.011317686880223055
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": 0.40711206367007624,
+            "family": "earnings_to_price",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": 0.39850407428929757,
+            "sign_reversal": false,
+            "spread_change": -0.008607989380778669
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.46173860380246506,
+            "family": "equity_duration",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.45197558925950065,
+            "sign_reversal": false,
+            "spread_change": 0.00976301454296441
+          },
+          {
+            "baseline_material": false,
+            "baseline_spread": -0.1907630266549669,
+            "family": "inventory_growth",
+            "materiality_lost": false,
+            "refit_material": false,
+            "refit_spread": -0.18672952764025358,
+            "sign_reversal": false,
+            "spread_change": 0.00403349901471331
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.2991828713209408,
+            "family": "long_term_reversal",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.2928569399397263,
+            "sign_reversal": false,
+            "spread_change": 0.006325931381214511
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.2980806949629772,
+            "family": "ppe_investment",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.29177806803091005,
+            "sign_reversal": false,
+            "spread_change": 0.0063026269320671235
+          }
+        ],
+        "lambda_market": 0.6064334992805853,
+        "lambda_rate": -0.6836962016894192,
+        "materiality_losses": 0,
+        "max_abs_pi_rate_change": 0.009175525526905592,
+        "n_assets": 60,
+        "omitted_family": "investment_to_assets",
+        "passes": true,
+        "portfolio_set": "all_seven_families_joint__minus__investment_to_assets",
+        "shanken_se_lambda_rate": 0.23974749648083374,
+        "sign_reversals": 0
+      },
+      {
+        "evaluated_families": [
+          {
+            "baseline_material": true,
+            "baseline_spread": 0.5352663273572212,
+            "family": "book_to_market",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": 0.5465176395145923,
+            "sign_reversal": false,
+            "spread_change": 0.011251312157371074
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": 0.40711206367007624,
+            "family": "earnings_to_price",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": 0.41566956986330006,
+            "sign_reversal": false,
+            "spread_change": 0.008557506193223818
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.46173860380246506,
+            "family": "equity_duration",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.47144436129358236,
+            "sign_reversal": false,
+            "spread_change": -0.009705757491117295
+          },
+          {
+            "baseline_material": false,
+            "baseline_spread": -0.1907630266549669,
+            "family": "inventory_growth",
+            "materiality_lost": false,
+            "refit_material": false,
+            "refit_spread": -0.19477287044913394,
+            "sign_reversal": false,
+            "spread_change": -0.004009843794167051
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.3283480827585187,
+            "family": "investment_to_assets",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.33524996801932067,
+            "sign_reversal": false,
+            "spread_change": -0.006901885260801988
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.2980806949629772,
+            "family": "ppe_investment",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.30434635894313694,
+            "sign_reversal": false,
+            "spread_change": -0.0062656639801597636
+          }
+        ],
+        "lambda_market": 0.5967296483452014,
+        "lambda_rate": -0.713146299897304,
+        "materiality_losses": 0,
+        "max_abs_pi_rate_change": 0.009121713915901108,
+        "n_assets": 60,
+        "omitted_family": "long_term_reversal",
+        "passes": true,
+        "portfolio_set": "all_seven_families_joint__minus__long_term_reversal",
+        "shanken_se_lambda_rate": 0.2521114133965081,
+        "sign_reversals": 0
+      },
+      {
+        "evaluated_families": [
+          {
+            "baseline_material": true,
+            "baseline_spread": 0.5352663273572212,
+            "family": "book_to_market",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": 0.5230965774752329,
+            "sign_reversal": false,
+            "spread_change": -0.012169749881988379
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": 0.40711206367007624,
+            "family": "earnings_to_price",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": 0.39785601348424326,
+            "sign_reversal": false,
+            "spread_change": -0.009256050185832976
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.46173860380246506,
+            "family": "equity_duration",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.4512405712681218,
+            "sign_reversal": false,
+            "spread_change": 0.010498032534343282
+          },
+          {
+            "baseline_material": false,
+            "baseline_spread": -0.1907630266549669,
+            "family": "inventory_growth",
+            "materiality_lost": false,
+            "refit_material": false,
+            "refit_spread": -0.1864258617662578,
+            "sign_reversal": false,
+            "spread_change": 0.004337164888709083
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.3283480827585187,
+            "family": "investment_to_assets",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.32088280082843595,
+            "sign_reversal": false,
+            "spread_change": 0.007465281930082723
+          },
+          {
+            "baseline_material": true,
+            "baseline_spread": -0.2991828713209408,
+            "family": "long_term_reversal",
+            "materiality_lost": false,
+            "refit_material": true,
+            "refit_spread": -0.2923806860780774,
+            "sign_reversal": false,
+            "spread_change": 0.006802185242863412
+          }
+        ],
+        "lambda_market": 0.6083986997710837,
+        "lambda_rate": -0.6825843518001311,
+        "materiality_losses": 0,
+        "max_abs_pi_rate_change": 0.00986631383956793,
+        "n_assets": 60,
+        "omitted_family": "ppe_investment",
+        "passes": true,
+        "portfolio_set": "all_seven_families_joint__minus__ppe_investment",
+        "shanken_se_lambda_rate": 0.24653122345712186,
+        "sign_reversals": 0
+      }
+    ]
+  },
+  "market_factor": "RM",
+  "model": "market_plus_fedfunds_innovation",
+  "n_months": 504,
+  "passes": true,
+  "rate_factor": "FFR_innovation",
+  "script": "scripts/run_weak_factor_diagnostics.py",
+  "thresholds": {
+    "dfbeta_influence": {
+      "max_abs_standardized_dfbeta": 1.0,
+      "rule": "the gate fails when any absolute standardized DFBETA reaches the bound",
+      "source": "research/inference_contract.md, research/weak_factor_registry.csv"
+    },
+    "leave_one_family_fitted_premium": {
+      "material_fitted_premium_spread_monthly_pp": 0.25,
+      "rule": "no sign reversal and no loss of materiality in any refit",
+      "source": "research/economic_thresholds.md, research/inference_contract.md"
+    },
+    "rank_gate": {
+      "numerical_tolerance": "max(n_assets, n_factors) * machine_epsilon * largest_singular_value",
+      "rule": "rank must equal the number of priced factors",
+      "source": "research/inference_contract.md, research/weak_factor_registry.csv"
+    },
+    "rate_spanning_criterion": {
+      "decision_tolerance": 1e-12,
+      "max_r2_span": 0.9,
+      "min_s_span": 0.31622776601683794,
+      "source": "research/inference_contract.md, research/economic_thresholds.md"
+    },
+    "standardized_rate_exposure_dispersion": {
+      "min_share_of_market_dispersion": 0.1,
+      "source": "research/inference_contract.md, research/weak_factor_registry.csv"
+    }
+  }
+}

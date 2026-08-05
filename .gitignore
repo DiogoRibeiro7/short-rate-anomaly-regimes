@@ -119,6 +119,14 @@ artifacts/**
 !artifacts/provenance/comparator_panel.json
 !artifacts/provenance/comparator_panel_column_metadata.csv
 !artifacts/provenance/published_target_audit.json
+!artifacts/diagnostics/weak_factor/*.json
+!artifacts/diagnostics/*.json
+!artifacts/tables/robustness/
+!artifacts/tables/robustness/.gitkeep
+!artifacts/tables/robustness/*.csv
+!artifacts/provenance/h4c_precision.json
+!artifacts/provenance/h1_materiality.json
+!artifacts/provenance/weak_factor_diagnostics.json
 !artifacts/provenance/portfolio_compatibility_audit.json
 !artifacts/figures/
 !artifacts/figures/.gitkeep
