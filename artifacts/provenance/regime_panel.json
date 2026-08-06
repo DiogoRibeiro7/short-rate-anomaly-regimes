@@ -9,7 +9,7 @@
   ],
   "eligibility_floors": {
     "regime_specific": 36,
-    "standalone_second_pass": 60,
+    "standalone_second_pass": 72,
     "test_assets": 10
   },
   "end": "2025-12",

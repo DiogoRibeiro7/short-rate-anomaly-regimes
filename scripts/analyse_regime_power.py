@@ -140,7 +140,7 @@ ECONOMIC_BOUND = 0.25
 #: ``configs/regimes.yaml``, ``regime_estimation_eligibility``. Reference marks
 #: only. This script never evaluates, proposes, or writes a threshold.
 FROZEN_FIRST_PASS_FLOOR_MONTHS = 36
-FROZEN_SECOND_PASS_FLOOR_MONTHS = 60
+FROZEN_SECOND_PASS_FLOOR_MONTHS = 72
 FROZEN_MINIMUM_TEST_ASSETS = 10
 
 #: ``research/regime_registry.csv``, primary transition rule, current vintage.

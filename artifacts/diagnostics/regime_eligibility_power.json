@@ -65,7 +65,7 @@
   },
   "frozen_reference_marks": {
     "minimum_months_for_regime_specific_estimation": 36,
-    "minimum_months_for_standalone_second_pass": 60,
+    "minimum_months_for_standalone_second_pass": 72,
     "minimum_test_assets_for_standalone_second_pass": 10,
     "role": "reference_marks_only_not_evaluated_and_not_changed",
     "source": "configs/regimes.yaml regime_estimation_eligibility"

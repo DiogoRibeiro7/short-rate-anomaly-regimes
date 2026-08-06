@@ -69,26 +69,33 @@ regime_definition:
 # that classifier can return.
 regime_estimation_eligibility:
   minimum_months_for_regime_specific_estimation: 36
-  minimum_months_for_standalone_second_pass: 60
+  # Raised from 60 to 72. The standalone second pass inverts a residual covariance
+  # estimated from T months for N test assets, so it does not exist unless T > N.
+  # On the confirmatory 70-portfolio system that needs 71 months, and the previous
+  # floor of 60 therefore admitted regimes to a second pass that could not be
+  # computed. 72 is the first simulated window clearing the requirement. No
+  # registered regime changes tier: conventional_pre_elb has 444 months and
+  # elb_qe 84, both eligible before and after, and no regime lies in [60, 71].
+  minimum_months_for_standalone_second_pass: 72
   minimum_test_assets_for_standalone_second_pass: 10
   required_beta_matrix_rank: number_of_priced_factors
-  short_sample_flag_band_months: [36, 59]
+  short_sample_flag_band_months: [36, 71]
   below_minimum_treatment: pooled_regime_interaction_models_only
   tiers:
     - id: blocked_for_regime_specific_estimation_below_36_months
       condition: months < 36
       permitted: pooled regime-interaction models only
     - id: eligible_first_pass_with_short_sample_flag
-      condition: 36 <= months < 60
+      condition: 36 <= months < 72
       permitted: regime-specific first-pass betas with a short-sample flag; standalone second pass blocked
       note: >-
         This is the first-pass-only tier. Under the frozen configuration it is
         reached through the short-sample band, but the classifier also assigns it
-        to a regime of at least 60 months that fails the test-asset or beta-rank
+        to a regime of at least 72 months that fails the test-asset or beta-rank
         gate, since that regime keeps its first-pass betas while the standalone
         second pass stays blocked. No threshold is relaxed by that fallback.
     - id: eligible_first_pass_and_standalone_second_pass
-      condition: months >= 60 and test_assets >= 10 and beta_rank == number_of_priced_factors
+      condition: months >= 72 and test_assets >= 10 and beta_rank == number_of_priced_factors
       permitted: regime-specific first pass and standalone regime second pass
 
 models:

@@ -1,8 +1,10 @@
+import re
 from pathlib import Path
 
 import pytest
 
 from short_rate_anomaly_regimes.reporting.manuscript import (
+    APPROVED_LANGUAGE_SECTIONS,
     extract_latex_title,
     load_artifact_map,
     render_blocked_manuscript_report,
@@ -268,3 +270,28 @@ def test_manuscript_checks_ignore_author_affiliation_metadata(tmp_path: Path) ->
         )
         == []
     )
+
+
+def test_every_approved_language_section_names_a_real_manuscript_section() -> None:
+    """The causal-language whitelist must name sections that actually exist.
+
+    A whitelist entry that matches no section title does not whitelist anything;
+    it silently bans the vocabulary everywhere, which is indistinguishable from
+    the rule working until someone tries to use the approved words.
+    """
+    manuscript = Path("paper/manuscript.tex").read_text(encoding="utf-8")
+    titles = set(re.findall(r"\\(?:sub)?section\{([^}]*)\}", manuscript))
+    matched = APPROVED_LANGUAGE_SECTIONS & titles
+    assert matched, (
+        "No approved-language section title matches the manuscript. "
+        f"Whitelist: {sorted(APPROVED_LANGUAGE_SECTIONS)}"
+    )
+
+
+def test_the_manuscript_reports_results_rather_than_a_pending_status() -> None:
+    """Guard against the results sections reverting to the pending-design draft."""
+    manuscript = Path("paper/manuscript.tex").read_text(encoding="utf-8")
+    assert "Status: Preliminary research design" not in manuscript
+    for heading in (r"\section{Baseline replication}", r"\section{Monetary-regime stability}"):
+        assert heading in manuscript
+    assert r"\section{Planned baseline replication}" not in manuscript
