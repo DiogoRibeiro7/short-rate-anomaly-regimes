@@ -54,7 +54,7 @@ include = ["src/short_rate_anomaly_regimes/py.typed"]
 [tool.poetry.group.dev.dependencies]
 pytest = ">=9.0.3,<10.0"
 pytest-cov = "^6.0"
-hypothesis = "^6.123"
+hypothesis = "^6.165"
 ruff = "^0.9"
 mypy = "^1.14"
 pandas-stubs = "^2.2"
