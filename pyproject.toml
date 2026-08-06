@@ -55,7 +55,7 @@ include = ["src/short_rate_anomaly_regimes/py.typed"]
 pytest = ">=9.0.3,<10.0"
 pytest-cov = "^6.0"
 hypothesis = "^6.123"
-ruff = "^0.9"
+ruff = "^0.16"
 mypy = "^1.14"
 pandas-stubs = "^2.2"
 types-pyyaml = "^6.0"
