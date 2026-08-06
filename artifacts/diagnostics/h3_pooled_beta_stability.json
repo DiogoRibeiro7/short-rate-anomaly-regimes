@@ -1,0 +1,346 @@
+{
+  "boundary_sensitivity": {
+    "any_conclusion_changed": false,
+    "results": [
+      {
+        "aggregate_rate_beta_holm_p_value": 0.06536997448035321,
+        "aggregate_rate_beta_statistic": 19.435161837730842,
+        "assets_rate_beta_significant_holm": 39,
+        "shift_months": -3,
+        "verdict": "unstable",
+        "verdict_matches_registered_boundaries": true
+      },
+      {
+        "aggregate_rate_beta_holm_p_value": 5.079924250282152e-05,
+        "aggregate_rate_beta_statistic": 37.31295828520956,
+        "assets_rate_beta_significant_holm": 26,
+        "shift_months": 0,
+        "verdict": "unstable",
+        "verdict_matches_registered_boundaries": true
+      },
+      {
+        "aggregate_rate_beta_holm_p_value": 0.05116597858682716,
+        "aggregate_rate_beta_statistic": 20.131980321075364,
+        "assets_rate_beta_significant_holm": 36,
+        "shift_months": 3,
+        "verdict": "unstable",
+        "verdict_matches_registered_boundaries": true
+      }
+    ],
+    "shifts_months": [
+      -3,
+      0,
+      3
+    ]
+  },
+  "classification": "unstable",
+  "exploratory_break_tests": {
+    "evidence_class": "exploratory",
+    "hypothesis": "E1",
+    "note": "exploratory under hypothesis E1; not a member of the confirmatory regime_stability family and neither confirms nor refutes H3",
+    "results": [
+      {
+        "break_month": "2008-12",
+        "break_number": null,
+        "break_type": "registered_boundary",
+        "candidate_count": null,
+        "criterion": null,
+        "df_denom": 642.0,
+        "df_num": 3.0,
+        "evidence_class": "exploratory",
+        "hypothesis": "E1",
+        "max_breaks_searched": 2.0,
+        "min_segment_observations": 12.0,
+        "multiplicity_family": "not_in_confirmatory_family",
+        "nobs": 648.0,
+        "p_value": 0.0662912499,
+        "scope": "equal_weighted_test_assets",
+        "selected_breaks": null,
+        "statistic": 2.405860791,
+        "test": "chow_known_break"
+      },
+      {
+        "break_month": "2015-12",
+        "break_number": null,
+        "break_type": "registered_boundary",
+        "candidate_count": null,
+        "criterion": null,
+        "df_denom": 642.0,
+        "df_num": 3.0,
+        "evidence_class": "exploratory",
+        "hypothesis": "E1",
+        "max_breaks_searched": 2.0,
+        "min_segment_observations": 12.0,
+        "multiplicity_family": "not_in_confirmatory_family",
+        "nobs": 648.0,
+        "p_value": 0.0525844981,
+        "scope": "equal_weighted_test_assets",
+        "selected_breaks": null,
+        "statistic": 2.5808433505,
+        "test": "chow_known_break"
+      },
+      {
+        "break_month": "2020-03",
+        "break_number": null,
+        "break_type": "registered_boundary",
+        "candidate_count": null,
+        "criterion": null,
+        "df_denom": 642.0,
+        "df_num": 3.0,
+        "evidence_class": "exploratory",
+        "hypothesis": "E1",
+        "max_breaks_searched": 2.0,
+        "min_segment_observations": 12.0,
+        "multiplicity_family": "not_in_confirmatory_family",
+        "nobs": 648.0,
+        "p_value": 0.8132234315,
+        "scope": "equal_weighted_test_assets",
+        "selected_breaks": null,
+        "statistic": 0.3168261748,
+        "test": "chow_known_break"
+      },
+      {
+        "break_month": "2022-03",
+        "break_number": null,
+        "break_type": "registered_boundary",
+        "candidate_count": null,
+        "criterion": null,
+        "df_denom": 642.0,
+        "df_num": 3.0,
+        "evidence_class": "exploratory",
+        "hypothesis": "E1",
+        "max_breaks_searched": 2.0,
+        "min_segment_observations": 12.0,
+        "multiplicity_family": "not_in_confirmatory_family",
+        "nobs": 648.0,
+        "p_value": 0.1684830887,
+        "scope": "equal_weighted_test_assets",
+        "selected_breaks": null,
+        "statistic": 1.6872003185,
+        "test": "chow_known_break"
+      },
+      {
+        "break_month": "2024-09",
+        "break_number": null,
+        "break_type": "registered_boundary",
+        "candidate_count": null,
+        "criterion": null,
+        "df_denom": 642.0,
+        "df_num": 3.0,
+        "evidence_class": "exploratory",
+        "hypothesis": "E1",
+        "max_breaks_searched": 2.0,
+        "min_segment_observations": 12.0,
+        "multiplicity_family": "not_in_confirmatory_family",
+        "nobs": 648.0,
+        "p_value": 0.1782765458,
+        "scope": "equal_weighted_test_assets",
+        "selected_breaks": null,
+        "statistic": 1.6426802606,
+        "test": "chow_known_break"
+      },
+      {
+        "break_month": "1989-12",
+        "break_number": null,
+        "break_type": "estimated_unknown_break",
+        "candidate_count": 576.0,
+        "criterion": null,
+        "df_denom": null,
+        "df_num": null,
+        "evidence_class": "exploratory",
+        "hypothesis": "E1",
+        "max_breaks_searched": 2.0,
+        "min_segment_observations": 36.0,
+        "multiplicity_family": "not_in_confirmatory_family",
+        "nobs": null,
+        "p_value": 0.0024373058,
+        "scope": "equal_weighted_test_assets",
+        "selected_breaks": null,
+        "statistic": 9.4223496026,
+        "test": "quandt_andrews_unknown_break"
+      },
+      {
+        "break_month": "1998-07",
+        "break_number": 1.0,
+        "break_type": "estimated_unknown_break",
+        "candidate_count": null,
+        "criterion": -592.710644224,
+        "df_denom": null,
+        "df_num": null,
+        "evidence_class": "exploratory",
+        "hypothesis": "E1",
+        "max_breaks_searched": 2.0,
+        "min_segment_observations": 36.0,
+        "multiplicity_family": "not_in_confirmatory_family",
+        "nobs": null,
+        "p_value": null,
+        "scope": "equal_weighted_test_assets",
+        "selected_breaks": 2.0,
+        "statistic": null,
+        "test": "bai_perron_multiple_breaks"
+      },
+      {
+        "break_month": "2001-08",
+        "break_number": 2.0,
+        "break_type": "estimated_unknown_break",
+        "candidate_count": null,
+        "criterion": -592.710644224,
+        "df_denom": null,
+        "df_num": null,
+        "evidence_class": "exploratory",
+        "hypothesis": "E1",
+        "max_breaks_searched": 2.0,
+        "min_segment_observations": 36.0,
+        "multiplicity_family": "not_in_confirmatory_family",
+        "nobs": null,
+        "p_value": null,
+        "scope": "equal_weighted_test_assets",
+        "selected_breaks": 2.0,
+        "statistic": null,
+        "test": "bai_perron_multiple_breaks"
+      },
+      {
+        "break_month": null,
+        "break_number": null,
+        "break_type": "recursive_residuals",
+        "candidate_count": null,
+        "criterion": null,
+        "df_denom": null,
+        "df_num": null,
+        "evidence_class": "exploratory",
+        "hypothesis": "E1",
+        "max_breaks_searched": 2.0,
+        "min_segment_observations": null,
+        "multiplicity_family": "not_in_confirmatory_family",
+        "nobs": 648.0,
+        "p_value": 0.0709343141,
+        "scope": "equal_weighted_test_assets",
+        "selected_breaks": null,
+        "statistic": 1.1502175845,
+        "test": "cusum_recursive_residuals"
+      }
+    ],
+    "scope": "equal_weighted_test_assets"
+  },
+  "hypothesis": "H3",
+  "interpretation_note": "Significant regime interactions indicate parameter instability; they do not by themselves identify a causal effect of monetary policy.",
+  "joint_equal_weighted_tests": {
+    "all_factor_interactions": {
+      "df": 10.0,
+      "holm_p_value": 6.72694066672141e-07,
+      "p_value": 5.953044837806557e-09,
+      "statistic": 58.859484907097475
+    },
+    "rate_beta_interactions": {
+      "df": 5.0,
+      "holm_p_value": 5.079924250282152e-05,
+      "p_value": 5.183596173757298e-07,
+      "statistic": 37.31295828520956
+    }
+  },
+  "multiplicity": {
+    "adjustment": "holm",
+    "family": "regime_stability",
+    "scope_note": "Holm is applied here across the pooled beta-stability tests. The registered family also contains the fitted-premium, pricing-error, and fit tests produced by the regime-specific workflow; adjusting over the completed family can only raise these adjusted p-values",
+    "tests_adjusted": 142
+  },
+  "per_asset_all_factor_interactions": {
+    "assets": 70,
+    "median_holm_p_value": 8.722474347351366e-05,
+    "min_holm_p_value": 1.288179005633866e-34,
+    "restricted_parameters": 10,
+    "significant_holm_5pct": 54,
+    "significant_unadjusted_5pct": 65
+  },
+  "per_asset_rate_beta_interactions": {
+    "assets": 70,
+    "median_holm_p_value": 0.2489906306785248,
+    "median_p_value": 0.005812846184231983,
+    "median_statistic": 16.46835906781993,
+    "min_holm_p_value": 1.1815669193585016e-18,
+    "min_p_value": 8.500481434233825e-21,
+    "restricted_parameters": 5,
+    "significant_holm_5pct": 26,
+    "significant_unadjusted_5pct": 41
+  },
+  "pooled_interaction_only_note": "these regimes fall below the frozen floor for regime-specific estimation, so the pooled interaction tests in this artifact are the only registered evidence available for them",
+  "pooled_interaction_only_regimes": [
+    "pandemic_elb_qe",
+    "inflation_tightening",
+    "post_tightening_easing"
+  ],
+  "rate_beta_interaction_by_regime": [
+    {
+      "assets": 70,
+      "assets_unadjusted_p_below_5pct": 6,
+      "max_interaction_coefficient": 15.731229553246417,
+      "mean_interaction_coefficient": -2.7091004844102256,
+      "median_interaction_coefficient": -2.1214768287908186,
+      "min_interaction_coefficient": -23.637675531060353,
+      "regime": "elb_qe"
+    },
+    {
+      "assets": 70,
+      "assets_unadjusted_p_below_5pct": 10,
+      "max_interaction_coefficient": 5.822981948075545,
+      "mean_interaction_coefficient": 0.5873674216785998,
+      "median_interaction_coefficient": 0.7033560162257806,
+      "min_interaction_coefficient": -7.424754420966365,
+      "regime": "inflation_tightening"
+    },
+    {
+      "assets": 70,
+      "assets_unadjusted_p_below_5pct": 34,
+      "max_interaction_coefficient": 17.091695752631214,
+      "mean_interaction_coefficient": 1.018906890726651,
+      "median_interaction_coefficient": -0.20134789637917416,
+      "min_interaction_coefficient": -5.271555901709917,
+      "regime": "normalisation"
+    },
+    {
+      "assets": 70,
+      "assets_unadjusted_p_below_5pct": 19,
+      "max_interaction_coefficient": 12.512610197764147,
+      "mean_interaction_coefficient": -0.8021390130866269,
+      "median_interaction_coefficient": -0.7396637395788748,
+      "min_interaction_coefficient": -26.34961311865272,
+      "regime": "pandemic_elb_qe"
+    },
+    {
+      "assets": 70,
+      "assets_unadjusted_p_below_5pct": 16,
+      "max_interaction_coefficient": 19.46805442235911,
+      "mean_interaction_coefficient": 1.8747990125183036,
+      "median_interaction_coefficient": 1.9329904790269374,
+      "min_interaction_coefficient": -13.47392543662378,
+      "regime": "post_tightening_easing"
+    }
+  ],
+  "replication_status": "documented_reconstruction",
+  "sample": {
+    "end": "2025-12",
+    "months": 648,
+    "start": "1972-01",
+    "test_assets": 70,
+    "vintage": "current_throughout"
+  },
+  "scope": "pooled_regime_interaction_beta_stability",
+  "scope_note": "this artifact covers the pooled beta half of H3 only; the regime-specific second passes, pricing-error and fit comparisons, and the TOST equivalence intervals are separate members of the same confirmatory family",
+  "significant_tests": [
+    "joint_regime_factor_interactions",
+    "joint_rate_beta_regime_interactions"
+  ],
+  "specification": {
+    "aggregate_asset_note": "every asset shares the same regressors, so the equal-weighted portfolio regression reproduces the pooled common-slope estimator and its HAC covariance absorbs cross-asset correlation",
+    "alpha": 0.05,
+    "design_cross_check_max_absolute_deviation": 0.0,
+    "hac_lags": 6,
+    "interaction_variable": "regime_primary",
+    "omitted_baseline_regime": "conventional_pre_elb",
+    "regressors": [
+      "RM",
+      "FFR_innovation"
+    ],
+    "response": "test-asset monthly excess return"
+  }
+}

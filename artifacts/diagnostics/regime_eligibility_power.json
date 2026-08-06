@@ -1,0 +1,185 @@
+{
+  "analysis": "regime_eligibility_power_analysis",
+  "calibrated_truth": {
+    "factor_means": {
+      "market_excess_return": 0.6308796296296296,
+      "short_rate_innovation__fedfunds": -1.107481733206329e-15
+    },
+    "first_pass_beta_noise_share_at_calibration_length": {
+      "market_excess_return": 0.02891864683882076,
+      "short_rate_innovation__fedfunds": 0.6669468434068522
+    },
+    "fitted_premium_spreads": {
+      "book_to_market": 0.2948091835679978,
+      "earnings_to_price": 0.17714511422686677,
+      "equity_duration": -0.2625219293495867,
+      "inventory_growth": -0.13239624728089103,
+      "investment_to_assets": -0.25927928864000593,
+      "long_term_reversal": -0.10889477268833199,
+      "ppe_investment": -0.15065328342354228
+    },
+    "fixed_point_caveat": "The calibration treats the full-sample estimated betas as true, so the process is not a fixed point of the two-pass estimator. Simulated first passes produce noisier betas than the process was built from, and the no-intercept second pass attenuates lambda_rate toward zero at every window length including the calibration length. Read bias, attenuation_ratio, and coverage as comparisons across window lengths, not as absolute statements. Because the real betas are themselves estimates, the simulated cross-section is better identified than the real one, so the reported precision is if anything optimistic.",
+    "rate_beta_dispersion": 0.20590725349819675,
+    "risk_prices": {
+      "market_excess_return": 0.6939221786933667,
+      "short_rate_innovation__fedfunds": -0.4977978592944884
+    }
+  },
+  "design": {
+    "calibration_first_pass": "estimate_time_series_betas",
+    "calibration_hac_lags": 6,
+    "calibration_months": 648,
+    "disturbances": "gaussian_iid_calibrated_to_first_pass_residual_covariance",
+    "factor_order": [
+      "market_excess_return",
+      "short_rate_innovation__fedfunds"
+    ],
+    "factors": "gaussian_iid_calibrated_to_sample_factor_mean_and_covariance",
+    "interval": "lambda_hat +/- 1.959963984540054 * shanken_standard_error",
+    "model": "market_plus_fedfunds_innovation",
+    "rate_series": "fedfunds",
+    "replications": 2000,
+    "residual_covariance": "residual_covariance_from_first_pass",
+    "second_pass": "estimate_article_second_pass",
+    "seed": 20260727,
+    "seed_rule": "SEED + window_months",
+    "simulation_first_pass": "plain_least_squares_as_in_block_bootstrap",
+    "window_lengths": [
+      12,
+      15,
+      18,
+      24,
+      30,
+      36,
+      48,
+      51,
+      60,
+      72,
+      84,
+      120,
+      180,
+      240,
+      444,
+      648
+    ]
+  },
+  "frozen_reference_marks": {
+    "minimum_months_for_regime_specific_estimation": 36,
+    "minimum_months_for_standalone_second_pass": 60,
+    "minimum_test_assets_for_standalone_second_pass": 10,
+    "role": "reference_marks_only_not_evaluated_and_not_changed",
+    "source": "configs/regimes.yaml regime_estimation_eligibility"
+  },
+  "post_hoc_disclosure": "This power analysis was produced AFTER the frozen 36-month and 60-month eligibility floors were observed to bind. No threshold, config, contract, or registry entry has been changed by it. Acting on this evidence would be a post-hoc design change and would require its own justification and its own disclosure.",
+  "reading_criteria": {
+    "attenuation_ratio_at_or_above_level": {
+      "crossings": {
+        "0.50": 444,
+        "0.90": null
+      },
+      "description": "Mean estimated lambda_rate on the joint system, divided by the true value, reaches the level and stays there. A ratio of 0.90 is the same statement as an absolute bias of at most 10 percent of the truth."
+    },
+    "feasible_shanken_covariance_estimable": {
+      "description": "The design's own residual-covariance constructor accepts the window, which requires more months than test assets.",
+      "family_10_decile": 11,
+      "joint_70_portfolio": 72,
+      "joint_exact_minimum_months": 71
+    },
+    "fitted_premium_spread_rmse_below_economic_bound": {
+      "all_families": {
+        "family_10_decile": 444,
+        "joint_70_portfolio": 180
+      },
+      "description": "Root mean squared error of pi(decile_10) - pi(decile_01) about its true value falls below the 0.25 monthly percentage-point bound and stays below it. Unlike the standard-deviation reading this one counts the attenuation bias, so a window cannot satisfy it merely by shrinking the estimate toward zero.",
+      "per_family": {
+        "family_10_decile": {
+          "book_to_market": 444,
+          "earnings_to_price": 120,
+          "equity_duration": 180,
+          "inventory_growth": 36,
+          "investment_to_assets": 120,
+          "long_term_reversal": 120,
+          "ppe_investment": 48
+        },
+        "joint_70_portfolio": {
+          "book_to_market": 180,
+          "earnings_to_price": 51,
+          "equity_duration": 120,
+          "inventory_growth": 24,
+          "investment_to_assets": 72,
+          "long_term_reversal": 51,
+          "ppe_investment": 24
+        }
+      }
+    },
+    "fitted_premium_spread_sd_below_economic_bound": {
+      "all_families": {
+        "family_10_decile": 180,
+        "joint_70_portfolio": 60
+      },
+      "description": "Sampling standard deviation of pi(decile_10) - pi(decile_01) falls below the 0.25 monthly percentage-point bound in research/economic_thresholds.md and stays below it.",
+      "per_family": {
+        "family_10_decile": {
+          "book_to_market": 180,
+          "earnings_to_price": 84,
+          "equity_duration": 120,
+          "inventory_growth": 30,
+          "investment_to_assets": 51,
+          "long_term_reversal": 120,
+          "ppe_investment": 36
+        },
+        "joint_70_portfolio": {
+          "book_to_market": 60,
+          "earnings_to_price": 48,
+          "equity_duration": 36,
+          "inventory_growth": 15,
+          "investment_to_assets": 24,
+          "long_term_reversal": 48,
+          "ppe_investment": 24
+        }
+      }
+    },
+    "shanken_coverage_within_band": {
+      "crossings": {
+        "family_10_decile": {
+          "book_to_market": null,
+          "earnings_to_price": null,
+          "equity_duration": null,
+          "inventory_growth": null,
+          "investment_to_assets": null,
+          "long_term_reversal": null,
+          "ppe_investment": null
+        },
+        "joint_70_portfolio__feasible": null,
+        "joint_70_portfolio__oracle": null
+      },
+      "description": "Coverage of the nominal 95 percent Shanken interval for lambda_rate lies in [0.9, 0.99] and stays there."
+    },
+    "sign_error_probability_at_or_below_level": {
+      "crossings": {
+        "family_10_decile": {
+          "book_to_market": null,
+          "earnings_to_price": 648,
+          "equity_duration": 444,
+          "inventory_growth": 444,
+          "investment_to_assets": 648,
+          "long_term_reversal": null,
+          "ppe_investment": 648
+        },
+        "joint_70_portfolio": 444
+      },
+      "description": "Probability that the estimated lambda_rate has the wrong sign is at or below 0.05 and stays there."
+    },
+    "status": "reporting_conventions_not_registered_thresholds"
+  },
+  "registered_regime_months": {
+    "conventional_pre_elb": 444,
+    "elb_qe": 84,
+    "inflation_tightening": 30,
+    "normalisation": 51,
+    "pandemic_elb_qe": 24,
+    "post_tightening_easing": 15
+  },
+  "replication_status": "documented_reconstruction",
+  "thresholds_changed": []
+}

@@ -1,0 +1,34 @@
+{
+  "base_seed": 20260805,
+  "block_lengths_by_regime": {
+    "conventional_pre_elb": 6,
+    "elb_qe": 12
+  },
+  "bounds": {
+    "dispersion": 0.25,
+    "fit": 0.1,
+    "fitted_premium": 0.25,
+    "max_error": 0.25,
+    "rmse": 0.1
+  },
+  "draws": 10000,
+  "inputs": {
+    "artifacts/tables/regimes/regime_eligibility.csv": "d918fbf6751b92314d1593f5922e07740834746c5f3fa08c90be4514a74cd3b4",
+    "data/processed/regimes/monthly_regimes.parquet": "8d82c850712c8503633dd59b38b170edd6c788ca7039baa6ee6e68fa33c468d6"
+  },
+  "outputs": {
+    "artifacts/diagnostics/h3_regime_equivalence.json": "028e1eac86b82a06124e51bfcf5bac785a9900bf46fd17591c2310a80a3f3af7",
+    "artifacts/tables/regimes/h3_equivalence.csv": "de749a82ff35b110627dbde05fc6cfac34fb333e513b5259ad7b209559e384de",
+    "artifacts/tables/regimes/regime_fitted_premia.csv": "17d834bba08fd85bcc00855a6daa3f286f3000e374aeaeeba642f0e4fa8da155",
+    "artifacts/tables/regimes/regime_second_pass.csv": "3c93cd1f6aec5231fa0ef81468a07d761d1f5762cb0c802798964eb6b4228e3f"
+  },
+  "script": "scripts/run_regime_equivalence.py",
+  "seeds_by_regime": {
+    "conventional_pre_elb": 20260805,
+    "elb_qe": 20260806
+  },
+  "successful_draws_by_regime": {
+    "conventional_pre_elb": 10000,
+    "elb_qe": 10000
+  }
+}

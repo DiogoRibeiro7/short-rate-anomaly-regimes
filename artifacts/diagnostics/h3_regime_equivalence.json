@@ -1,0 +1,62 @@
+{
+  "classification": "regime_stability_unsupported_under_the_registered_equivalence_standard",
+  "classification_basis": "at least one dimension has its whole 90 percent interval beyond its bound, which is what the registered unsupported reading asserts",
+  "coverage_note": "the registered floors admit only two regimes to a standalone second pass, so the confirmatory comparison spans a single contrast; the other four regimes enter only through the pooled interaction model",
+  "dimensions_with_a_demonstrated_exceedance": [
+    "rmse_relative_deterioration"
+  ],
+  "draws": 10000,
+  "equivalence_rule": "tost_5pct_90pct_interval",
+  "gates": {
+    "article_fit_deterioration": false,
+    "dispersion_relative_change": false,
+    "max_abs_error_deterioration": false,
+    "per_portfolio_fitted_premium_equivalence": false,
+    "rmse_relative_deterioration": false
+  },
+  "global_innovation_sensitivity": {
+    "correlation": 0.9987244600785619,
+    "max_absolute_discrepancy": 0.03666770913343717,
+    "portfolios_beyond_bound_global_innovation": 17,
+    "portfolios_beyond_bound_within_regime_innovation": 16,
+    "sign_agreement": 70
+  },
+  "hypothesis": "H3",
+  "innovation_definition": "within_regime_ar1",
+  "max_absolute_point_premium_change": 0.5272008024132742,
+  "per_portfolio_decision_categories": {
+    "equivalent_within_bound": 26,
+    "inconclusive": 44
+  },
+  "portfolios_evaluated": 70,
+  "portfolios_failing_the_premium_bound": 44,
+  "reference_regime": "conventional_pre_elb",
+  "regimes_limited_to_pooled_interactions": [
+    "normalisation",
+    "pandemic_elb_qe",
+    "inflation_tightening",
+    "post_tightening_easing"
+  ],
+  "regimes_with_standalone_second_pass": [
+    "conventional_pre_elb",
+    "elb_qe"
+  ],
+  "replication_status": "documented_reconstruction",
+  "residual_covariance_conditioning": {
+    "conventional_pre_elb": {
+      "excess_months_over_assets": 374,
+      "months": 444,
+      "residual_covariance_condition_number": 553.5363713756919,
+      "smallest_eigenvalue": 0.14891958870671998,
+      "test_assets": 70
+    },
+    "elb_qe": {
+      "excess_months_over_assets": 14,
+      "months": 84,
+      "residual_covariance_condition_number": 11056.177195390506,
+      "smallest_eigenvalue": 0.003661007798888209,
+      "test_assets": 70
+    }
+  },
+  "specification_test_caveat": "the chi-square statistic and the Shanken correction invert a residual covariance estimated from T months for N test assets; where T - N is small that inverse is unstable and the statistic should not be read as evidence. The equivalence gates do not invert it"
+}

@@ -1,0 +1,35 @@
+{
+  "inputs": {
+    "data/processed/regimes/monthly_regimes.parquet": "8d82c850712c8503633dd59b38b170edd6c788ca7039baa6ee6e68fa33c468d6"
+  },
+  "model": "market_plus_fedfunds_innovation",
+  "outputs": {
+    "artifacts/diagnostics/regime_eligibility_power.json": "b2286001a31c8c6bc3f80659a348f9913c5a29a9a746a1ce76b5919b1844a1eb",
+    "artifacts/tables/regimes/eligibility_power_curve.csv": "a04c6f714fef76cb2bd45e3c75cccb902232fccac0fdddd9f885f355b991ad01"
+  },
+  "post_hoc_disclosure": "This power analysis was produced AFTER the frozen 36-month and 60-month eligibility floors were observed to bind. No threshold, config, contract, or registry entry has been changed by it. Acting on this evidence would be a post-hoc design change and would require its own justification and its own disclosure.",
+  "rate_series": "fedfunds",
+  "replications": 2000,
+  "runtime_seconds": 1040.3,
+  "script": "scripts/analyse_regime_power.py",
+  "seed": 20260727,
+  "thresholds_changed": [],
+  "window_lengths": [
+    12,
+    15,
+    18,
+    24,
+    30,
+    36,
+    48,
+    51,
+    60,
+    72,
+    84,
+    120,
+    180,
+    240,
+    444,
+    648
+  ]
+}
