@@ -175,4 +175,6 @@ why the comparison between them is more informative than either alone.
 2. The 60-month standalone-second-pass floor decision, which constrains what
    Milestone 10 can deliver and is still uncontaminated by any regime estimate.
    It is now the binding open question: under the frozen floors only two of six
-   regimes support a standalone second pass.
+   regimes support a standalone second pass. *Since resolved in Milestone 10:
+   the floor is now 72 months, and the same two regimes remain the two that
+   clear it. See `reports/design_correction_changelog.md`.*

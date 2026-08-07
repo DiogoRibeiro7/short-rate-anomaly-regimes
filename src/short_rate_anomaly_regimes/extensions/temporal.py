@@ -399,15 +399,29 @@ def write_temporal_extension_outputs(
     table_dir.mkdir(parents=True, exist_ok=True)
     figure_dir.mkdir(parents=True, exist_ok=True)
     report_path.parent.mkdir(parents=True, exist_ok=True)
-    panel_build.monthly_panel.to_csv(table_dir / "monthly_panel_audit.csv", index=False)
-    panel_build.revision_audit.to_csv(table_dir / "revision_audit.csv", index=False)
-    panel_build.universe.to_csv(table_dir / "extension_universe.csv", index=False)
-    panel_build.observation_summary.to_csv(table_dir / "observation_summary.csv", index=False)
-    frozen_pricing.to_csv(table_dir / "frozen_2013_pricing_errors.csv", index=False)
-    pattern_comparison.to_csv(table_dir / "pre_post_pattern_comparison.csv", index=False)
-    pattern_summary.to_frame("value").to_csv(table_dir / "publication_decay_summary.csv")
+    panel_build.monthly_panel.to_csv(
+        table_dir / "monthly_panel_audit.csv", index=False, lineterminator="\n"
+    )
+    panel_build.revision_audit.to_csv(
+        table_dir / "revision_audit.csv", index=False, lineterminator="\n"
+    )
+    panel_build.universe.to_csv(
+        table_dir / "extension_universe.csv", index=False, lineterminator="\n"
+    )
+    panel_build.observation_summary.to_csv(
+        table_dir / "observation_summary.csv", index=False, lineterminator="\n"
+    )
+    frozen_pricing.to_csv(
+        table_dir / "frozen_2013_pricing_errors.csv", index=False, lineterminator="\n"
+    )
+    pattern_comparison.to_csv(
+        table_dir / "pre_post_pattern_comparison.csv", index=False, lineterminator="\n"
+    )
+    pattern_summary.to_frame("value").to_csv(
+        table_dir / "publication_decay_summary.csv", lineterminator="\n"
+    )
     (table_dir / "freeze_metadata.json").write_text(
-        json.dumps(asdict(freeze), indent=2, sort_keys=True), encoding="utf-8"
+        json.dumps(asdict(freeze), indent=2, sort_keys=True), encoding="utf-8", newline="\n"
     )
     write_boundary_figure(
         panel_build.monthly_panel,
@@ -429,6 +443,7 @@ def write_temporal_extension_outputs(
             ]
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
 
@@ -495,6 +510,7 @@ def write_blocked_temporal_report(
             ]
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
 
@@ -566,8 +582,12 @@ def render_temporal_evidence_report(
         "",
         *dataframe_table(evaluation),
         "",
-        "The baseline and extension vintages are labelled separately. Revised historical "
-        "values enter only the vintage comparison, never the temporal verdict.",
+        "The baseline and extension vintages are labelled separately. The revised-history "
+        "evaluation is the current-vintage comparator for the registered temporal gates, so "
+        "revised historical values do enter the temporal verdict, as the quantity the refitted "
+        "extension is measured against. What the shared vintage removes is the publication-era "
+        "against current-vintage revision effect, which the locked-baseline comparison reports "
+        "separately.",
         "",
         "## Artifacts Read",
         "",
@@ -593,6 +613,7 @@ def write_temporal_evidence_report(
             evaluation_table_path=evaluation_table_path,
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
 

@@ -268,10 +268,13 @@ not told where to look does not find the policy boundaries.
 
 A simulation calibrated to the estimated full-history process, 2,000
 replications at each of 16 window lengths, was run as decision support for the
-open 60-month floor question. **It changed no threshold, config, contract, or
-registry entry**, and the artifact records that acting on it would be a post-hoc
-design change requiring its own disclosure. It is reported here because it
-explains section 5 rather than because it revises anything.
+standalone-second-pass floor question, which was open at 60 months when the
+simulation ran. **It relaxed no threshold, config, contract, or registry
+entry**, and the artifact records that acting on it to loosen a floor would be a
+post-hoc design change requiring its own disclosure. The one revision that
+followed tightened the floor, from 60 to 72 months, on the computability ground
+set out below; it is recorded in `reports/design_correction_changelog.md` and
+changed no registered regime's tier. Nothing in section 5 moves as a result.
 
 Months required, on the joint 70-portfolio system, for each criterion to be met
 and stay met:
@@ -293,8 +296,8 @@ estimator is mechanically a stable one. The error-counting version of the same
 criterion, RMSE about the true value, is not met until 180 months. Quoting the
 60 without the attenuation would invert the finding.
 
-The headline is that **36 and 60 are not too strict; on this evidence both are,
-if anything, too lax.** Three things follow, none of which changes a threshold.
+The headline is that **36 and 72 are not too strict; on this evidence both are,
+if anything, too lax.** Three things follow, none of which relaxes a threshold.
 
 First, the dominant mechanism is errors-in-variables attenuation, and it does
 not go away with sample size. Even at 648 months, 66.7 percent of the
@@ -303,17 +306,18 @@ cross-sectional dispersion of `beta_rate` is first-pass sampling noise, against
 is essentially flat, 0.1499 at 12 months and 0.1167 at 648: a longer window
 moves the estimate rather than tightening it. At 36 months the estimator returns
 11 percent of the true risk price and gets the sign wrong 35 percent of the
-time; at 60 months, 14 percent and 30 percent. `lambda_market` is the control
+time; at 72 months, 17 percent and 25 percent. `lambda_market` is the control
 that shows the machinery is sound, with coverage between 0.943 and 0.959 at
 every window length and a standard deviation falling at root-T.
 
-Second, the frozen 60-month floor is below the 71 months this design needs
+Second, the previous 60-month floor sat below the 71 months this design needs
 merely for the residual covariance of a 70-asset system to exist. A regime of 60
-to 70 months would clear the registered tier and then fail inside the standalone
-second pass that tier authorises. No registered regime hits this today, so
-nothing is broken, but it is a latent gap. It is the same gap section 6 found
-empirically at `elb_qe`, where `T - N` is 14, reached from an independent
-direction.
+to 70 months would have cleared the registered tier and then failed inside the
+standalone second pass that tier authorises. No registered regime ever fell in
+that band, so nothing estimated was affected, but it was a latent gap, and it is
+the same gap section 6 found empirically at `elb_qe`, where `T - N` is 14,
+reached from an independent direction. The floor is now 72 months, the first
+window on the sweep at which the covariance exists, which empties the band.
 
 Third, `elb_qe`'s 84 months sit far below the 180 needed for fitted-premium
 spreads to be resolved against the very bound the equivalence gates use. The 44

@@ -727,9 +727,9 @@ def main() -> None:
 
     for path in (WALD_CSV, BREAK_CSV, SENSITIVITY_CSV, DIAGNOSTIC_JSON, PROVENANCE_JSON):
         path.parent.mkdir(parents=True, exist_ok=True)
-    wald_table.to_csv(WALD_CSV, index=False)
-    breaks.to_csv(BREAK_CSV, index=False)
-    sensitivity.to_csv(SENSITIVITY_CSV, index=False)
+    wald_table.to_csv(WALD_CSV, index=False, lineterminator="\n")
+    breaks.to_csv(BREAK_CSV, index=False, lineterminator="\n")
+    sensitivity.to_csv(SENSITIVITY_CSV, index=False, lineterminator="\n")
 
     pooled_only = eligibility.loc[
         ~eligibility["regime_specific_first_pass_permitted"].astype(bool), "regime_id"
@@ -850,6 +850,7 @@ def main() -> None:
             sort_keys=True,
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
     PROVENANCE_JSON.write_text(
@@ -897,6 +898,7 @@ def main() -> None:
             sort_keys=True,
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
     print(f"pooled regime interactions: {len(panel)} months, {len(assets)} test assets")

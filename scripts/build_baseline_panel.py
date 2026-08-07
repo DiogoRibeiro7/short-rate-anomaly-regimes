@@ -134,6 +134,7 @@ def main() -> None:
                 sort_keys=True,
             ),
             encoding="utf-8",
+            newline="\n",
         )
         raise DataValidationError(
             "Canonical panel validation failed; no panel was written. "
@@ -151,7 +152,7 @@ def main() -> None:
         if path.exists():
             path.unlink()
     output.to_parquet(PANEL_PARQUET, index=False)
-    output.to_csv(PANEL_CSV, index=False)
+    output.to_csv(PANEL_CSV, index=False, lineterminator="\n")
 
     rows = []
     for column in panel.columns:
@@ -206,7 +207,7 @@ def main() -> None:
         )
     COLUMN_METADATA_CSV.parent.mkdir(parents=True, exist_ok=True)
     with COLUMN_METADATA_CSV.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()), lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
@@ -216,7 +217,9 @@ def main() -> None:
     payload["panel_parquet_sha256"] = _sha256(PANEL_PARQUET)
     payload["panel_csv_sha256"] = _sha256(PANEL_CSV)
     VALIDATION_JSON.parent.mkdir(parents=True, exist_ok=True)
-    VALIDATION_JSON.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    VALIDATION_JSON.write_text(
+        json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8", newline="\n"
+    )
 
     print(f"Panel: {report.rows} months x {report.columns} columns")
     print(f"Sample: {report.sample_start} .. {report.sample_end}")

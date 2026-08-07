@@ -9,6 +9,7 @@ grow. Nothing here asserts anything about a frozen threshold.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +25,7 @@ from scripts.analyse_regime_power import (
     FROZEN_MINIMUM_TEST_ASSETS,
     FROZEN_SECOND_PASS_FLOOR_MONTHS,
     MARKET_FACTOR,
+    POST_HOC_DISCLOSURE,
     RATE_FACTOR,
     REGISTERED_REGIME_MONTHS,
     WINDOW_LENGTHS,
@@ -379,6 +381,20 @@ def test_frozen_reference_marks_match_the_configuration() -> None:
     assert (
         eligibility["minimum_test_assets_for_standalone_second_pass"] == FROZEN_MINIMUM_TEST_ASSETS
     )
+
+
+def test_post_hoc_disclosure_names_the_floors_that_are_actually_frozen() -> None:
+    """The disclosure must be derived from the reference marks, not written out.
+
+    The disclosure is copied verbatim into the diagnostic and provenance
+    artifacts, so a hand-written floor month in it would keep disclosing a
+    superseded value after `configs/regimes.yaml` moved. Deriving it from the
+    constants ties it to the configuration, which
+    `test_frozen_reference_marks_match_the_configuration` pins.
+    """
+    named = [int(month) for month in re.findall(r"(\d+)-month", POST_HOC_DISCLOSURE)]
+
+    assert named == [FROZEN_FIRST_PASS_FLOOR_MONTHS, FROZEN_SECOND_PASS_FLOOR_MONTHS]
 
 
 def test_registered_regime_lengths_are_points_on_the_sweep() -> None:

@@ -13,14 +13,14 @@
   },
   "draws": 10000,
   "inputs": {
-    "artifacts/tables/regimes/regime_eligibility.csv": "d918fbf6751b92314d1593f5922e07740834746c5f3fa08c90be4514a74cd3b4",
+    "artifacts/tables/regimes/regime_eligibility.csv": "fe2af196a69c6c1cd5de4c2a72577d2dbbd4ff30f142ecb703bec15101b0a2e5",
     "data/processed/regimes/monthly_regimes.parquet": "8d82c850712c8503633dd59b38b170edd6c788ca7039baa6ee6e68fa33c468d6"
   },
   "outputs": {
-    "artifacts/diagnostics/h3_regime_equivalence.json": "028e1eac86b82a06124e51bfcf5bac785a9900bf46fd17591c2310a80a3f3af7",
-    "artifacts/tables/regimes/h3_equivalence.csv": "de749a82ff35b110627dbde05fc6cfac34fb333e513b5259ad7b209559e384de",
-    "artifacts/tables/regimes/regime_fitted_premia.csv": "17d834bba08fd85bcc00855a6daa3f286f3000e374aeaeeba642f0e4fa8da155",
-    "artifacts/tables/regimes/regime_second_pass.csv": "3c93cd1f6aec5231fa0ef81468a07d761d1f5762cb0c802798964eb6b4228e3f"
+    "artifacts/diagnostics/h3_regime_equivalence.json": "ba90bd14b05be9807797c5fc7339625a9b564b5cebe005828c55019d9de737ee",
+    "artifacts/tables/regimes/h3_equivalence.csv": "8c2027b91c83f391d9bafb65a91677d1341e56dc37b26c54deea9bb3a5c207bb",
+    "artifacts/tables/regimes/regime_fitted_premia.csv": "4435a018eb7c7256db55f1372b4be5900512b56ab1c1a1d5b96a55664892fd29",
+    "artifacts/tables/regimes/regime_second_pass.csv": "186755c4a24d6ea9157f172dfafba02830b0e12b50daa41e59b97c32a895d851"
   },
   "script": "scripts/run_regime_equivalence.py",
   "seeds_by_regime": {

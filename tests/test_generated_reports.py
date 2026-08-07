@@ -82,8 +82,51 @@ def _equivalence_artifact() -> dict[str, Any]:
 
 def _pooled_beta_artifact() -> dict[str, Any]:
     return {
-        "boundary_sensitivity": {"any_conclusion_changed": False},
+        "boundary_sensitivity": {
+            "any_conclusion_changed": False,
+            "results": [
+                {
+                    "aggregate_rate_beta_holm_p_value": 0.06537,
+                    "aggregate_rate_beta_statistic": 19.435162,
+                    "assets_rate_beta_significant_holm": 39,
+                    "shift_months": -3,
+                    "verdict": "unstable",
+                    "verdict_matches_registered_boundaries": True,
+                },
+                {
+                    "aggregate_rate_beta_holm_p_value": 5.079924e-05,
+                    "aggregate_rate_beta_statistic": 37.312958,
+                    "assets_rate_beta_significant_holm": 26,
+                    "shift_months": 0,
+                    "verdict": "unstable",
+                    "verdict_matches_registered_boundaries": True,
+                },
+            ],
+            "shifts_months": [-3, 0],
+        },
         "classification": "unstable",
+        "exploratory_break_tests": {
+            "evidence_class": "exploratory",
+            "hypothesis": "E1",
+            "note": "exploratory under hypothesis E1; not a member of the confirmatory family",
+            "results": [
+                {
+                    "break_month": "2015-12",
+                    "break_type": "registered_boundary",
+                    "p_value": 0.0525845,
+                    "statistic": 2.5808434,
+                    "test": "chow_known_break",
+                },
+                {
+                    "break_month": "1998-07",
+                    "break_number": 1,
+                    "break_type": "estimated_unknown_break",
+                    "p_value": None,
+                    "test": "bai_perron_multiple_breaks",
+                },
+            ],
+            "scope": "equal_weighted_test_assets",
+        },
         "hypothesis": "H3",
         "interpretation_note": "Significant regime interactions indicate parameter instability.",
         "joint_equal_weighted_tests": {
@@ -147,6 +190,7 @@ def _materiality_artifact() -> dict[str, Any]:
     comparison = {
         "classification": "unsupported",
         "comparator_model": "capm",
+        "comparison_role": "primary",
         "n_assets": 70,
         "n_gates_passed": 2,
         "n_gates_total": 3,
@@ -158,14 +202,41 @@ def _materiality_artifact() -> dict[str, Any]:
         "rmse_relative_reduction__threshold": 0.1,
         "rmse_relative_reduction__treatment_value": 0.100393,
     }
-    secondary = {**comparison, "comparator_model": "carhart_4"}
+    secondary = {
+        **comparison,
+        "comparator_model": "carhart_4",
+        "comparison_role": "secondary_adversarial",
+    }
+    off_headline = {
+        **comparison,
+        "classification": "supported",
+        "n_assets": 10,
+        "rmse_relative_reduction__comparator_value": 0.193039,
+        "rmse_relative_reduction__observed": 0.54428,
+        "rmse_relative_reduction__treatment_value": 0.087972,
+    }
+    off_headline_secondary = {
+        **off_headline,
+        "classification": "unsupported",
+        "comparator_model": "fama_french_5",
+        "comparison_role": "secondary_adversarial",
+        "rmse_relative_reduction__observed": -2.119,
+        "rmse_relative_reduction__passed": False,
+    }
     return {
         "asset_sets": {
             "all_seven_families_joint": {
                 "h1_primary_classification": "unsupported",
                 "primary_comparison": {"market_plus_fedfunds_innovation": comparison},
                 "secondary_adversarial_comparison": {"market_plus_fedfunds_innovation": secondary},
-            }
+            },
+            "book_to_market": {
+                "h1_primary_classification": "supported",
+                "primary_comparison": {"market_plus_fedfunds_innovation": off_headline},
+                "secondary_adversarial_comparison": {
+                    "market_plus_fedfunds_innovation": off_headline_secondary
+                },
+            },
         },
         "decision_rule": "H1 is supported only if all three primary gates hold jointly.",
         "headline_asset_set": "all_seven_families_joint",
@@ -243,8 +314,10 @@ def _precision_artifact() -> dict[str, Any]:
                 "h4c_gate": "pass",
                 "interval_spans_both_directions": False,
                 "lower_90": 0.070413,
+                "lower_95": 0.022276,
                 "point_estimate": 0.535266,
                 "upper_90": 0.761391,
+                "upper_95": 0.832065,
             }
         ],
     }
@@ -313,6 +386,75 @@ def test_regime_report_renders_registered_h3_outcomes(tmp_path: Path) -> None:
     assert "- `" + equivalence_path.as_posix() + "`" in report
 
 
+def test_regime_report_shows_the_evidence_behind_the_boundary_verdict(tmp_path: Path) -> None:
+    """The per-shift results are rendered, not only the aggregate boolean.
+
+    `any_conclusion_changed` is a single boolean, so on its own it hides how
+    close a shifted boundary runs to the decision level. Each stored shift must
+    appear with its statistic and its adjusted p-value.
+    """
+    pooled = _pooled_beta_artifact()
+    report = render_regime_evidence_report(
+        equivalence_path=_write_json(tmp_path / "h3_equivalence.json", _equivalence_artifact()),
+        pooled_beta_path=_write_json(tmp_path / "h3_pooled.json", pooled),
+    )
+    sensitivity = artifact_field(pooled, "boundary_sensitivity")
+
+    assert "### Boundary Sensitivity By Registered Shift" in report
+    assert "Any conclusion changed: `false` across shifts `-3`, `0` months" in report
+    for result in artifact_field(sensitivity, "results"):
+        row = " | ".join(
+            format_value(result[column])
+            for column in (
+                "shift_months",
+                "aggregate_rate_beta_holm_p_value",
+                "aggregate_rate_beta_statistic",
+                "assets_rate_beta_significant_holm",
+                "verdict",
+                "verdict_matches_registered_boundaries",
+            )
+        )
+        assert f"| {row} |" in report
+    assert "| -3 | 0.06537 |" in report
+
+
+def test_regime_report_surfaces_the_exploratory_break_battery(tmp_path: Path) -> None:
+    """The stored break rows are rendered under their registered evidence class.
+
+    The rows are exploratory and outside the confirmatory family, so the section
+    states that before the table rather than letting the rows read as
+    confirmatory evidence.
+    """
+    pooled = _pooled_beta_artifact()
+    report = render_regime_evidence_report(
+        equivalence_path=_write_json(tmp_path / "h3_equivalence.json", _equivalence_artifact()),
+        pooled_beta_path=_write_json(tmp_path / "h3_pooled.json", pooled),
+    )
+    breaks = artifact_field(pooled, "exploratory_break_tests")
+
+    assert "### Exploratory Break Battery" in report
+    assert "Evidence class: `exploratory`" in report
+    assert f"Note: {artifact_field(breaks, 'note')}" in report
+    for result in artifact_field(breaks, "results"):
+        assert format_value(result["break_month"]) in report
+        assert format_value(result["test"]) in report
+    assert "| 2015-12 | n/a | registered_boundary | 0.0525845 |" in report
+    assert "| 1998-07 | 1 | estimated_unknown_break | n/a |" in report
+
+
+def test_regime_report_states_when_a_stored_battery_is_empty(tmp_path: Path) -> None:
+    """An empty battery is reported as empty rather than rendered as a bare heading."""
+    pooled = _pooled_beta_artifact()
+    pooled["exploratory_break_tests"]["results"] = []
+    report = render_regime_evidence_report(
+        equivalence_path=_write_json(tmp_path / "h3_equivalence.json", _equivalence_artifact()),
+        pooled_beta_path=_write_json(tmp_path / "h3_pooled.json", pooled),
+    )
+
+    assert "### Exploratory Break Battery" in report
+    assert "No records are stored for this section." in report
+
+
 def test_temporal_report_renders_registered_h2_outcomes(tmp_path: Path) -> None:
     stability_path = _write_json(tmp_path / "h2.json", _temporal_artifact())
     evaluation_path = tmp_path / "temporal_evaluation.csv"
@@ -355,6 +497,9 @@ def test_temporal_report_renders_registered_h2_outcomes(tmp_path: Path) -> None:
     assert "| refitted_extension | -0.082546 |" in report
     assert "| locked_baseline_1972_2013 | 504 | -0.698465 | documented_reconstruction |" in report
     assert "Vintage isolation: the temporal gates compare vintage-consistent windows" in report
+    assert "revised-history evaluation is the current-vintage comparator" in report
+    assert "revised historical values do enter the temporal verdict" in report
+    assert "never the temporal verdict" not in report
 
 
 def test_robustness_report_renders_registered_h1_and_weak_factor_outcomes(tmp_path: Path) -> None:
@@ -392,8 +537,77 @@ def test_robustness_report_renders_registered_h1_and_weak_factor_outcomes(tmp_pa
     assert "| H4a | true | none |" in report
     assert "| H4c | h4c_passed_interval_excludes_at_least_one_economic_direction | none |" in report
     assert "rank `2` of `2` priced factors" in report
-    assert "| book_to_market | 0.535266 | 0.070413 | 0.761391 | false | pass |" in report
+    assert "| book_to_market | 0.535266 | 0.022276 | 0.832065 | false | pass |" in report
     assert "significant-only robustness reporting is prohibited" in report
+
+
+def test_h4c_table_displays_the_interval_the_registered_gate_reads(tmp_path: Path) -> None:
+    """H4c renders the 95 percent interval, which is the one the gate evaluates.
+
+    The gate in `scripts/run_h4c_precision.py` sets
+    `interval_spans_both_directions` from `lower_95` and `upper_95`. Displaying
+    the 90 percent interval beside that verdict showed evidence the gate never
+    read, so the report is required to carry the 95 percent bounds.
+    """
+    report = render_robustness_evidence_report(
+        materiality_path=_write_json(tmp_path / "h1.json", _materiality_artifact()),
+        identification_path=_write_json(tmp_path / "h4a.json", _identification_artifact()),
+        influence_path=_write_json(tmp_path / "h4b.json", _influence_artifact()),
+        precision_path=_write_json(tmp_path / "h4c.json", _precision_artifact()),
+    )
+    family = artifact_field(_precision_artifact(), "per_family")[0]
+
+    assert "| Family | Point Estimate | Lower 95 | Upper 95 |" in report
+    assert "Lower 90" not in report
+    assert "Upper 90" not in report
+    assert format_value(family["lower_95"]) in report
+    assert format_value(family["upper_95"]) in report
+    assert format_value(family["lower_90"]) not in report
+    assert format_value(family["upper_90"]) not in report
+    assert "registered H4c gate is evaluated on the 95 percent bootstrap interval" in report
+
+
+def test_h1_report_renders_gate_values_for_every_asset_set(tmp_path: Path) -> None:
+    """Every classification the report lists is backed by displayed gate values.
+
+    The report previously emitted gate values for the headline asset set alone
+    while listing a classification for each asset set and model, so the
+    off-headline classifications could not be audited from the report.
+    """
+    materiality = _materiality_artifact()
+    report = render_robustness_evidence_report(
+        materiality_path=_write_json(tmp_path / "h1.json", materiality),
+        identification_path=_write_json(tmp_path / "h4a.json", _identification_artifact()),
+        influence_path=_write_json(tmp_path / "h4b.json", _influence_artifact()),
+        precision_path=_write_json(tmp_path / "h4c.json", _precision_artifact()),
+    )
+    gates = sorted(artifact_field(materiality, "thresholds"))
+    asset_sets = artifact_field(materiality, "asset_sets")
+
+    assert "## H1 Gate Values By Asset Set And Comparison" in report
+    rendered = 0
+    for asset_set, record in asset_sets.items():
+        for slot in ("primary_comparison", "secondary_adversarial_comparison"):
+            for model, comparison in record[slot].items():
+                for gate in gates:
+                    row = " | ".join(
+                        [
+                            asset_set,
+                            model,
+                            str(comparison["comparison_role"]),
+                            str(comparison["comparator_model"]),
+                            gate,
+                            format_value(comparison[f"{gate}__comparison"]),
+                            format_value(comparison[f"{gate}__threshold"]),
+                            format_value(comparison[f"{gate}__comparator_value"]),
+                            format_value(comparison[f"{gate}__treatment_value"]),
+                            format_value(comparison[f"{gate}__observed"]),
+                            format_value(comparison[f"{gate}__passed"]),
+                        ]
+                    )
+                    assert f"| {row} |" in report
+                    rendered += 1
+    assert rendered == len(asset_sets) * 2 * len(gates)
 
 
 def test_robustness_report_requires_a_confirmatory_system(tmp_path: Path) -> None:

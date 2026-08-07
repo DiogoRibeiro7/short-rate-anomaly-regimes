@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from itertools import pairwise
 from pathlib import Path
@@ -307,9 +307,9 @@ def write_regime_outputs(
     table_dir.mkdir(parents=True, exist_ok=True)
     figure_dir.mkdir(parents=True, exist_ok=True)
     report_path.parent.mkdir(parents=True, exist_ok=True)
-    regime_table.to_csv(table_dir / "regime_table.csv", index=False)
-    coefficient_panel.to_csv(table_dir / "coefficient_panel.csv", index=False)
-    test_results.to_csv(table_dir / "stability_tests.csv", index=False)
+    regime_table.to_csv(table_dir / "regime_table.csv", index=False, lineterminator="\n")
+    coefficient_panel.to_csv(table_dir / "coefficient_panel.csv", index=False, lineterminator="\n")
+    test_results.to_csv(table_dir / "stability_tests.csv", index=False, lineterminator="\n")
     (table_dir / "stability_verdict.json").write_text(
         json.dumps(
             {
@@ -321,6 +321,7 @@ def write_regime_outputs(
             sort_keys=True,
         ),
         encoding="utf-8",
+        newline="\n",
     )
     write_break_plot(test_results, output_path=figure_dir / "break_dates.pdf")
     write_rolling_beta_plot(coefficient_panel, output_path=figure_dir / "rolling_betas.pdf")
@@ -335,6 +336,7 @@ def write_regime_outputs(
             ]
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
 
@@ -391,6 +393,7 @@ def write_blocked_regime_report(*, output_path: Path, missing_inputs: tuple[Path
             ]
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
 
@@ -446,6 +449,7 @@ def write_regime_evidence_report(
             pooled_beta_path=pooled_beta_path,
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
 
@@ -563,7 +567,75 @@ def _pooled_beta_sections(pooled: Mapping[str, Any]) -> list[str]:
         "",
         f"Scope note: {artifact_field(pooled, 'scope_note')}",
         "",
+        *_boundary_sensitivity_section(artifact_field(pooled, "boundary_sensitivity")),
+        *_exploratory_break_section(artifact_field(pooled, "exploratory_break_tests")),
     ]
+
+
+def _boundary_sensitivity_section(sensitivity: Mapping[str, Any]) -> list[str]:
+    """Render every stored per-shift boundary-sensitivity result.
+
+    The unchanged `any_conclusion_changed` verdict is a single boolean, so on its
+    own it hides how close the shifted boundaries run to the decision level. The
+    per-shift statistics and adjusted p-values are already stored; rendering them
+    lets a reader see the margin instead of taking the boolean on trust.
+    """
+    return [
+        "### Boundary Sensitivity By Registered Shift",
+        "",
+        "Any conclusion changed: "
+        f"{format_code(artifact_field(sensitivity, 'any_conclusion_changed'))} across shifts "
+        + format_sequence(artifact_field(sensitivity, "shifts_months"))
+        + " months",
+        "",
+        *_record_table(artifact_field(sensitivity, "results"), lead=("shift_months",)),
+        "",
+    ]
+
+
+def _exploratory_break_section(breaks: Mapping[str, Any]) -> list[str]:
+    """Render the stored exploratory break battery with its evidence class.
+
+    These rows are registered as exploratory and are not members of the
+    confirmatory family, so the section states that before the table rather than
+    leaving the rows to be read as confirmatory evidence.
+    """
+    return [
+        "### Exploratory Break Battery",
+        "",
+        f"Hypothesis: {format_code(artifact_field(breaks, 'hypothesis'))}",
+        f"Evidence class: {format_code(artifact_field(breaks, 'evidence_class'))}",
+        f"Scope: {format_code(artifact_field(breaks, 'scope'))}",
+        "",
+        f"Note: {artifact_field(breaks, 'note')}",
+        "",
+        *_record_table(artifact_field(breaks, "results")),
+        "",
+    ]
+
+
+def _record_table(records: Sequence[Mapping[str, Any]], *, lead: Sequence[str] = ()) -> list[str]:
+    """Render stored records as a table whose columns are the stored keys.
+
+    Args:
+        records: Artifact records to display.
+        lead: Column names to place first when present; ordering only.
+
+    Returns:
+        Markdown table lines. Columns are the union of the stored keys so a new
+        field added to the artifact appears in the report without an edit here.
+    """
+    if not records:
+        return ["No records are stored for this section."]
+    stored: set[str] = set()
+    for record in records:
+        stored.update(record)
+    ordered = [column for column in lead if column in stored]
+    ordered.extend(sorted(stored.difference(ordered)))
+    return markdown_table(
+        [column.replace("_", " ") for column in ordered],
+        [[record.get(column) for column in ordered] for record in records],
+    )
 
 
 def _align_regime_inputs(

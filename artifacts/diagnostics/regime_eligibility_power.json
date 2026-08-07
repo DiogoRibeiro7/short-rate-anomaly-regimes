@@ -70,7 +70,7 @@
     "role": "reference_marks_only_not_evaluated_and_not_changed",
     "source": "configs/regimes.yaml regime_estimation_eligibility"
   },
-  "post_hoc_disclosure": "This power analysis was produced AFTER the frozen 36-month and 60-month eligibility floors were observed to bind. No threshold, config, contract, or registry entry has been changed by it. Acting on this evidence would be a post-hoc design change and would require its own justification and its own disclosure.",
+  "post_hoc_disclosure": "This power analysis was produced AFTER the frozen 36-month and 72-month eligibility floors were observed to bind. No threshold, config, contract, or registry entry has been changed by it. Acting on this evidence would be a post-hoc design change and would require its own justification and its own disclosure.",
   "reading_criteria": {
     "attenuation_ratio_at_or_above_level": {
       "crossings": {

@@ -112,9 +112,9 @@ entirely under the new policy stance; the month containing the policy action
 remains with the outgoing regime. The whole-transition-month rule is retained
 as a declared sensitivity analysis only. Minimum regime-estimation eligibility
 is frozen in `configs/regimes.yaml`: fewer than 36 months permits pooled
-regime-interaction models only, 36 to 59 months permits flagged regime-specific
+regime-interaction models only, 36 to 71 months permits flagged regime-specific
 first-pass betas, and a standalone regime second pass additionally requires at
-least 60 months, at least 10 test assets, and full beta-matrix rank. These
+least 72 months, at least 10 test assets, and full beta-matrix rank. These
 floors may not be relaxed for a regime that turns out to be short.
 
 ## Temporal Extension And Out-Of-Sample Design

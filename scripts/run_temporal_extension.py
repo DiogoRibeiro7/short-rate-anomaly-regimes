@@ -322,9 +322,9 @@ def main() -> None:
 
     for path in (EVALUATION_CSV, DIAGNOSTIC_JSON):
         path.parent.mkdir(parents=True, exist_ok=True)
-    evaluation.to_csv(EVALUATION_CSV, index=False)
-    spreads.to_csv(SPREAD_CSV, index=False)
-    vintage.to_csv(VINTAGE_CSV, index=False)
+    evaluation.to_csv(EVALUATION_CSV, index=False, lineterminator="\n")
+    spreads.to_csv(SPREAD_CSV, index=False, lineterminator="\n")
+    vintage.to_csv(VINTAGE_CSV, index=False, lineterminator="\n")
 
     DIAGNOSTIC_JSON.write_text(
         json.dumps(
@@ -365,6 +365,7 @@ def main() -> None:
             sort_keys=True,
         ),
         encoding="utf-8",
+        newline="\n",
     )
     PROVENANCE_JSON.write_text(
         json.dumps(
@@ -387,6 +388,7 @@ def main() -> None:
             sort_keys=True,
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
     print(evaluation.round(4).to_string(index=False))

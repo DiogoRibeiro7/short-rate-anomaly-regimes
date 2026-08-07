@@ -258,4 +258,5 @@ vintage. Nothing here distinguishes a threshold outcome from a vintage effect.
 2. H2 temporal extension and H3 regime stability, both of which the acquired
    inputs support to 2025-12.
 3. The 60-month standalone-second-pass floor remains an open decision and is
-   still uncontaminated by any regime estimate.
+   still uncontaminated by any regime estimate. *Since resolved in Milestone 10:
+   the floor is now 72 months. See `reports/design_correction_changelog.md`.*

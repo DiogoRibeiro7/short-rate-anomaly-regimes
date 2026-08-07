@@ -315,11 +315,14 @@ def write_out_of_sample_outputs(
     table_dir.mkdir(parents=True, exist_ok=True)
     report_path.parent.mkdir(parents=True, exist_ok=True)
     build.forecasts.to_parquet(forecast_path, index=False)
-    build.metrics.to_csv(table_dir / "forecast_metrics.csv", index=False)
-    build.confidence_set.to_csv(table_dir / "model_confidence_set.csv", index=False)
+    build.metrics.to_csv(table_dir / "forecast_metrics.csv", index=False, lineterminator="\n")
+    build.confidence_set.to_csv(
+        table_dir / "model_confidence_set.csv", index=False, lineterminator="\n"
+    )
     (table_dir / "design.json").write_text(
         json.dumps(asdict(design), indent=2, sort_keys=True),
         encoding="utf-8",
+        newline="\n",
     )
     best = build.metrics.sort_values("mean_squared_error").iloc[0]
     report_path.write_text(
@@ -338,6 +341,7 @@ def write_out_of_sample_outputs(
             ]
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
 
@@ -362,6 +366,7 @@ def write_blocked_oos_report(*, output_path: Path, missing_inputs: tuple[Path, .
             ]
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
 

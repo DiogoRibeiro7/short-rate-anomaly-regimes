@@ -736,8 +736,12 @@ def main() -> None:
     ):
         path.parent.mkdir(parents=True, exist_ok=True)
 
-    pd.DataFrame.from_records(primary_records).to_csv(PRIMARY_COMPARISON_CSV, index=False)
-    pd.DataFrame.from_records(secondary_records).to_csv(SECONDARY_ADVERSARIAL_CSV, index=False)
+    pd.DataFrame.from_records(primary_records).to_csv(
+        PRIMARY_COMPARISON_CSV, index=False, lineterminator="\n"
+    )
+    pd.DataFrame.from_records(secondary_records).to_csv(
+        SECONDARY_ADVERSARIAL_CSV, index=False, lineterminator="\n"
+    )
 
     DIAGNOSTICS_JSON.write_text(
         json.dumps(
@@ -746,6 +750,7 @@ def main() -> None:
             sort_keys=True,
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
     inputs = {
@@ -788,6 +793,7 @@ def main() -> None:
             sort_keys=True,
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
     _print_gate_table(

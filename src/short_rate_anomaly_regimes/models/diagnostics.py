@@ -679,9 +679,9 @@ def write_robustness_outputs(
             },
         }
     diagnostics_path.write_text(
-        json.dumps(diagnostics_payload, indent=2, sort_keys=True), encoding="utf-8"
+        json.dumps(diagnostics_payload, indent=2, sort_keys=True), encoding="utf-8", newline="\n"
     )
-    specification_results.to_csv(table_path, index=False)
+    specification_results.to_csv(table_path, index=False, lineterminator="\n")
     report_path.write_text(
         "\n".join(
             [
@@ -697,6 +697,7 @@ def write_robustness_outputs(
             ]
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
 
@@ -782,6 +783,7 @@ def write_robustness_evidence_report(
             precision_path=precision_path,
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
 
@@ -806,6 +808,7 @@ def write_blocked_robustness_report(*, output_path: Path, missing_inputs: tuple[
             ]
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
 
@@ -860,6 +863,28 @@ def _h1_sections(materiality: Mapping[str, Any], *, headline: str) -> list[str]:
                 _h1_asset_set_rows(asset_sets),
             ),
             "",
+            "## H1 Gate Values By Asset Set And Comparison",
+            "",
+            "Every classification in the table above is derived from the gate values below; "
+            "no asset set is classified from evidence that is not displayed.",
+            "",
+            *markdown_table(
+                [
+                    "Asset Set",
+                    "Treatment Model",
+                    "Comparison Role",
+                    "Comparator Model",
+                    "Gate",
+                    "Comparison",
+                    "Threshold",
+                    "Comparator Value",
+                    "Treatment Value",
+                    "Observed",
+                    "Passed",
+                ],
+                _h1_all_gate_rows(asset_sets, gates),
+            ),
+            "",
         ]
     )
     return lines
@@ -878,6 +903,32 @@ def _h1_gate_rows(comparison: Mapping[str, Any], gates: Sequence[str]) -> list[l
         ]
         for gate in gates
     ]
+
+
+#: Registered comparison slots stored under every H1 asset-set record. Both are
+#: rendered so the report displays a gate value for every classification it lists.
+H1_COMPARISON_SLOTS: tuple[str, ...] = ("primary_comparison", "secondary_adversarial_comparison")
+
+
+def _h1_all_gate_rows(asset_sets: Mapping[str, Any], gates: Sequence[str]) -> list[list[Any]]:
+    rows: list[list[Any]] = []
+    for asset_set in sorted(asset_sets):
+        record = asset_sets[asset_set]
+        for slot in H1_COMPARISON_SLOTS:
+            comparisons = record[slot]
+            for model in sorted(comparisons):
+                comparison = comparisons[model]
+                rows.extend(
+                    [
+                        asset_set,
+                        model,
+                        comparison["comparison_role"],
+                        comparison["comparator_model"],
+                        *gate_row,
+                    ]
+                    for gate_row in _h1_gate_rows(comparison, gates)
+                )
+    return rows
 
 
 def _h1_asset_set_rows(asset_sets: Mapping[str, Any]) -> list[list[Any]]:
@@ -979,14 +1030,17 @@ def _weak_factor_sections(
         f"{format_code(artifact_field(precision, 'block_length'))} selected by "
         f"{format_code(artifact_field(precision, 'block_length_selected_by'))}",
         "",
+        "The registered H4c gate is evaluated on the 95 percent bootstrap interval, so the "
+        "interval displayed here is the one the gate reads.",
+        "",
         *markdown_table(
-            ["Family", "Point Estimate", "Lower 90", "Upper 90", "Spans Both Directions", "Gate"],
+            ["Family", "Point Estimate", "Lower 95", "Upper 95", "Spans Both Directions", "Gate"],
             [
                 [
                     family["family"],
                     family["point_estimate"],
-                    family["lower_90"],
-                    family["upper_90"],
+                    family["lower_95"],
+                    family["upper_95"],
                     family["interval_spans_both_directions"],
                     family["h4c_gate"],
                 ]

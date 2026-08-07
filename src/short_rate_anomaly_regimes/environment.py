@@ -99,4 +99,6 @@ def write_environment_manifest(
     """Write an environment manifest as stable JSON."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
     manifest = build_environment_manifest(config_paths=config_paths, cwd=cwd)
-    output_path.write_text(json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8")
+    output_path.write_text(
+        json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8", newline="\n"
+    )

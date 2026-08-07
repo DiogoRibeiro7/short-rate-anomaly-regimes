@@ -305,16 +305,22 @@ def write_shock_outputs(
     for path in (diagnostics_dir, table_dir, monthly_path.parent, report_path.parent):
         path.mkdir(parents=True, exist_ok=True)
     build.monthly_shocks.to_parquet(monthly_path)
-    build.event_shocks.to_csv(table_dir / "event_shocks.csv", index=False)
-    build.summary_statistics.to_csv(table_dir / "source_study_summary.csv", index=False)
-    build.asset_pricing_design.to_csv(table_dir / "asset_pricing_design.csv", index=False)
+    build.event_shocks.to_csv(table_dir / "event_shocks.csv", index=False, lineterminator="\n")
+    build.summary_statistics.to_csv(
+        table_dir / "source_study_summary.csv", index=False, lineterminator="\n"
+    )
+    build.asset_pricing_design.to_csv(
+        table_dir / "asset_pricing_design.csv", index=False, lineterminator="\n"
+    )
     compare_shock_spanning(build.monthly_shocks).to_csv(
         table_dir / "shock_spanning.csv",
         index=False,
+        lineterminator="\n",
     )
     (diagnostics_dir / "identification_rule.json").write_text(
         json.dumps(asdict(rule), indent=2, sort_keys=True),
         encoding="utf-8",
+        newline="\n",
     )
     report_path.write_text(
         "\n".join(
@@ -331,6 +337,7 @@ def write_shock_outputs(
             ]
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
 
@@ -361,6 +368,7 @@ def write_blocked_shock_report(
             ]
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
 

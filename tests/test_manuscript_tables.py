@@ -109,7 +109,8 @@ def test_committed_figures_match_a_fresh_regeneration(tmp_path: Path) -> None:
 def test_every_generated_figure_is_included_by_the_manuscript() -> None:
     """A generated figure the manuscript never shows must not linger."""
     manuscript = MANUSCRIPT.read_text(encoding="utf-8")
-    pattern = r"\\includegraphics\[[^]]*\]\{figures/([A-Za-z0-9_]+)\}"
+    # The options group is optional: a bare \includegraphics{...} must still count.
+    pattern = r"\\includegraphics(?:\[[^]]*\])?\{figures/([A-Za-z0-9_]+)\}"
     included = set(re.findall(pattern, manuscript))
     generated = {path.stem for path in FIGURE_ROOT.glob("*.pdf")}
     assert generated == included

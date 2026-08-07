@@ -295,3 +295,82 @@ def test_the_manuscript_reports_results_rather_than_a_pending_status() -> None:
     for heading in (r"\section{Baseline replication}", r"\section{Monetary-regime stability}"):
         assert heading in manuscript
     assert r"\section{Planned baseline replication}" not in manuscript
+
+
+def test_manuscript_checks_follow_nested_inputs(tmp_path: Path) -> None:
+    """A wrapper include must not smuggle an untagged number past the checks.
+
+    Expanding only one level would let `manuscript -> wrapper -> table` hide the
+    table's contents, which is exactly the guarantee the generated-table
+    pipeline depends on.
+    """
+    artifact = tmp_path / "artifact.csv"
+    artifact.write_text("x\n", encoding="utf-8")
+    artifact_map_path = tmp_path / "map.csv"
+    artifact_map_path.write_text(
+        f"artifact_id,path,description\nartifact,{artifact.as_posix()},Fixture artifact\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "wrapper.tex").write_text("\\input{deep}\n", encoding="utf-8")
+    (tmp_path / "deep.tex").write_text("The estimate is 0.42 with no tag.\n", encoding="utf-8")
+    manuscript_path = tmp_path / "paper.tex"
+    manuscript_path.write_text(
+        "\\title{Clean Title}\n\\section{Results}\n\\input{wrapper}\n", encoding="utf-8"
+    )
+
+    issues = validate_manuscript(
+        manuscript_path=manuscript_path,
+        artifact_map_path=artifact_map_path,
+    )
+
+    assert [issue.check for issue in issues] == ["numeric_artifact_mapping"]
+    assert "deep.tex" in issues[0].message
+
+
+def test_manuscript_checks_report_a_missing_nested_input(tmp_path: Path) -> None:
+    """An unresolvable include is an error wherever it appears."""
+    artifact = tmp_path / "artifact.csv"
+    artifact.write_text("x\n", encoding="utf-8")
+    artifact_map_path = tmp_path / "map.csv"
+    artifact_map_path.write_text(
+        f"artifact_id,path,description\nartifact,{artifact.as_posix()},Fixture artifact\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "wrapper.tex").write_text("\\input{absent}\n", encoding="utf-8")
+    manuscript_path = tmp_path / "paper.tex"
+    manuscript_path.write_text(
+        "\\title{Clean Title}\n\\section{Results}\n\\input{wrapper}\n", encoding="utf-8"
+    )
+
+    issues = validate_manuscript(
+        manuscript_path=manuscript_path,
+        artifact_map_path=artifact_map_path,
+    )
+
+    assert [issue.check for issue in issues] == ["input_exists"]
+    assert "wrapper.tex" in issues[0].message
+
+
+def test_manuscript_checks_terminate_on_a_cyclic_input(tmp_path: Path) -> None:
+    """A cycle must terminate rather than recurse until the stack gives out."""
+    artifact = tmp_path / "artifact.csv"
+    artifact.write_text("x\n", encoding="utf-8")
+    artifact_map_path = tmp_path / "map.csv"
+    artifact_map_path.write_text(
+        f"artifact_id,path,description\nartifact,{artifact.as_posix()},Fixture artifact\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "a.tex").write_text("\\input{b}\n", encoding="utf-8")
+    (tmp_path / "b.tex").write_text("\\input{a}\n", encoding="utf-8")
+    manuscript_path = tmp_path / "paper.tex"
+    manuscript_path.write_text(
+        "\\title{Clean Title}\n\\section{Results}\n\\input{a}\n", encoding="utf-8"
+    )
+
+    assert (
+        validate_manuscript(
+            manuscript_path=manuscript_path,
+            artifact_map_path=artifact_map_path,
+        )
+        == []
+    )

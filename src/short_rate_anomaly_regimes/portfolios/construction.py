@@ -163,7 +163,7 @@ def write_construction_manifest(
         ],
     }
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8", newline="\n")
 
 
 def construct_double_sorted_portfolios(

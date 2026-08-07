@@ -165,7 +165,9 @@ def _default_provenance_path(source_id: str) -> Path:
 def _write_json(payload: DownloadRecord | ManualRegistrationRecord, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     serializable = asdict(payload)
-    path.write_text(json.dumps(serializable, indent=2, sort_keys=True), encoding="utf-8")
+    path.write_text(
+        json.dumps(serializable, indent=2, sort_keys=True), encoding="utf-8", newline="\n"
+    )
 
 
 def _require_nonempty_payload(payload: bytes) -> None:
@@ -206,7 +208,7 @@ def _parse_fred_csv(payload: bytes, interim_path: Path) -> None:
     if frame.empty:
         raise DataValidationError("FRED CSV payload contains no rows")
     interim_path.parent.mkdir(parents=True, exist_ok=True)
-    frame.to_csv(interim_path, index=False)
+    frame.to_csv(interim_path, index=False, lineterminator="\n")
 
 
 def _parse_french_zip(payload: bytes, interim_path: Path) -> None:

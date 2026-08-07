@@ -83,6 +83,36 @@ Interpretation: Significant regime interactions indicate parameter instability; 
 
 Scope note: this artifact covers the pooled beta half of H3 only; the regime-specific second passes, pricing-error and fit comparisons, and the TOST equivalence intervals are separate members of the same confirmatory family
 
+### Boundary Sensitivity By Registered Shift
+
+Any conclusion changed: `false` across shifts `-3`, `0`, `3` months
+
+| shift months | aggregate rate beta holm p value | aggregate rate beta statistic | assets rate beta significant holm | verdict | verdict matches registered boundaries |
+|---|---|---|---|---|---|
+| -3 | 0.06537 | 19.4352 | 39 | unstable | true |
+| 0 | 5.07992e-05 | 37.313 | 26 | unstable | true |
+| 3 | 0.051166 | 20.132 | 36 | unstable | true |
+
+### Exploratory Break Battery
+
+Hypothesis: `E1`
+Evidence class: `exploratory`
+Scope: `equal_weighted_test_assets`
+
+Note: exploratory under hypothesis E1; not a member of the confirmatory regime_stability family and neither confirms nor refutes H3
+
+| break month | break number | break type | candidate count | criterion | df denom | df num | evidence class | hypothesis | max breaks searched | min segment observations | multiplicity family | nobs | p value | scope | selected breaks | statistic | test |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2008-12 | n/a | registered_boundary | n/a | n/a | 642 | 3 | exploratory | E1 | 2 | 12 | not_in_confirmatory_family | 648 | 0.0662912 | equal_weighted_test_assets | n/a | 2.40586 | chow_known_break |
+| 2015-12 | n/a | registered_boundary | n/a | n/a | 642 | 3 | exploratory | E1 | 2 | 12 | not_in_confirmatory_family | 648 | 0.0525845 | equal_weighted_test_assets | n/a | 2.58084 | chow_known_break |
+| 2020-03 | n/a | registered_boundary | n/a | n/a | 642 | 3 | exploratory | E1 | 2 | 12 | not_in_confirmatory_family | 648 | 0.813223 | equal_weighted_test_assets | n/a | 0.316826 | chow_known_break |
+| 2022-03 | n/a | registered_boundary | n/a | n/a | 642 | 3 | exploratory | E1 | 2 | 12 | not_in_confirmatory_family | 648 | 0.168483 | equal_weighted_test_assets | n/a | 1.6872 | chow_known_break |
+| 2024-09 | n/a | registered_boundary | n/a | n/a | 642 | 3 | exploratory | E1 | 2 | 12 | not_in_confirmatory_family | 648 | 0.178277 | equal_weighted_test_assets | n/a | 1.64268 | chow_known_break |
+| 1989-12 | n/a | estimated_unknown_break | 576 | n/a | n/a | n/a | exploratory | E1 | 2 | 36 | not_in_confirmatory_family | n/a | 0.00243731 | equal_weighted_test_assets | n/a | 9.42235 | quandt_andrews_unknown_break |
+| 1998-07 | 1 | estimated_unknown_break | n/a | -592.711 | n/a | n/a | exploratory | E1 | 2 | 36 | not_in_confirmatory_family | n/a | n/a | equal_weighted_test_assets | 2 | n/a | bai_perron_multiple_breaks |
+| 2001-08 | 2 | estimated_unknown_break | n/a | -592.711 | n/a | n/a | exploratory | E1 | 2 | 36 | not_in_confirmatory_family | n/a | n/a | equal_weighted_test_assets | 2 | n/a | bai_perron_multiple_breaks |
+| n/a | n/a | recursive_residuals | n/a | n/a | n/a | n/a | exploratory | E1 | 2 | n/a | not_in_confirmatory_family | 648 | 0.0709343 | equal_weighted_test_assets | n/a | 1.15022 | cusum_recursive_residuals |
+
 ## Artifacts Read
 
 - `artifacts/diagnostics/h3_regime_equivalence.json`

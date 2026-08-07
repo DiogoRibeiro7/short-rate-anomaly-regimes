@@ -47,8 +47,8 @@ short-rate innovation carries a negative price of risk that is significant under
 the Shanken correction, and it cuts cross-sectional pricing errors against the
 market model by roughly a half. Three pre-registered findings qualify that.
 First, the incremental-pricing standard registered in advance is not met on the
-headline asset set, and every traded multi-factor comparator prices the same
-seventy portfolios more accurately than the short-rate model does. Second, the
+headline asset set, and every traded multi-factor comparator attains a lower
+cross-sectional RMSE on the same seventy portfolios. Second, the
 relation does not survive the publication sample: refitted post-2013 estimates % artifact: configs/extensions.yaml
 reverse sign for five of seven anomaly families, and we show this is not a
 data-vintage artifact and not, by the registered identification gate, a weak-factor
@@ -91,7 +91,7 @@ risk of $-0.6985$ per month with a Shanken $t$ of $-2.86$, and it roughly halves
 cross-sectional pricing errors relative to the market model. % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
 Against that, the incremental-pricing standard we registered in advance is not
 met on the joint asset set, and every traded multi-factor comparator we examine
-prices the same portfolios with smaller errors than the short-rate model. The
+attains a lower cross-sectional RMSE and a higher fit on the same portfolios. The
 relation then fails to extend past the publication sample, in a way we can
 attribute to the passage of time rather than to data revisions or to weak
 identification. Finally, short-rate exposures differ across monetary regimes,
@@ -499,10 +499,10 @@ exploratory and cannot replace the confirmatory calendar regime. % artifact: res
 Regime-estimation eligibility is frozen numerically before any regime estimate
 is produced and is not relaxed for regimes that turn out to be short. A regime
 shorter than 36 months supports no regime-specific estimation and enters only % artifact: configs/regimes.yaml
-pooled regime-interaction models. A regime of 36 to 59 months supports % artifact: configs/regimes.yaml
+pooled regime-interaction models. A regime of 36 to 71 months supports % artifact: configs/regimes.yaml
 regime-specific first-pass betas under a short-sample flag but no standalone
 second pass. A standalone regime-specific second pass additionally requires at
-least 60 months, at least 10 test assets, and a beta matrix whose rank equals % artifact: configs/regimes.yaml
+least 72 months, at least 10 test assets, and a beta matrix whose rank equals % artifact: configs/regimes.yaml
 the number of priced factors. Under these frozen rules only the conventional
 and lower-bound regimes carry full eligibility, and the three post-2020 regimes % artifact: configs/regimes.yaml
 are restricted to pooled interactions; a predeclared combination of the two
@@ -869,10 +869,10 @@ earlier variation once the policy rate reaches the effective lower bound.}
 \subsection{Most regimes cannot support a standalone second pass}
 
 The eligibility floors were fixed before any regime was estimated.
-Table~\ref{tab:eligibility} applies them. Only two of the six registered regimes
-clear the standalone second-pass tier, one of them limited to first-pass betas by
-the short-sample band and the remaining three falling below the first-pass floor
-entirely.
+Table~\ref{tab:eligibility} applies them. Two of the six registered regimes clear
+the standalone second-pass tier. A third, the normalisation regime, sits in the
+short-sample band and keeps its first-pass betas while the standalone second pass
+stays blocked. The remaining three fall below the first-pass floor entirely.
 
 \input{tables/eligibility}
 
@@ -1044,7 +1044,10 @@ regime-length samples rather than a fact about the periods.
 What survives is narrower than the original claim and, we think, more useful: a
 short-rate innovation is well identified and was priced in the cross-section of
 anomaly returns through 2013, it was never the most accurate available pricing % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
-model on those assets, and it has not been priced since.
+model on those assets by cross-sectional RMSE, and the evidence that it remained
+priced afterwards is absent. We stop short of the stronger claim that it ceased
+to be priced, because the post-2013 window is too short to separate a relation % artifact: configs/extensions.yaml
+that has weakened from one estimated imprecisely.
 
 \appendix
 

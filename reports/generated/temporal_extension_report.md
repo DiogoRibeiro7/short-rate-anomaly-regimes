@@ -44,7 +44,7 @@ Vintage isolation: the temporal gates compare the refitted extension with the re
 | refitted_extension_2014_2025 | current | 144 | 0.997163 | -0.0825459 | -1.49336 | 0.191766 | 0.146386 | 0.683394 | 0.45021 | documented_reconstruction |
 | revised_history_1972_2013 | current | 504 | 0.604393 | -0.697373 | -2.86141 | 0.101481 | 0.0821065 | 0.25359 | 0.533951 | documented_reconstruction |
 
-The baseline and extension vintages are labelled separately. Revised historical values enter only the vintage comparison, never the temporal verdict.
+The baseline and extension vintages are labelled separately. The revised-history evaluation is the current-vintage comparator for the registered temporal gates, so revised historical values do enter the temporal verdict, as the quantity the refitted extension is measured against. What the shared vintage removes is the publication-era against current-vintage revision effect, which the locked-baseline comparison reports separately.
 
 ## Artifacts Read
 

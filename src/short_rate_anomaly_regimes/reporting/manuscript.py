@@ -109,21 +109,15 @@ def validate_manuscript(
                     )
                 )
 
-    for line_number, line in enumerate(manuscript.splitlines(), start=1):
-        include_match = INPUT_PATTERN.search(_strip_comment(line))
-        if include_match is None:
-            continue
-        target = manuscript_path.parent / include_match.group("path")
-        if target.suffix != ".tex":
-            target = target.with_suffix(".tex")
-        if not target.exists():
-            issues.append(
-                ManuscriptIssue(
-                    line_number=line_number,
-                    check="input_exists",
-                    message=f"Included file does not exist: {target}",
-                )
+    for origin, line_number, target in _missing_inputs(manuscript_path, manuscript):
+        where = f" in {origin}" if origin else ""
+        issues.append(
+            ManuscriptIssue(
+                line_number=line_number,
+                check="input_exists",
+                message=f"Included file does not exist{where}: {target}",
             )
+        )
 
     current_section = ""
     current_environment: str | None = None
@@ -343,7 +337,65 @@ def _line_has_numeric_claim(line: str) -> bool:
     return NUMERIC_PATTERN.search(stripped) is not None
 
 
-def _source_lines(manuscript_path: Path, manuscript: str) -> list[tuple[str, int, str]]:
+def _resolve_input(root: Path, target: str) -> Path:
+    """Resolve one ``\\input`` target relative to the including document."""
+    included = root / target
+    if included.suffix != ".tex":
+        included = included.with_suffix(".tex")
+    return included
+
+
+def _missing_inputs(
+    manuscript_path: Path,
+    manuscript: str,
+    *,
+    origin: str = "",
+    seen: frozenset[str] = frozenset(),
+) -> list[tuple[str, int, Path]]:
+    """Find every ``\\input`` target that does not exist, following includes.
+
+    Recursion mirrors :func:`_source_lines`, so a missing include inside a
+    generated table is reported rather than silently skipped during expansion.
+
+    Args:
+        manuscript_path: Path to the document being scanned.
+        manuscript: The document's source text.
+        origin: Label for the document, empty for the top-level manuscript.
+        seen: Documents already on the include path.
+
+    Returns:
+        Triples of origin label, line number, and the unresolved target path.
+    """
+    missing: list[tuple[str, int, Path]] = []
+    path_guard = seen | {manuscript_path.resolve().as_posix()}
+    for line_number, line in enumerate(manuscript.splitlines(), start=1):
+        include_match = INPUT_PATTERN.search(_strip_comment(line))
+        if include_match is None:
+            continue
+        included = _resolve_input(manuscript_path.parent, include_match.group("path"))
+        if not included.exists():
+            missing.append((origin, line_number, included))
+            continue
+        if included.resolve().as_posix() in path_guard:
+            continue
+        missing.extend(
+            _missing_inputs(
+                included,
+                included.read_text(encoding="utf-8"),
+                origin=included.as_posix(),
+                seen=path_guard,
+            )
+        )
+    return missing
+
+
+def _source_lines(
+    manuscript_path: Path,
+    manuscript: str,
+    *,
+    origin: str = "",
+    seen: frozenset[str] = frozenset(),
+) -> list[tuple[str, int, str]]:
     """Yield the manuscript's lines with every ``\\input`` expanded in place.
 
     Generated result tables live in their own files so that they can be rebuilt
@@ -352,31 +404,37 @@ def _source_lines(manuscript_path: Path, manuscript: str) -> list[tuple[str, int
     a number written directly into the manuscript; without this, moving a table
     into an included file would quietly exempt it from every check.
 
+    Expansion recurses, because a one-level expansion would let a wrapper file
+    that merely includes another smuggle untagged numbers past the checks. A
+    file already on the current include path is not re-entered, so a cyclic
+    include terminates instead of recursing forever.
+
     Args:
-        manuscript_path: Path to the manuscript, used to resolve relative inputs.
-        manuscript: The manuscript source text.
+        manuscript_path: Path to the document being expanded, used to resolve
+            relative inputs.
+        manuscript: The document's source text.
+        origin: Label for the document, empty for the top-level manuscript.
+        seen: Documents already on the include path, guarding against cycles.
 
     Returns:
         Triples of origin label, line number within that origin, and line text.
-        The origin is empty for lines of the manuscript itself.
     """
     expanded: list[tuple[str, int, str]] = []
+    path_guard = seen | {manuscript_path.resolve().as_posix()}
     for line_number, line in enumerate(manuscript.splitlines(), start=1):
-        expanded.append(("", line_number, line))
+        expanded.append((origin, line_number, line))
         include_match = INPUT_PATTERN.search(_strip_comment(line))
         if include_match is None:
             continue
-        target = include_match.group("path")
-        included = manuscript_path.parent / target
-        if included.suffix != ".tex":
-            included = included.with_suffix(".tex")
-        if not included.exists():
+        included = _resolve_input(manuscript_path.parent, include_match.group("path"))
+        if not included.exists() or included.resolve().as_posix() in path_guard:
             continue
-        origin = included.as_posix()
         expanded.extend(
-            (origin, included_number, included_line)
-            for included_number, included_line in enumerate(
-                included.read_text(encoding="utf-8").splitlines(), start=1
+            _source_lines(
+                included,
+                included.read_text(encoding="utf-8"),
+                origin=included.as_posix(),
+                seen=path_guard,
             )
         )
     return expanded

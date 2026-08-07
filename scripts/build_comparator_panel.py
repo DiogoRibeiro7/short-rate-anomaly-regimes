@@ -115,7 +115,7 @@ def main() -> None:
     ]
     COLUMN_METADATA_CSV.parent.mkdir(parents=True, exist_ok=True)
     with COLUMN_METADATA_CSV.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()), lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
@@ -139,6 +139,7 @@ def main() -> None:
             sort_keys=True,
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
     print(f"Comparator panel: {len(panel)} months x {panel.shape[1]} factors")

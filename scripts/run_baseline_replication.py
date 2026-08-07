@@ -196,7 +196,7 @@ def main() -> None:
     pd.DataFrame.from_records(error_rows).to_parquet(PRICING_ERRORS_PARQUET, index=False)
     summary_frame = pd.DataFrame.from_records(summary_rows)
     summary_frame.to_parquet(SECOND_PASS_PARQUET, index=False)
-    summary_frame.to_csv(RISK_PRICE_CSV, index=False)
+    summary_frame.to_csv(RISK_PRICE_CSV, index=False, lineterminator="\n")
 
     PROVENANCE_JSON.write_text(
         json.dumps(
@@ -250,6 +250,7 @@ def main() -> None:
             sort_keys=True,
         ),
         encoding="utf-8",
+        newline="\n",
     )
     print(f"\nWrote {len(summary_frame)} model-by-asset-set systems to {RISK_PRICE_CSV}")
 

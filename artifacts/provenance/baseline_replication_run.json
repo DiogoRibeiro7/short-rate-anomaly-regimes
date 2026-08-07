@@ -72,7 +72,7 @@
     "artifacts/estimates/cross_section/baseline_pricing_errors.parquet": "c0587e7baf221c302f93bf4296f29df68550c09a6a8a1ab133725459bf0f88e3",
     "artifacts/estimates/cross_section/baseline_second_pass.parquet": "fde0868f26781a6b31f1e0ab047d6a685b19a43a8fd2f7bcf89582b4b8dc7ed0",
     "artifacts/estimates/time_series/baseline_first_pass_betas.parquet": "ef1ee06ceba52d49d95d27f6c34d3ab177dce1ba7a06abe0a4092ef80a36f4b7",
-    "artifacts/tables/cross_section/baseline_risk_prices.csv": "3a74666591854e87377174568f1a9b08a0e2bb5d0dbd18ea939559747d781e89"
+    "artifacts/tables/cross_section/baseline_risk_prices.csv": "2751383f466740daa9a67b4c796cdb356d139a7ce1339b4c6bf8b6fe329d995c"
   },
   "replication_status": "documented_reconstruction",
   "script": "scripts/run_baseline_replication.py",

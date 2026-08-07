@@ -8,6 +8,13 @@ this document.
 All eight corrections are applied. Each entry states what changed, where, and
 what it now forbids.
 
+One further correction, number 9, was applied later and after estimation. It is
+appended at the end of this document with its own date and its own post-hoc
+disclosure, and it is the only entry here that was not settled before data
+acquisition. Corrections 1 to 8 below are the record as of 2026-07-31 and are
+not restated to match it; where correction 8 and correction 9 disagree,
+correction 9 is the current configuration.
+
 ## 1. Table 1 comparator roles
 
 - Changed: the H1 row of Table 1 ("Replication target and economic hypotheses")
@@ -196,3 +203,41 @@ as a result-driven design choice.
   exhaustive coverage of 1972-01 to 2026-06 under both transition rules.
 - No bare `H4` identifier remains in `research/` or `paper/` outside the
   explanatory sentence in `research/inference_contract.md`.
+
+## 9. Standalone-second-pass floor raised from 60 to 72 months
+
+Date: 2026-08-06. Milestone 10. Applied after estimation, with the binding
+outcome already known, so this is not a threshold frozen before estimation. It
+tightens the floor and changes no reported result; no floor has been relaxed at
+any point.
+
+- Changed: `minimum_months_for_standalone_second_pass` in `configs/regimes.yaml`
+  from 60 to 72, with `short_sample_flag_band_months` moving from `[36, 59]` to
+  `[36, 71]` and the tier conditions restated accordingly. The configuration
+  validator requires the band to end one month below the floor, so the two move
+  together and cannot diverge.
+- Also changed, as dependent records only: the `second_pass_eligibility` tier
+  label in `research/regime_registry.csv`, the eligibility sentence in
+  `research/statistical_protocol.md`, and the floor references in
+  `reports/regime_eligibility_power_analysis.md` and
+  `reports/monetary_regime_report.md`.
+- Reason: the standalone second pass inverts a residual covariance estimated
+  from T months for N test assets, which does not exist unless T is greater than
+  N. On the confirmatory 70-portfolio system that requires 71 months. The
+  previous 60-month floor therefore admitted a regime to an estimator that could
+  not run on the confirmatory asset set. 72 is the shortest window on the
+  simulated sweep at which the covariance is constructible, recorded as
+  `reading_criteria.feasible_shanken_covariance_estimable.joint_70_portfolio` in
+  `artifacts/diagnostics/regime_eligibility_power.json`, with the exact minimum
+  of 71 recorded alongside it as `joint_exact_minimum_months`.
+- Effect: no registered regime changes tier. `conventional_pre_elb` has 444
+  months and `elb_qe` 84, both eligible before and after; the next longest
+  regime is `normalisation` at 51, and no registered regime lies in the vacated
+  `[60, 71]` band. No reported result moves.
+- What it now forbids: a regime can no longer reach the
+  `eligible_first_pass_and_standalone_second_pass` tier at a length where the
+  Shanken covariance, the t-statistics, and the chi-square specification test of
+  the confirmatory system do not exist.
+- Superseded above: the tier table in correction 8 records the 36/60 boundaries
+  that were frozen on 2026-07-31. That table is left as the record of what
+  correction 8 did and is not the current configuration.

@@ -219,7 +219,7 @@ def write_audit(records: list[TableAuditRecord], path: Path) -> None:
     frame = pd.DataFrame([asdict(record) for record in records])
     if not frame.empty and not set(frame["status"]).issubset(set(ALLOWED_STATUSES)):
         raise ValueError("Audit contains a status outside the allowed replication labels")
-    frame.to_csv(path, index=False)
+    frame.to_csv(path, index=False, lineterminator="\n")
 
 
 def audit_summary(records: list[TableAuditRecord]) -> pd.Series:
@@ -234,6 +234,7 @@ def write_audit_json(records: list[TableAuditRecord], path: Path) -> None:
     path.write_text(
         json.dumps([asdict(record) for record in records], indent=2, sort_keys=True),
         encoding="utf-8",
+        newline="\n",
     )
 
 
@@ -349,7 +350,7 @@ def render_replication_report(
 def write_replication_report(records: list[TableAuditRecord], path: Path) -> None:
     """Write the markdown replication report."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(render_replication_report(records), encoding="utf-8")
+    path.write_text(render_replication_report(records), encoding="utf-8", newline="\n")
 
 
 def _format_record_list(records: list[TableAuditRecord]) -> str:

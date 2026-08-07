@@ -308,7 +308,7 @@ def write_time_series_outputs(
     table.to_parquet(coefficients_path, index=False)
     result.residuals.to_parquet(residuals_path)
     result.diagnostics.to_json(diagnostics_path, orient="index", indent=2)
-    table.to_csv(table_path, index=False)
+    table.to_csv(table_path, index=False, lineterminator="\n")
     payload = {
         **metadata,
         "covariance": result.covariance,
@@ -323,7 +323,9 @@ def write_time_series_outputs(
             "dropped_incomplete_rows": result.alignment.dropped_incomplete_rows,
         },
     }
-    metadata_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    metadata_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8", newline="\n"
+    )
 
 
 def _newey_west_meat(x: FloatArray, residuals: FloatArray, *, hac_lags: int) -> FloatArray:

@@ -4,13 +4,13 @@
   },
   "model": "market_plus_fedfunds_innovation",
   "outputs": {
-    "artifacts/diagnostics/regime_eligibility_power.json": "3b3496414707ec795a0b1b7ebce52e36a9a00547d3bcbed804f3c1a6c16ad6a3",
-    "artifacts/tables/regimes/eligibility_power_curve.csv": "a04c6f714fef76cb2bd45e3c75cccb902232fccac0fdddd9f885f355b991ad01"
+    "artifacts/diagnostics/regime_eligibility_power.json": "45d4269988a3ab05c15a231cda0d8f9d85d13ae2321f57a49bcfa730f2ec4001",
+    "artifacts/tables/regimes/eligibility_power_curve.csv": "b2d0c04c1ca1016890c64e58ea53fbb8f1bab39b8f3967bb5399b9268bde8535"
   },
-  "post_hoc_disclosure": "This power analysis was produced AFTER the frozen 36-month and 60-month eligibility floors were observed to bind. No threshold, config, contract, or registry entry has been changed by it. Acting on this evidence would be a post-hoc design change and would require its own justification and its own disclosure.",
+  "post_hoc_disclosure": "This power analysis was produced AFTER the frozen 36-month and 72-month eligibility floors were observed to bind. No threshold, config, contract, or registry entry has been changed by it. Acting on this evidence would be a post-hoc design change and would require its own justification and its own disclosure.",
   "rate_series": "fedfunds",
   "replications": 2000,
-  "runtime_seconds": 1053.6,
+  "runtime_seconds": 959.5,
   "script": "scripts/analyse_regime_power.py",
   "seed": 20260727,
   "thresholds_changed": [],

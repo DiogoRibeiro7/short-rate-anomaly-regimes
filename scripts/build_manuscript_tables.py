@@ -115,7 +115,10 @@ def _document(lines: Iterable[str], tag: str) -> str:
 
 def _write(name: str, lines: Iterable[str], tag: str) -> Path:
     path = TABLE_ROOT / f"{name}.tex"
-    path.write_text(_document(lines, tag), encoding="utf-8")
+    # Explicit LF: git normalises these files to LF, and a CRLF write would
+    # make the bytes on disk differ from the bytes the repository stores.
+    with path.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(_document(lines, tag))
     return path
 
 
@@ -521,9 +524,9 @@ def main() -> None:
         "tables": sorted(path.name for path in TABLE_ROOT.glob("*.tex")),
         "replication_status": "documented_reconstruction",
     }
-    Path("artifacts/provenance/manuscript_tables.json").write_text(
-        json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8"
-    )
+    provenance = Path("artifacts/provenance/manuscript_tables.json")
+    with provenance.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps(manifest, indent=2, sort_keys=True))
 
 
 if __name__ == "__main__":

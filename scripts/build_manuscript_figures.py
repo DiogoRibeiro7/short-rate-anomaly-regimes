@@ -62,9 +62,16 @@ FAMILY_LABELS: dict[str, str] = {
 }
 
 
-#: Suppressing the embedded creation date makes the emitted PDF a pure
-#: function of the artifacts, so the drift guard can compare bytes.
-DETERMINISTIC_METADATA = {"CreationDate": None}
+#: Pinning the embedded metadata makes the emitted PDF a pure function of the
+#: artifacts, so the drift guard can compare bytes. The creation date is the
+#: obvious source of variation, but ``Creator`` carries the matplotlib version
+#: and ``Producer`` the backend, either of which would make the guard fail on a
+#: dependency bump rather than on a changed result.
+DETERMINISTIC_METADATA: dict[str, str | None] = {
+    "CreationDate": None,
+    "Creator": "short-rate-anomaly-regimes",
+    "Producer": "matplotlib",
+}
 
 
 def _as_float(value: Any) -> float:
@@ -220,9 +227,9 @@ def main() -> None:
         ],
         "replication_status": "documented_reconstruction",
     }
-    Path("artifacts/provenance/manuscript_figures.json").write_text(
-        json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8"
-    )
+    provenance = Path("artifacts/provenance/manuscript_figures.json")
+    with provenance.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps(manifest, indent=2, sort_keys=True))
 
 
 if __name__ == "__main__":

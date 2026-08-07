@@ -347,7 +347,9 @@ def write_cross_section_outputs(
         "n_assets": result.n_assets,
         "weak_factor_warning": result.weak_factor_warning.warning,
     }
-    metrics_path.write_text(json.dumps(metrics, indent=2, sort_keys=True), encoding="utf-8")
+    metrics_path.write_text(
+        json.dumps(metrics, indent=2, sort_keys=True), encoding="utf-8", newline="\n"
+    )
     payload = {
         **metadata,
         "estimator": result.estimator,
@@ -356,7 +358,9 @@ def write_cross_section_outputs(
         "estimation_window": result.estimation_window,
         "regularization": result.regularization,
     }
-    metadata_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    metadata_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8", newline="\n"
+    )
 
 
 def _prepare_cross_section_design(

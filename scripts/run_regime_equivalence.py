@@ -396,9 +396,9 @@ def main() -> None:
 
     for path in (SECOND_PASS_CSV, DIAGNOSTIC_JSON, PROVENANCE_JSON):
         path.parent.mkdir(parents=True, exist_ok=True)
-    second_pass.to_csv(SECOND_PASS_CSV, index=False)
-    equivalence.to_csv(EQUIVALENCE_CSV, index=False)
-    premia.to_csv(PREMIA_CSV, index=False)
+    second_pass.to_csv(SECOND_PASS_CSV, index=False, lineterminator="\n")
+    equivalence.to_csv(EQUIVALENCE_CSV, index=False, lineterminator="\n")
+    premia.to_csv(PREMIA_CSV, index=False, lineterminator="\n")
 
     failing = premium_gate.loc[~premium_gate["tost_5pct_90pct_interval_passes"], "estimand"]
     categories = premium_gate["decision_category"].value_counts().to_dict()
@@ -472,6 +472,7 @@ def main() -> None:
             sort_keys=True,
         ),
         encoding="utf-8",
+        newline="\n",
     )
     PROVENANCE_JSON.write_text(
         json.dumps(
@@ -501,6 +502,7 @@ def main() -> None:
             sort_keys=True,
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
     display = [

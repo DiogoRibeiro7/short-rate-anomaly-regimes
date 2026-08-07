@@ -163,9 +163,12 @@ COVERAGE_READING_HIGH = 0.99
 ATTENUATION_READING_LEVELS: tuple[float, ...] = (0.50, 0.90)
 
 #: Text repeated into every generated artifact so no consumer can read the curve
-#: without the disclosure attached.
+#: without the disclosure attached. The floor months are interpolated from the
+#: reference-mark constants rather than written out, so the disclosure cannot
+#: keep naming a superseded floor after ``configs/regimes.yaml`` moves.
 POST_HOC_DISCLOSURE = (
-    "This power analysis was produced AFTER the frozen 36-month and 60-month "
+    f"This power analysis was produced AFTER the frozen "
+    f"{FROZEN_FIRST_PASS_FLOOR_MONTHS}-month and {FROZEN_SECOND_PASS_FLOOR_MONTHS}-month "
     "eligibility floors were observed to bind. No threshold, config, contract, or "
     "registry entry has been changed by it. Acting on this evidence would be a "
     "post-hoc design change and would require its own justification and its own "
@@ -1201,7 +1204,7 @@ def main() -> None:
         ["system", "estimand", "cross_section", "window_months"], ignore_index=True
     )
     CURVE_CSV.parent.mkdir(parents=True, exist_ok=True)
-    curve.to_csv(CURVE_CSV, index=False)
+    curve.to_csv(CURVE_CSV, index=False, lineterminator="\n")
 
     criteria = reading_criteria(curve, WINDOW_LENGTHS)
     diagnostics = {
@@ -1260,7 +1263,9 @@ def main() -> None:
         "replication_status": "documented_reconstruction",
     }
     DIAGNOSTIC_JSON.parent.mkdir(parents=True, exist_ok=True)
-    DIAGNOSTIC_JSON.write_text(json.dumps(diagnostics, indent=2, sort_keys=True), encoding="utf-8")
+    DIAGNOSTIC_JSON.write_text(
+        json.dumps(diagnostics, indent=2, sort_keys=True), encoding="utf-8", newline="\n"
+    )
 
     PROVENANCE_JSON.parent.mkdir(parents=True, exist_ok=True)
     PROVENANCE_JSON.write_text(
@@ -1285,6 +1290,7 @@ def main() -> None:
             sort_keys=True,
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
     _print_headline(curve)

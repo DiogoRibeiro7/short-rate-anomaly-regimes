@@ -155,7 +155,7 @@ def main() -> None:
     output = panel.reset_index()
     output["month"] = output["month"].astype(str)
     output.to_parquet(REGIME_PARQUET, index=False)
-    frame.to_csv(ELIGIBILITY_CSV, index=False)
+    frame.to_csv(ELIGIBILITY_CSV, index=False, lineterminator="\n")
     output[
         [
             "month",
@@ -164,7 +164,7 @@ def main() -> None:
             "regime_primary",
             "regime_sensitivity",
         ]
-    ].to_csv(SERIES_CSV, index=False)
+    ].to_csv(SERIES_CSV, index=False, lineterminator="\n")
 
     PROVENANCE_JSON.write_text(
         json.dumps(
@@ -208,6 +208,7 @@ def main() -> None:
             sort_keys=True,
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
     print(f"regime panel: {len(panel)} months {panel.index[0]}..{panel.index[-1]}, current vintage")

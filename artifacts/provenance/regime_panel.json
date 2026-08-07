@@ -20,7 +20,8 @@
   },
   "months": 648,
   "outputs": {
-    "artifacts/tables/regimes/regime_eligibility.csv": "d918fbf6751b92314d1593f5922e07740834746c5f3fa08c90be4514a74cd3b4",
+    "artifacts/tables/regimes/regime_eligibility.csv": "fe2af196a69c6c1cd5de4c2a72577d2dbbd4ff30f142ecb703bec15101b0a2e5",
+    "artifacts/tables/regimes/regime_monthly_series.csv": "6feb1e7f8ae0c9b6306a33988bfe390951dc5a84b577434d445e911b8e1bde6f",
     "data/processed/regimes/monthly_regimes.parquet": "8d82c850712c8503633dd59b38b170edd6c788ca7039baa6ee6e68fa33c468d6"
   },
   "replication_status": "documented_reconstruction",
