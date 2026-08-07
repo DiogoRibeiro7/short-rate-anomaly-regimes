@@ -109,7 +109,8 @@ def validate_manuscript(
                     )
                 )
 
-    for origin, line_number, target in _missing_inputs(manuscript_path, manuscript):
+    walk = _walk_includes(manuscript_path, manuscript)
+    for origin, line_number, target in walk.missing:
         where = f" in {origin}" if origin else ""
         issues.append(
             ManuscriptIssue(
@@ -123,7 +124,7 @@ def validate_manuscript(
     current_environment: str | None = None
     environment_start_line = 0
     environment_artifact_paths: set[str] = set()
-    for origin, line_number, line in _source_lines(manuscript_path, manuscript):
+    for origin, line_number, line in _source_lines(walk):
         where = "" if not origin else f" in {origin}"
         section_match = SECTION_PATTERN.search(line)
         if section_match is not None:
@@ -185,12 +186,14 @@ def validate_manuscript(
                         ),
                     )
                 )
-    # Paragraphs are checked per source document, including every expanded
-    # input, so moving an empirical paragraph into an included file does not
-    # exempt it from declaring its context.
-    for origin, document in _source_documents(manuscript_path, manuscript):
-        where = f" in {origin}" if origin else ""
-        for paragraph_start_line, paragraph in _iter_paragraphs(document):
+    # Paragraphs are scoped to their own document rather than to the flattened
+    # stream. A blank line inside an included file ends a paragraph there, and a
+    # context declaration has to accompany the marker it explains, so allowing a
+    # paragraph to span an include boundary would let the two drift into
+    # separate files.
+    for document in walk.documents:
+        where = f" in {document.origin}" if document.origin else ""
+        for paragraph_start_line, paragraph in _iter_paragraphs(document.text):
             if not EMPIRICAL_PARAGRAPH_PATTERN.search(paragraph):
                 continue
             for issue in _validate_empirical_context(paragraph_start_line, paragraph):
@@ -358,69 +361,55 @@ def _resolve_input(root: Path, target: str) -> Path:
     return included
 
 
-def _source_documents(
+@dataclass(frozen=True, slots=True)
+class _IncludedDocument:
+    """One document reachable from the manuscript, with its origin label."""
+
+    origin: str
+    path: Path
+    text: str
+
+
+@dataclass(frozen=True, slots=True)
+class _IncludeWalk:
+    """Every document reachable by ``\\input``, and every target that is not."""
+
+    documents: tuple[_IncludedDocument, ...]
+    missing: tuple[tuple[str, int, Path], ...]
+
+
+def _walk_includes(
     manuscript_path: Path,
     manuscript: str,
     *,
     origin: str = "",
     seen: frozenset[str] = frozenset(),
-) -> list[tuple[str, str]]:
-    r"""Return the manuscript and every document it includes, as whole texts.
+) -> _IncludeWalk:
+    r"""Collect the manuscript and everything it includes, in one traversal.
 
-    Paragraph-level rules need each document intact rather than the flattened
-    line stream, because a blank line in an included file ends a paragraph there
-    and must not be read as continuing one in the parent.
+    Three checks need the include tree: numeric traceability and table sources
+    read the flattened line stream, the paragraph rule reads whole documents,
+    and the existence check reads unresolvable targets. Walking once and taking
+    three views of the result keeps the cycle guard, comment stripping, and path
+    resolution in a single place, so they cannot drift apart.
 
-    Args:
-        manuscript_path: Path to the document being expanded.
-        manuscript: The document's source text.
-        origin: Label for the document, empty for the top-level manuscript.
-        seen: Documents already on the include path.
-
-    Returns:
-        Pairs of origin label and document text, parents before children.
-    """
-    documents = [(origin, manuscript)]
-    path_guard = seen | {manuscript_path.resolve().as_posix()}
-    for line in manuscript.splitlines():
-        include_match = INPUT_PATTERN.search(_strip_comment(line))
-        if include_match is None:
-            continue
-        included = _resolve_input(manuscript_path.parent, include_match.group("path"))
-        if not included.exists() or included.resolve().as_posix() in path_guard:
-            continue
-        documents.extend(
-            _source_documents(
-                included,
-                included.read_text(encoding="utf-8"),
-                origin=included.as_posix(),
-                seen=path_guard,
-            )
-        )
-    return documents
-
-
-def _missing_inputs(
-    manuscript_path: Path,
-    manuscript: str,
-    *,
-    origin: str = "",
-    seen: frozenset[str] = frozenset(),
-) -> list[tuple[str, int, Path]]:
-    r"""Find every ``\\input`` target that does not exist, following includes.
-
-    Recursion mirrors :func:`_source_lines`, so a missing include inside a
-    generated table is reported rather than silently skipped during expansion.
+    Expansion recurses, because a one-level walk would let a wrapper file that
+    merely includes another smuggle untagged numbers past the checks. A file
+    already on the current include path is not re-entered, so a cyclic include
+    terminates instead of recursing forever.
 
     Args:
-        manuscript_path: Path to the document being scanned.
+        manuscript_path: Path to the document being walked, used to resolve
+            relative inputs.
         manuscript: The document's source text.
         origin: Label for the document, empty for the top-level manuscript.
-        seen: Documents already on the include path.
+        seen: Documents already on the include path, guarding against cycles.
 
     Returns:
-        Triples of origin label, line number, and the unresolved target path.
+        The reachable documents, parents before children, and the unresolvable
+        targets with the origin and line number that named them.
     """
+    documents = [_IncludedDocument(origin=origin, path=manuscript_path, text=manuscript)]
     missing: list[tuple[str, int, Path]] = []
     path_guard = seen | {manuscript_path.resolve().as_posix()}
     for line_number, line in enumerate(manuscript.splitlines(), start=1):
@@ -433,66 +422,36 @@ def _missing_inputs(
             continue
         if included.resolve().as_posix() in path_guard:
             continue
-        missing.extend(
-            _missing_inputs(
-                included,
-                included.read_text(encoding="utf-8"),
-                origin=included.as_posix(),
-                seen=path_guard,
-            )
+        child = _walk_includes(
+            included,
+            included.read_text(encoding="utf-8"),
+            origin=included.as_posix(),
+            seen=path_guard,
         )
-    return missing
+        documents.extend(child.documents)
+        missing.extend(child.missing)
+    return _IncludeWalk(documents=tuple(documents), missing=tuple(missing))
 
 
-def _source_lines(
-    manuscript_path: Path,
-    manuscript: str,
-    *,
-    origin: str = "",
-    seen: frozenset[str] = frozenset(),
-) -> list[tuple[str, int, str]]:
-    r"""Yield the manuscript's lines with every ``\\input`` expanded in place.
+def _source_lines(walk: _IncludeWalk) -> list[tuple[str, int, str]]:
+    """Flatten the walked documents into an origin-tagged line stream.
 
-    Generated result tables live in their own files so that they can be rebuilt
-    from artifacts rather than transcribed. Expanding them here means the same
-    numeric-traceability and table-source rules apply to a generated table as to
-    a number written directly into the manuscript; without this, moving a table
-    into an included file would quietly exempt it from every check.
-
-    Expansion recurses, because a one-level expansion would let a wrapper file
-    that merely includes another smuggle untagged numbers past the checks. A
-    file already on the current include path is not re-entered, so a cyclic
-    include terminates instead of recursing forever.
+    Lines are grouped by document rather than spliced at the ``\\input`` site.
+    Every per-line rule is local to its line, so the ordering does not affect
+    any outcome, and keeping each document contiguous means a reported line
+    number always indexes the file the message names.
 
     Args:
-        manuscript_path: Path to the document being expanded, used to resolve
-            relative inputs.
-        manuscript: The document's source text.
-        origin: Label for the document, empty for the top-level manuscript.
-        seen: Documents already on the include path, guarding against cycles.
+        walk: The include traversal to flatten.
 
     Returns:
         Triples of origin label, line number within that origin, and line text.
     """
-    expanded: list[tuple[str, int, str]] = []
-    path_guard = seen | {manuscript_path.resolve().as_posix()}
-    for line_number, line in enumerate(manuscript.splitlines(), start=1):
-        expanded.append((origin, line_number, line))
-        include_match = INPUT_PATTERN.search(_strip_comment(line))
-        if include_match is None:
-            continue
-        included = _resolve_input(manuscript_path.parent, include_match.group("path"))
-        if not included.exists() or included.resolve().as_posix() in path_guard:
-            continue
-        expanded.extend(
-            _source_lines(
-                included,
-                included.read_text(encoding="utf-8"),
-                origin=included.as_posix(),
-                seen=path_guard,
-            )
-        )
-    return expanded
+    return [
+        (document.origin, line_number, line)
+        for document in walk.documents
+        for line_number, line in enumerate(document.text.splitlines(), start=1)
+    ]
 
 
 def _strip_comment(line: str) -> str:
