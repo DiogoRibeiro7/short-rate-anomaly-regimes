@@ -39,6 +39,10 @@ BASELINE_PARQUET = Path("data/processed/baseline_panel.parquet")
 
 REGIME_PARQUET = Path("data/processed/regimes/monthly_regimes.parquet")
 ELIGIBILITY_CSV = Path("artifacts/tables/regimes/regime_eligibility.csv")
+#: The rate columns and labels alone, small enough to publish alongside the
+#: results. The full panel carries seventy portfolio columns and stays out of
+#: version control, but a figure that plots only the rate needs this much.
+SERIES_CSV = Path("artifacts/tables/regimes/regime_monthly_series.csv")
 PROVENANCE_JSON = Path("artifacts/provenance/regime_panel.json")
 
 RATE = "fedfunds"
@@ -152,6 +156,15 @@ def main() -> None:
     output["month"] = output["month"].astype(str)
     output.to_parquet(REGIME_PARQUET, index=False)
     frame.to_csv(ELIGIBILITY_CSV, index=False)
+    output[
+        [
+            "month",
+            f"short_rate_level__{RATE}",
+            f"short_rate_innovation__{RATE}",
+            "regime_primary",
+            "regime_sensitivity",
+        ]
+    ].to_csv(SERIES_CSV, index=False)
 
     PROVENANCE_JSON.write_text(
         json.dumps(
@@ -174,6 +187,7 @@ def main() -> None:
                 "outputs": {
                     REGIME_PARQUET.as_posix(): _sha256(REGIME_PARQUET),
                     ELIGIBILITY_CSV.as_posix(): _sha256(ELIGIBILITY_CSV),
+                    SERIES_CSV.as_posix(): _sha256(SERIES_CSV),
                 },
                 "short_rate_ar": {
                     "intercept": float(coefficients[0]),

@@ -3,10 +3,18 @@
 from __future__ import annotations
 
 import re
+from collections import Counter
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
+
+from short_rate_anomaly_regimes.reporting.artifact_evidence import (
+    markdown_table,
+    path_bullets,
+    report_verdict,
+)
 
 TITLE_PATTERN = re.compile(r"\\title\{(?P<title>[^}]*)\}")
 SECTION_PATTERN = re.compile(r"\\section\{(?P<section>[^}]*)\}")
@@ -15,6 +23,7 @@ ARTIFACT_TAG_PATTERN = re.compile(r"%\s*artifact:\s*(?P<artifact>\S+)")
 LATEX_ARTIFACT_PATTERN = re.compile(r"\\artifact\{(?P<artifact>[^}]*)\}")
 ENVIRONMENT_BEGIN_PATTERN = re.compile(r"\\begin\{(?P<environment>table|figure)\}")
 ENVIRONMENT_END_PATTERN = re.compile(r"\\end\{(?P<environment>table|figure)\}")
+INPUT_PATTERN = re.compile(r"\\input\{(?P<path>[^}]*)\}")
 EMPIRICAL_PARAGRAPH_PATTERN = re.compile(r"%\s*empirical-paragraph\b")
 EMPIRICAL_CONTEXT_PATTERN = re.compile(r"%\s*empirical-context:\s*(?P<context>.*)")
 RESTRICTED_LANGUAGE_PATTERN = re.compile(r"\b(cause|effect|policy shock)\b", re.IGNORECASE)
@@ -100,11 +109,28 @@ def validate_manuscript(
                     )
                 )
 
+    for line_number, line in enumerate(manuscript.splitlines(), start=1):
+        include_match = INPUT_PATTERN.search(_strip_comment(line))
+        if include_match is None:
+            continue
+        target = manuscript_path.parent / include_match.group("path")
+        if target.suffix != ".tex":
+            target = target.with_suffix(".tex")
+        if not target.exists():
+            issues.append(
+                ManuscriptIssue(
+                    line_number=line_number,
+                    check="input_exists",
+                    message=f"Included file does not exist: {target}",
+                )
+            )
+
     current_section = ""
     current_environment: str | None = None
     environment_start_line = 0
     environment_artifact_paths: set[str] = set()
-    for line_number, line in enumerate(manuscript.splitlines(), start=1):
+    for origin, line_number, line in _source_lines(manuscript_path, manuscript):
+        where = "" if not origin else f" in {origin}"
         section_match = SECTION_PATTERN.search(line)
         if section_match is not None:
             current_section = section_match.group("section")
@@ -122,7 +148,7 @@ def validate_manuscript(
                     ManuscriptIssue(
                         line_number=line_number,
                         check="numeric_artifact_mapping",
-                        message="Numeric token lacks an artifact tag on the same line",
+                        message=f"Numeric token lacks an artifact tag on the same line{where}",
                     )
                 )
             elif tag_match.group("artifact") not in declared_paths:
@@ -130,7 +156,9 @@ def validate_manuscript(
                     ManuscriptIssue(
                         line_number=line_number,
                         check="numeric_artifact_mapping",
-                        message=f"Artifact tag is not declared: {tag_match.group('artifact')}",
+                        message=(
+                            f"Artifact tag is not declared{where}: {tag_match.group('artifact')}"
+                        ),
                     )
                 )
         end_match = ENVIRONMENT_END_PATTERN.search(line)
@@ -184,6 +212,7 @@ def render_blocked_manuscript_report(*, missing_inputs: tuple[Path, ...]) -> str
         "",
         "Numerical manuscript claims must carry artifact mappings. AR innovations must not "
         "be described with causal language.",
+        "",
     ]
     return "\n".join(lines)
 
@@ -194,6 +223,93 @@ def write_blocked_manuscript_report(*, output_path: Path, missing_inputs: tuple[
     output_path.write_text(
         render_blocked_manuscript_report(missing_inputs=missing_inputs),
         encoding="utf-8",
+    )
+
+
+def render_manuscript_output_report(
+    *,
+    manuscript_path: Path,
+    artifact_map_path: Path,
+    upstream_report_paths: tuple[Path, ...],
+) -> str:
+    """Render the manuscript-output report from the manuscript and its artifact map.
+
+    Args:
+        manuscript_path: LaTeX manuscript to validate.
+        artifact_map_path: Declared manuscript artifact mappings.
+        upstream_report_paths: Generated reports whose verdicts the manuscript carries.
+
+    Returns:
+        The markdown report. Counts and verdicts are computed at render time from
+        the manuscript, the artifact map, and the generated reports themselves.
+    """
+    artifact_map = load_artifact_map(artifact_map_path)
+    mapped_paths = [Path(str(path)) for path in artifact_map["path"].astype(str)]
+    absent = [path for path in mapped_paths if not path.exists()]
+    issues = validate_manuscript(
+        manuscript_path=manuscript_path,
+        artifact_map_path=artifact_map_path,
+    )
+    verdict = "manuscript_outputs_validated" if not issues else "manuscript_validation_failed"
+    lines = [
+        "# Manuscript Output Report",
+        "",
+        f"Verdict: `{verdict}`",
+        "",
+        f"Manuscript: `{manuscript_path.as_posix()}`",
+        f"Artifact map: `{artifact_map_path.as_posix()}`",
+        f"Mapped artifacts: {len(mapped_paths)}, of which {len(absent)} are absent",
+        f"Validation issues: {len(issues)}",
+        "",
+        "## Validation Issues By Check",
+        "",
+        *_issue_count_lines(issues),
+        "",
+        "## Upstream Generated Report Verdicts",
+        "",
+        *markdown_table(
+            ["Report", "Verdict"],
+            [[path.as_posix(), report_verdict(path)] for path in upstream_report_paths],
+        ),
+        "",
+        "Numerical manuscript claims carry artifact mappings, and every mapped artifact is "
+        "checked for existence at render time. AR innovations are not described with causal "
+        "language outside the approved identification sections.",
+        "",
+        "## Inputs Read",
+        "",
+        *path_bullets((manuscript_path, artifact_map_path, *upstream_report_paths)),
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def write_manuscript_output_report(
+    *,
+    output_path: Path,
+    manuscript_path: Path,
+    artifact_map_path: Path,
+    upstream_report_paths: tuple[Path, ...],
+) -> None:
+    """Write the manuscript-output report rendered from the manuscript and its map."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        render_manuscript_output_report(
+            manuscript_path=manuscript_path,
+            artifact_map_path=artifact_map_path,
+            upstream_report_paths=upstream_report_paths,
+        ),
+        encoding="utf-8",
+    )
+
+
+def _issue_count_lines(issues: Sequence[ManuscriptIssue]) -> list[str]:
+    if not issues:
+        return ["No manuscript validation issue was raised."]
+    counts = Counter(issue.check for issue in issues)
+    return markdown_table(
+        ["Check", "Issues"],
+        [[check, counts[check]] for check in sorted(counts)],
     )
 
 
@@ -225,6 +341,45 @@ def _line_has_numeric_claim(line: str) -> bool:
     ):
         return False
     return NUMERIC_PATTERN.search(stripped) is not None
+
+
+def _source_lines(manuscript_path: Path, manuscript: str) -> list[tuple[str, int, str]]:
+    """Yield the manuscript's lines with every ``\\input`` expanded in place.
+
+    Generated result tables live in their own files so that they can be rebuilt
+    from artifacts rather than transcribed. Expanding them here means the same
+    numeric-traceability and table-source rules apply to a generated table as to
+    a number written directly into the manuscript; without this, moving a table
+    into an included file would quietly exempt it from every check.
+
+    Args:
+        manuscript_path: Path to the manuscript, used to resolve relative inputs.
+        manuscript: The manuscript source text.
+
+    Returns:
+        Triples of origin label, line number within that origin, and line text.
+        The origin is empty for lines of the manuscript itself.
+    """
+    expanded: list[tuple[str, int, str]] = []
+    for line_number, line in enumerate(manuscript.splitlines(), start=1):
+        expanded.append(("", line_number, line))
+        include_match = INPUT_PATTERN.search(_strip_comment(line))
+        if include_match is None:
+            continue
+        target = include_match.group("path")
+        included = manuscript_path.parent / target
+        if included.suffix != ".tex":
+            included = included.with_suffix(".tex")
+        if not included.exists():
+            continue
+        origin = included.as_posix()
+        expanded.extend(
+            (origin, included_number, included_line)
+            for included_number, included_line in enumerate(
+                included.read_text(encoding="utf-8").splitlines(), start=1
+            )
+        )
+    return expanded
 
 
 def _strip_comment(line: str) -> str:

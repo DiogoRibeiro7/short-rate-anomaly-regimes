@@ -1,0 +1,14 @@
+{
+  "replication_status": "documented_reconstruction",
+  "script": "scripts/build_manuscript_tables.py",
+  "tables": [
+    "ar1.tex",
+    "baseline.tex",
+    "eligibility.tex",
+    "h1.tex",
+    "layers.tex",
+    "recovery.tex",
+    "regimes.tex",
+    "temporal.tex"
+  ]
+}

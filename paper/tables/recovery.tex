@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\caption{Cell-level recovery by statistic. A cell counts as recovered when it
+agrees with the article to the precision the article prints, that is within half
+of the last printed increment.}
+\label{tab:recovery}
+\begin{tabular}{lccccc}
+\toprule
+Statistic & Cells & Recovered & Share & Median $|\Delta|$ & Max $|\Delta|$ \\
+\midrule
+Market risk price & 29 & 20 & 0.690 & 0.0033 & 0.0117 \\ % artifact: artifacts/audit/published_target_audit.csv
+Rate risk price & 16 & 3 & 0.188 & 0.0137 & 0.0901 \\ % artifact: artifacts/audit/published_target_audit.csv
+Cross-sectional fit & 29 & 3 & 0.103 & 0.0251 & 0.2863 \\ % artifact: artifacts/audit/published_target_audit.csv
+Specification statistic & 29 & 0 & 0.000 & 0.7458 & 7.4110 \\ % artifact: artifacts/audit/published_target_audit.csv
+Constrained fit & 5 & 1 & 0.200 & 0.0162 & 0.0492 \\ % artifact: artifacts/audit/published_target_audit.csv
+Comparator factor prices & 15 & 2 & 0.133 & 0.0193 & 0.1350 \\ % artifact: artifacts/audit/published_target_audit.csv
+\bottomrule
+\end{tabular}
+\end{table}

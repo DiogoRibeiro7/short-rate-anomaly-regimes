@@ -351,12 +351,14 @@ def write_blocked_oos_report(*, output_path: Path, missing_inputs: tuple[Path, .
                 "",
                 "Verdict: `blocked_missing_input`",
                 "",
-                "Out-of-sample falsification is blocked until baseline factors, compatible "
-                "portfolio panels, and temporal-extension outputs exist. The refit schedule "
-                "is frozen before evaluation and must not be tuned after test errors are seen.",
+                "The registered out-of-sample falsification has not been executed, so no "
+                "forecast, metric, or model-confidence-set artifacts exist to report. The "
+                "refit schedule is frozen before evaluation and must not be tuned after "
+                "test errors are seen.",
                 "",
                 "Missing inputs:",
                 *[f"- `{path.as_posix()}`" for path in missing_inputs],
+                "",
             ]
         ),
         encoding="utf-8",

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from itertools import pairwise
 from pathlib import Path
@@ -14,6 +15,15 @@ import pandas as pd
 import statsmodels.api as sm
 from scipy.stats import chi2  # type: ignore[import-untyped]
 from scipy.stats import f as f_distribution
+
+from short_rate_anomaly_regimes.reporting.artifact_evidence import (
+    artifact_field,
+    format_code,
+    format_sequence,
+    load_json_artifact,
+    markdown_table,
+    path_bullets,
+)
 
 StabilityVerdict = Literal["stable", "unstable", "inconclusive"]
 
@@ -371,16 +381,189 @@ def write_blocked_regime_report(*, output_path: Path, missing_inputs: tuple[Path
                 "",
                 "Verdict: `blocked_missing_input`",
                 "",
-                "Regime stability tests are blocked until baseline and temporal-extension "
-                "panels exist. A significant future regime interaction will be interpreted "
-                "as parameter instability, not automatic monetary-policy causality.",
+                "Regime stability results are blocked until the registered H3 equivalence "
+                "and pooled beta-stability artifacts exist. A significant regime interaction "
+                "is interpreted as parameter instability, not as monetary-policy causality.",
                 "",
                 "Missing inputs:",
                 *[f"- `{path.as_posix()}`" for path in missing_inputs],
+                "",
             ]
         ),
         encoding="utf-8",
     )
+
+
+def render_regime_evidence_report(*, equivalence_path: Path, pooled_beta_path: Path) -> str:
+    """Render the regime report from the frozen H3 diagnostic artifacts.
+
+    Args:
+        equivalence_path: Registered H3 regime-equivalence artifact.
+        pooled_beta_path: Registered H3 pooled beta-stability artifact.
+
+    Returns:
+        The markdown report. Every displayed value is read from the artifacts;
+        the registered classification strings are reproduced verbatim.
+    """
+    equivalence = load_json_artifact(equivalence_path)
+    pooled = load_json_artifact(pooled_beta_path)
+    lines = [
+        "# Regime Stability Report",
+        "",
+        f"Verdict: {format_code(artifact_field(equivalence, 'classification'))}",
+        "",
+        f"Hypothesis: {format_code(artifact_field(equivalence, 'hypothesis'))}",
+        f"Replication status: {format_code(artifact_field(equivalence, 'replication_status'))}",
+        f"Equivalence rule: {format_code(artifact_field(equivalence, 'equivalence_rule'))}",
+        f"Bootstrap draws: {format_code(artifact_field(equivalence, 'draws'))}",
+        f"Reference regime: {format_code(artifact_field(equivalence, 'reference_regime'))}",
+        "Innovation definition: "
+        f"{format_code(artifact_field(equivalence, 'innovation_definition'))}",
+        "",
+        f"Classification basis: {artifact_field(equivalence, 'classification_basis')}",
+        "",
+        *_regime_equivalence_sections(equivalence),
+        *_pooled_beta_sections(pooled),
+        "## Artifacts Read",
+        "",
+        *path_bullets((equivalence_path, pooled_beta_path)),
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def write_regime_evidence_report(
+    *,
+    output_path: Path,
+    equivalence_path: Path,
+    pooled_beta_path: Path,
+) -> None:
+    """Write the regime report rendered from the frozen H3 artifacts."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        render_regime_evidence_report(
+            equivalence_path=equivalence_path,
+            pooled_beta_path=pooled_beta_path,
+        ),
+        encoding="utf-8",
+    )
+
+
+def _regime_equivalence_sections(equivalence: Mapping[str, Any]) -> list[str]:
+    gates = artifact_field(equivalence, "gates")
+    categories = artifact_field(equivalence, "per_portfolio_decision_categories")
+    conditioning = artifact_field(equivalence, "residual_covariance_conditioning")
+    sensitivity = artifact_field(equivalence, "global_innovation_sensitivity")
+    return [
+        "## Registered Equivalence Gates",
+        "",
+        *markdown_table(
+            ["Dimension", "Equivalence Demonstrated"],
+            [[dimension, gates[dimension]] for dimension in sorted(gates)],
+        ),
+        "",
+        "Dimensions with a demonstrated exceedance: "
+        + format_sequence(artifact_field(equivalence, "dimensions_with_a_demonstrated_exceedance")),
+        "",
+        "## Per-Portfolio Equivalence Decisions",
+        "",
+        *markdown_table(
+            ["Decision", "Portfolios"],
+            [[decision, categories[decision]] for decision in sorted(categories)],
+        ),
+        "",
+        "- Portfolios evaluated: "
+        + format_code(artifact_field(equivalence, "portfolios_evaluated")),
+        "- Portfolios failing the premium bound: "
+        f"{format_code(artifact_field(equivalence, 'portfolios_failing_the_premium_bound'))}",
+        "- Maximum absolute point premium change: "
+        f"{format_code(artifact_field(equivalence, 'max_absolute_point_premium_change'))}",
+        "",
+        "## Regime Coverage",
+        "",
+        "- Standalone second pass: "
+        + format_sequence(artifact_field(equivalence, "regimes_with_standalone_second_pass")),
+        "- Pooled interactions only: "
+        + format_sequence(artifact_field(equivalence, "regimes_limited_to_pooled_interactions")),
+        "",
+        f"Coverage note: {artifact_field(equivalence, 'coverage_note')}",
+        "",
+        "## Residual Covariance Conditioning",
+        "",
+        *markdown_table(
+            ["Regime", "Months", "Test Assets", "Excess Months", "Condition Number"],
+            [
+                [
+                    regime,
+                    conditioning[regime]["months"],
+                    conditioning[regime]["test_assets"],
+                    conditioning[regime]["excess_months_over_assets"],
+                    conditioning[regime]["residual_covariance_condition_number"],
+                ]
+                for regime in sorted(conditioning)
+            ],
+        ),
+        "",
+        f"Specification caveat: {artifact_field(equivalence, 'specification_test_caveat')}",
+        "",
+        "## Global Innovation Sensitivity",
+        "",
+        *markdown_table(
+            ["Statistic", "Value"],
+            [[statistic, sensitivity[statistic]] for statistic in sorted(sensitivity)],
+        ),
+        "",
+    ]
+
+
+def _pooled_beta_sections(pooled: Mapping[str, Any]) -> list[str]:
+    joint = artifact_field(pooled, "joint_equal_weighted_tests")
+    sample = artifact_field(pooled, "sample")
+    specification = artifact_field(pooled, "specification")
+    return [
+        "## Pooled Interaction Beta Stability",
+        "",
+        f"Classification: {format_code(artifact_field(pooled, 'classification'))}",
+        f"Scope: {format_code(artifact_field(pooled, 'scope'))}",
+        f"Replication status: {format_code(artifact_field(pooled, 'replication_status'))}",
+        "",
+        *markdown_table(
+            ["Test", "Statistic", "Degrees Of Freedom", "P Value", "Holm P Value"],
+            [
+                [
+                    test,
+                    joint[test]["statistic"],
+                    joint[test]["df"],
+                    joint[test]["p_value"],
+                    joint[test]["holm_p_value"],
+                ]
+                for test in sorted(joint)
+            ],
+        ),
+        "",
+        "Significant tests: " + format_sequence(artifact_field(pooled, "significant_tests")),
+        "",
+        "- Multiplicity adjustment: "
+        f"{format_code(artifact_field(pooled, 'multiplicity', 'adjustment'))} across "
+        f"{format_code(artifact_field(pooled, 'multiplicity', 'tests_adjusted'))} tests in family "
+        f"{format_code(artifact_field(pooled, 'multiplicity', 'family'))}",
+        f"- Sample: {format_code(sample['months'])} months, {format_code(sample['start'])} to "
+        f"{format_code(sample['end'])}, {format_code(sample['test_assets'])} test assets, vintage "
+        f"{format_code(sample['vintage'])}",
+        f"- Specification: response {format_code(specification['response'])}, regressors "
+        f"{format_sequence(specification['regressors'])}, HAC lags "
+        f"{format_code(specification['hac_lags'])}, omitted baseline regime "
+        f"{format_code(specification['omitted_baseline_regime'])}",
+        "- Boundary sensitivity changed a conclusion: "
+        f"{format_code(artifact_field(pooled, 'boundary_sensitivity', 'any_conclusion_changed'))}",
+        "- Regimes evidenced only by pooled interactions: "
+        + format_sequence(artifact_field(pooled, "pooled_interaction_only_regimes")),
+        "",
+        f"Interpretation: {artifact_field(pooled, 'interpretation_note')}",
+        "",
+        f"Scope note: {artifact_field(pooled, 'scope_note')}",
+        "",
+    ]
 
 
 def _align_regime_inputs(

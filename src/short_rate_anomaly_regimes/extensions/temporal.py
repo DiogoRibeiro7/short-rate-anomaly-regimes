@@ -13,6 +13,15 @@ import pandas as pd
 from matplotlib.dates import date2num
 from scipy.stats import spearmanr  # type: ignore[import-untyped]
 
+from short_rate_anomaly_regimes.reporting.artifact_evidence import (
+    artifact_field,
+    dataframe_table,
+    format_code,
+    load_json_artifact,
+    markdown_table,
+    path_bullets,
+)
+
 matplotlib.use("Agg")
 
 
@@ -476,13 +485,112 @@ def write_blocked_temporal_report(
                 f"Latest common month: `{freeze.latest_common_month}`",
                 f"Retrieval date: `{freeze.retrieval_date}`",
                 "",
-                "The temporal extension cannot run until baseline outputs and compatible "
-                "post-2013 panels exist. No revised historical data have been merged into "
-                "the locked 1972-2013 baseline.",
+                "The temporal extension report cannot be rendered until the registered H2 "
+                "temporal-stability artifacts exist. No revised historical data have been "
+                "merged into the locked 1972-2013 baseline.",
                 "",
                 "Missing inputs:",
                 *[f"- `{path.as_posix()}`" for path in missing_inputs],
+                "",
             ]
+        ),
+        encoding="utf-8",
+    )
+
+
+def render_temporal_evidence_report(
+    *,
+    freeze: TemporalFreeze,
+    stability_path: Path,
+    evaluation_table_path: Path,
+) -> str:
+    """Render the temporal-extension report from the frozen H2 artifacts.
+
+    Args:
+        freeze: Frozen vintage metadata for the post-2013 extension.
+        stability_path: Registered H2 temporal-stability artifact.
+        evaluation_table_path: Registered per-window evaluation table.
+
+    Returns:
+        The markdown report. Every displayed value is read from the artifacts or
+        from the frozen extension configuration.
+    """
+    stability = load_json_artifact(stability_path)
+    evaluation = pd.read_csv(evaluation_table_path)
+    gates = artifact_field(stability, "gates")
+    lambda_rate = artifact_field(stability, "lambda_rate")
+    dispersion = artifact_field(stability, "standardized_rate_exposure_dispersion_share")
+    lines = [
+        "# Temporal Extension Report",
+        "",
+        f"Verdict: {format_code(artifact_field(stability, 'classification'))}",
+        "",
+        f"Hypothesis: {format_code(artifact_field(stability, 'hypothesis'))}",
+        f"Replication status: {format_code(artifact_field(stability, 'replication_status'))}",
+        f"Latest common month: `{freeze.latest_common_month}`",
+        f"Retrieval date: `{freeze.retrieval_date}`",
+        f"Locked baseline vintage: `{freeze.baseline_vintage_label}`",
+        f"Extension vintage: `{freeze.extension_vintage_label}`",
+        f"Revision policy: `{freeze.revision_policy}`",
+        "",
+        "## Registered Compatibility Gates",
+        "",
+        *markdown_table(
+            ["Gate", "Passed"],
+            [[gate, gates[gate]] for gate in sorted(gates)],
+        ),
+        "",
+        "## Rate Risk Price By Evaluation Window",
+        "",
+        *markdown_table(
+            ["Window", "Rate Risk Price"],
+            [[window, lambda_rate[window]] for window in sorted(lambda_rate)],
+        ),
+        "",
+        "- RMSE relative change against the locked baseline: "
+        f"{format_code(artifact_field(stability, 'rmse_relative_change_vs_locked_baseline'))}",
+        "- RMSE relative change against the revised history: "
+        f"{format_code(artifact_field(stability, 'rmse_relative_change_vs_revised_history'))}",
+        "- Frozen autoregression intercept: "
+        f"{format_code(artifact_field(stability, 'frozen_ar_intercept'))}, slope "
+        f"{format_code(artifact_field(stability, 'frozen_ar_slope'))}",
+        "- Standardized rate-exposure dispersion share: locked baseline "
+        f"{format_code(dispersion['locked_baseline'])}, refitted extension "
+        f"{format_code(dispersion['refitted_extension'])}",
+        "",
+        f"Dispersion note: {dispersion['note']}",
+        "",
+        f"Vintage isolation: {artifact_field(stability, 'vintage_isolation')}",
+        "",
+        "## Evaluation Windows",
+        "",
+        *dataframe_table(evaluation),
+        "",
+        "The baseline and extension vintages are labelled separately. Revised historical "
+        "values enter only the vintage comparison, never the temporal verdict.",
+        "",
+        "## Artifacts Read",
+        "",
+        *path_bullets((stability_path, evaluation_table_path)),
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def write_temporal_evidence_report(
+    *,
+    output_path: Path,
+    freeze: TemporalFreeze,
+    stability_path: Path,
+    evaluation_table_path: Path,
+) -> None:
+    """Write the temporal-extension report rendered from the frozen H2 artifacts."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        render_temporal_evidence_report(
+            freeze=freeze,
+            stability_path=stability_path,
+            evaluation_table_path=evaluation_table_path,
         ),
         encoding="utf-8",
     )

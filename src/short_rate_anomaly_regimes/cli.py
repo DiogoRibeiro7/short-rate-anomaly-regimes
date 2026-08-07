@@ -28,10 +28,19 @@ from short_rate_anomaly_regimes.exceptions import ReplicationBlockError
 from short_rate_anomaly_regimes.extensions.temporal import (
     TemporalFreeze,
     write_blocked_temporal_report,
+    write_temporal_evidence_report,
 )
 from short_rate_anomaly_regimes.forecasting.out_of_sample import write_blocked_oos_report
+from short_rate_anomaly_regimes.models.diagnostics import (
+    write_blocked_robustness_report,
+    write_robustness_evidence_report,
+)
 from short_rate_anomaly_regimes.portfolios.construction import write_construction_manifest
-from short_rate_anomaly_regimes.regimes.stability import write_blocked_regime_report
+from short_rate_anomaly_regimes.regimes.stability import (
+    write_blocked_regime_report,
+    write_regime_evidence_report,
+)
+from short_rate_anomaly_regimes.reporting.artifact_evidence import missing_inputs
 from short_rate_anomaly_regimes.reporting.audit import (
     build_missing_input_audit,
     load_table_targets,
@@ -39,7 +48,10 @@ from short_rate_anomaly_regimes.reporting.audit import (
     write_audit_json,
     write_replication_report,
 )
-from short_rate_anomaly_regimes.reporting.manuscript import write_blocked_manuscript_report
+from short_rate_anomaly_regimes.reporting.manuscript import (
+    write_blocked_manuscript_report,
+    write_manuscript_output_report,
+)
 from short_rate_anomaly_regimes.reporting.release import (
     write_adversarial_reports,
     write_checksum_manifest,
@@ -55,6 +67,42 @@ from short_rate_anomaly_regimes.shocks.decomposition import write_blocked_shock_
 
 app = typer.Typer(no_args_is_help=True)
 console = Console()
+
+#: Registered H3 artifacts the regime report renders. A generated report is
+#: blocked only when the artifacts it would read are genuinely absent.
+REGIME_EVIDENCE_INPUTS = (
+    Path("artifacts/diagnostics/h3_regime_equivalence.json"),
+    Path("artifacts/diagnostics/h3_pooled_beta_stability.json"),
+)
+#: Registered H1 and weak-factor artifacts the robustness report renders.
+ROBUSTNESS_EVIDENCE_INPUTS = (
+    Path("artifacts/diagnostics/h1_materiality.json"),
+    Path("artifacts/diagnostics/weak_factor/h4a_identification_strength.json"),
+    Path("artifacts/diagnostics/weak_factor/h4b_influence_stability.json"),
+    Path("artifacts/diagnostics/weak_factor/h4c_fitted_premium_precision.json"),
+)
+#: Registered H2 artifacts the temporal-extension report renders.
+TEMPORAL_EVIDENCE_INPUTS = (
+    Path("artifacts/diagnostics/h2_temporal_stability.json"),
+    Path("artifacts/tables/extension/temporal_evaluation.csv"),
+)
+#: Evaluation artifacts the out-of-sample falsification gate would report.
+OUT_OF_SAMPLE_EVIDENCE_INPUTS = (
+    Path("artifacts/tables/out_of_sample/forecast_metrics.csv"),
+    Path("artifacts/tables/out_of_sample/model_confidence_set.csv"),
+    Path("artifacts/tables/out_of_sample/design.json"),
+)
+MANUSCRIPT_PATH = Path("paper/manuscript.tex")
+MANUSCRIPT_ARTIFACT_MAP_PATH = Path("research/manuscript_artifact_map.csv")
+#: Generated reports whose verdicts the manuscript-output report carries forward.
+UPSTREAM_GENERATED_REPORTS = (
+    Path("reports/generated/replication_report.md"),
+    Path("reports/generated/robustness_report.md"),
+    Path("reports/generated/temporal_extension_report.md"),
+    Path("reports/generated/regime_report.md"),
+    Path("reports/generated/shock_decomposition_report.md"),
+    Path("reports/generated/out_of_sample_report.md"),
+)
 ConfigPathOption = Annotated[Path, typer.Option(exists=True, dir_okay=False)]
 OutputPathOption = Annotated[Path, typer.Option(dir_okay=False)]
 InputPathOption = Annotated[Path, typer.Option(exists=True, dir_okay=False)]
@@ -359,40 +407,23 @@ def audit_replication(
 def robustness_diagnostics(
     output: OutputPathOption = Path("reports/generated/robustness_report.md"),
 ) -> None:
-    """Run registered robustness and weak-factor diagnostics after baseline outputs exist."""
-    required_paths = [
-        Path("artifacts/estimates/time_series"),
-        Path("artifacts/estimates/cross_section"),
-        Path("data/processed/factors/short_rate_factors.parquet"),
-        Path("artifacts/audit/table_replication.csv"),
-    ]
-    missing_paths = [str(path) for path in required_paths if not path.exists()]
+    """Report the registered robustness and weak-factor gate outcomes."""
+    missing_paths = missing_inputs(ROBUSTNESS_EVIDENCE_INPUTS)
     if missing_paths:
-        output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(
-            "\n".join(
-                [
-                    "# Robustness Report",
-                    "",
-                    "Verdict: `unidentified`",
-                    "",
-                    "Robustness diagnostics are blocked until baseline generated artifacts exist.",
-                    "",
-                    "Missing inputs:",
-                    *[f"- `{path}`" for path in missing_paths],
-                    "",
-                    "No significant-only robustness reporting has been performed.",
-                ]
-            ),
-            encoding="utf-8",
-        )
+        write_blocked_robustness_report(output_path=output, missing_inputs=missing_paths)
         raise ReplicationBlockError(
-            "Wrote blocked robustness report; diagnostics require baseline artifacts: "
-            f"{', '.join(missing_paths)}"
+            "Wrote blocked robustness report; diagnostics require the registered H1 and "
+            f"weak-factor artifacts: {_format_paths(missing_paths)}"
         )
-    raise ReplicationBlockError(
-        "Baseline artifacts exist, but registered robustness specification mapping is not frozen"
+    materiality, identification, influence, precision = ROBUSTNESS_EVIDENCE_INPUTS
+    write_robustness_evidence_report(
+        output_path=output,
+        materiality_path=materiality,
+        identification_path=identification,
+        influence_path=influence,
+        precision_path=precision,
     )
+    console.print(f"Wrote robustness report from registered artifacts to {output}")
 
 
 @app.command("temporal-extension")
@@ -401,21 +432,12 @@ def temporal_extension(
     baseline_config: ConfigPathOption = Path("configs/baseline.yaml"),
     output: OutputPathOption = Path("reports/generated/temporal_extension_report.md"),
 ) -> None:
-    """Run the post-2013 temporal-extension gate with frozen vintage metadata."""
+    """Report the post-2013 temporal-extension gate with frozen vintage metadata."""
     extension = load_extension_config(config)
     baseline = load_baseline_config(baseline_config)
-    required_paths = [
-        Path("data/processed/factors/short_rate_factors.parquet"),
-        Path("artifacts/estimates/time_series"),
-        Path("artifacts/estimates/cross_section"),
-    ]
     portfolio_sets = _compatible_extension_portfolio_sets(extension, tuple(baseline.portfolio_sets))
-    required_paths.extend(
-        Path("data/processed/portfolios") / f"{portfolio_set}.parquet"
-        for portfolio_set in portfolio_sets
-    )
-    missing_paths = tuple(path for path in required_paths if not path.exists())
     freeze = _temporal_freeze_from_config(extension)
+    missing_paths = missing_inputs(TEMPORAL_EVIDENCE_INPUTS)
     if missing_paths:
         write_blocked_temporal_report(
             output_path=output,
@@ -423,12 +445,19 @@ def temporal_extension(
             missing_inputs=missing_paths,
         )
         raise ReplicationBlockError(
-            "Wrote blocked temporal extension report; extension requires baseline and "
-            f"post-2013 compatible panels: {', '.join(str(path) for path in missing_paths)}"
+            "Wrote blocked temporal extension report; the extension report requires the "
+            f"registered H2 artifacts: {_format_paths(missing_paths)}"
         )
-    raise ReplicationBlockError(
-        "Baseline artifacts exist, but temporal-extension panel assembly is not linked to "
-        "source-specific compatible vintages yet"
+    stability_path, evaluation_table_path = TEMPORAL_EVIDENCE_INPUTS
+    write_temporal_evidence_report(
+        output_path=output,
+        freeze=freeze,
+        stability_path=stability_path,
+        evaluation_table_path=evaluation_table_path,
+    )
+    console.print(
+        f"Wrote temporal extension report from registered artifacts to {output} "
+        f"for {len(portfolio_sets)} compatible portfolio sets"
     )
 
 
@@ -444,26 +473,23 @@ def run_regimes(
     config: ConfigPathOption,
     output: OutputPathOption = Path("reports/generated/regime_report.md"),
 ) -> None:
-    """Run the regime-stability extension."""
+    """Report the registered regime-stability outcomes."""
     validated = load_regime_config(config)
-    required_paths = [
-        Path(validated.base_config),
-        Path("data/processed/extension/monthly_panel.parquet"),
-        Path("data/processed/factors/short_rate_factors.parquet"),
-        Path("artifacts/estimates/time_series"),
-        Path("artifacts/estimates/cross_section"),
-        Path("research/regime_policy_sources.csv"),
-    ]
-    missing_paths = tuple(path for path in required_paths if not path.exists())
+    required_paths = (Path(validated.base_config), *REGIME_EVIDENCE_INPUTS)
+    missing_paths = missing_inputs(required_paths)
     if missing_paths:
         write_blocked_regime_report(output_path=output, missing_inputs=missing_paths)
         raise ReplicationBlockError(
-            "Wrote blocked regime report; regime stability requires baseline, extension, "
-            f"and verified policy-source inputs: {', '.join(str(path) for path in missing_paths)}"
+            "Wrote blocked regime report; the regime report requires the base configuration "
+            f"and the registered H3 artifacts: {_format_paths(missing_paths)}"
         )
-    raise ReplicationBlockError(
-        "Required regime inputs exist, but source-specific regime panel assembly is not frozen"
+    equivalence_path, pooled_beta_path = REGIME_EVIDENCE_INPUTS
+    write_regime_evidence_report(
+        output_path=output,
+        equivalence_path=equivalence_path,
+        pooled_beta_path=pooled_beta_path,
     )
+    console.print(f"Wrote regime stability report from registered artifacts to {output}")
 
 
 @app.command("shock-decomposition")
@@ -501,22 +527,16 @@ def out_of_sample(
 ) -> None:
     """Run the out-of-sample falsification gate."""
     validated = load_extension_config(config)
-    required_paths = [
-        Path("data/processed/extension/monthly_panel.parquet"),
-        Path("data/processed/factors/short_rate_factors.parquet"),
-        Path("artifacts/estimates/time_series"),
-        Path("artifacts/estimates/cross_section"),
-    ]
-    missing_paths = tuple(path for path in required_paths if not path.exists())
+    missing_paths = missing_inputs(OUT_OF_SAMPLE_EVIDENCE_INPUTS)
     if missing_paths:
         write_blocked_oos_report(output_path=output, missing_inputs=missing_paths)
         raise ReplicationBlockError(
-            "Wrote blocked out-of-sample report; falsification requires frozen "
-            f"baseline and extension inputs: {', '.join(str(path) for path in missing_paths)}"
+            "Wrote blocked out-of-sample report; the registered falsification run has not "
+            f"produced its evaluation artifacts: {_format_paths(missing_paths)}"
         )
     raise ReplicationBlockError(
-        "Required OOS inputs exist, but panel-specific forecast assembly is not frozen "
-        f"for {validated.out_of_sample.confirmatory_model}"
+        "Out-of-sample evaluation artifacts exist, but panel-specific forecast assembly is "
+        f"not frozen for {validated.out_of_sample.confirmatory_model}"
     )
 
 
@@ -525,31 +545,23 @@ def build_report(
     config: ConfigPathOption,
     output: OutputPathOption = Path("reports/generated/manuscript_output_report.md"),
 ) -> None:
-    """Build tables, figures, and the replication report."""
+    """Report manuscript-output traceability against the generated reports."""
     load_reporting_config(config)
-    required_paths = [
-        Path("paper/manuscript.tex"),
-        Path("research/manuscript_artifact_map.csv"),
-        Path("artifacts/audit/table_replication.csv"),
-        Path("reports/generated/replication_report.md"),
-        Path("reports/generated/robustness_report.md"),
-        Path("reports/generated/temporal_extension_report.md"),
-        Path("reports/generated/regime_report.md"),
-        Path("reports/generated/shock_decomposition_report.md"),
-        Path("reports/generated/out_of_sample_report.md"),
-        Path("data/processed/extension/monthly_panel.parquet"),
-        Path("data/processed/factors/short_rate_factors.parquet"),
-    ]
-    missing_paths = tuple(path for path in required_paths if not path.exists())
+    required_paths = (MANUSCRIPT_PATH, MANUSCRIPT_ARTIFACT_MAP_PATH, *UPSTREAM_GENERATED_REPORTS)
+    missing_paths = missing_inputs(required_paths)
     if missing_paths:
         write_blocked_manuscript_report(output_path=output, missing_inputs=missing_paths)
         raise ReplicationBlockError(
-            "Wrote blocked manuscript report; manuscript outputs require frozen empirical "
-            f"artifacts: {', '.join(str(path) for path in missing_paths)}"
+            "Wrote blocked manuscript report; manuscript outputs require the manuscript, its "
+            f"artifact map, and the generated reports: {_format_paths(missing_paths)}"
         )
-    raise ReplicationBlockError(
-        "Required manuscript inputs exist, but final table and figure rendering is not frozen"
+    write_manuscript_output_report(
+        output_path=output,
+        manuscript_path=MANUSCRIPT_PATH,
+        artifact_map_path=MANUSCRIPT_ARTIFACT_MAP_PATH,
+        upstream_report_paths=UPSTREAM_GENERATED_REPORTS,
     )
+    console.print(f"Wrote manuscript output report from mapped artifacts to {output}")
 
 
 @app.command("release-audit")
@@ -599,6 +611,10 @@ def release_audit(
         "Wrote release audit artifacts "
         f"with {critical_count} critical and {major_count} major issues"
     )
+
+
+def _format_paths(paths: tuple[Path, ...]) -> str:
+    return ", ".join(path.as_posix() for path in paths)
 
 
 def _temporal_freeze_from_config(config: ExtensionConfig) -> TemporalFreeze:

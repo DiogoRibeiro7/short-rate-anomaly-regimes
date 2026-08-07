@@ -1,11 +1,36 @@
 # Manuscript Output Report
 
-Verdict: `blocked_missing_input`
+Verdict: `manuscript_outputs_validated`
 
-The manuscript scaffold is present, but empirical manuscript outputs are blocked until generated tables, figures, audit files, and extension artifacts are frozen.
+Manuscript: `paper/manuscript.tex`
+Artifact map: `research/manuscript_artifact_map.csv`
+Mapped artifacts: 77, of which 0 are absent
+Validation issues: 0
 
-Missing inputs:
-- `data/processed/extension/monthly_panel.parquet`
-- `data/processed/factors/short_rate_factors.parquet`
+## Validation Issues By Check
 
-Numerical manuscript claims must carry artifact mappings. AR innovations must not be described with causal language.
+No manuscript validation issue was raised.
+
+## Upstream Generated Report Verdicts
+
+| Report | Verdict |
+|---|---|
+| reports/generated/replication_report.md | unidentified |
+| reports/generated/robustness_report.md | unsupported |
+| reports/generated/temporal_extension_report.md | post_publication_compatibility_unsupported |
+| reports/generated/regime_report.md | regime_stability_unsupported_under_the_registered_equivalence_standard |
+| reports/generated/shock_decomposition_report.md | blocked_missing_input |
+| reports/generated/out_of_sample_report.md | blocked_missing_input |
+
+Numerical manuscript claims carry artifact mappings, and every mapped artifact is checked for existence at render time. AR innovations are not described with causal language outside the approved identification sections.
+
+## Inputs Read
+
+- `paper/manuscript.tex`
+- `research/manuscript_artifact_map.csv`
+- `reports/generated/replication_report.md`
+- `reports/generated/robustness_report.md`
+- `reports/generated/temporal_extension_report.md`
+- `reports/generated/regime_report.md`
+- `reports/generated/shock_decomposition_report.md`
+- `reports/generated/out_of_sample_report.md`

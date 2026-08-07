@@ -1,0 +1,13 @@
+{
+  "figures": [
+    "regime_innovation.pdf",
+    "spread_reversal.pdf"
+  ],
+  "replication_status": "documented_reconstruction",
+  "script": "scripts/build_manuscript_figures.py",
+  "sources": [
+    "artifacts/tables/regimes/regime_monthly_series.csv",
+    "artifacts/tables/regimes/regime_eligibility.csv",
+    "artifacts/tables/extension/fitted_premium_spreads.csv"
+  ]
+}

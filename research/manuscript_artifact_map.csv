@@ -68,3 +68,11 @@ baseline_replication_audit,reports/baseline_replication_audit.md,Baseline replic
 regime_power_report,reports/regime_eligibility_power_analysis.md,Power analysis of the regime estimation eligibility floors
 published_targets,research/published_target_values.csv,Transcribed published statistic targets from the article tables and supplement
 regime_fitted_premia,artifacts/tables/regimes/regime_fitted_premia.csv,Per-portfolio rate-attributable fitted premia by regime with changes and sensitivity
+ar1_published_comparison,artifacts/tables/factors/ar1_published_target_comparison.csv,Reconstructed AR(1) statistics compared cell by cell against the published Table 1 targets
+h1_primary_comparison,artifacts/tables/robustness/h1_primary_comparison.csv,Primary incremental-pricing materiality gates per asset set and short-rate specification
+manuscript_tables,artifacts/provenance/manuscript_tables.json,Manifest of the generated manuscript result tables
+manuscript_figures,artifacts/provenance/manuscript_figures.json,Manifest of the generated manuscript result figures and their sources
+fitted_premium_spreads,artifacts/tables/extension/fitted_premium_spreads.csv,Per-family rate-attributable fitted-premium spreads across baseline vintage and extension evaluations
+regime_series,artifacts/tables/regimes/regime_monthly_series.csv,Monthly short-rate level innovation and regime labels on the vintage-consistent panel
+table_builder,scripts/build_manuscript_tables.py,Generator that writes every manuscript result table from the frozen artifacts
+figure_builder,scripts/build_manuscript_figures.py,Generator that writes every manuscript result figure from the frozen artifacts

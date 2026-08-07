@@ -145,9 +145,11 @@ identified announcement components and from regime-specific pricing evidence.
 Structural-change methods such as \citet{bai_perron_1998} provide a way to
 distinguish predeclared regime boundaries from estimated breaks.
 
-The final stream is data vintage discipline. Official factor libraries provide
-current data access, historical archives, and selected change notes, which makes
-source vintage a replication object rather than a footnote
+The final stream is data vintage discipline. Official factor libraries publish
+current data, dated historical archives, and selected change notes rather than a
+complete revision history, so the retrieval vintage of a source has to be
+recorded before an estimate is labelled an exact replication or entered into a
+post-publication comparison
 \citep{fama_french_data_library_2026}. This paper therefore adds value beyond
 the original article by freezing a table-level replication target before asking
 whether the short-rate evidence generalizes over time and across regimes.
@@ -375,7 +377,11 @@ rate definitions, local-level filters, and announcement-surprise measures are
 robustness or extension specifications, not replacements for the strict baseline.
 
 First-pass time-series regressions estimate portfolio exposures to the market
-excess return and the selected short-rate innovation. The notation separates the
+excess return and the selected short-rate innovation. Their standard errors are
+heteroskedasticity and autocorrelation consistent, computed with the
+\citet{newey_west_1987} covariance estimator under an automatic monthly lag rule
+that depends only on the number of observations, so no lag length is chosen after
+seeing an estimate. The notation separates the
 time-series intercept \(\delta_i\), factor loadings \(\beta_i\), residuals
 \(\varepsilon_{i,t}\), cross-sectional pricing errors \(\alpha^{CS}_i\), and
 risk prices \(\lambda\). The second pass is the article's verified no-intercept
@@ -584,23 +590,7 @@ conversion, both reconstructed intercepts round to the published $0.000$; withou
 it, neither does. The slope, both $t$-ratios, and the coefficient of
 determination are scale invariant and need no conversion. % artifact: artifacts/diagnostics/rates/ar1_reconstruction_estimates.csv
 
-\begin{table}[htbp]
-\centering
-\caption{Short-rate innovation reconstruction, 1972-01 to 2013-12. Published % artifact: artifacts/diagnostics/rates/ar1_reconstruction_estimates.csv
-values are those printed by \citet{maio_santaclara_2017}. Innovation standard
-deviations are in annualized percentage points.}
-\label{tab:ar1}
-\begin{tabular}{lccccc}
-\toprule
-Series & Intercept & Slope & Slope $t$ & $R^2$ & Innovation s.d. \\ % artifact: artifacts/diagnostics/rates/ar1_reconstruction_estimates.csv
-\midrule
-Federal funds, reconstructed & 0.000463 & 0.9905 & 147.27 & 0.9774 & 0.5855 \\ % artifact: artifacts/diagnostics/rates/ar1_reconstruction_estimates.csv
-Federal funds, published & 0.000 & 0.991 & --- & 0.98 & --- \\ % artifact: research/published_target_values.csv
-Treasury bill, reconstructed & 0.000354 & 0.9916 & 153.18 & 0.9791 & 0.4855 \\ % artifact: artifacts/diagnostics/rates/ar1_reconstruction_estimates.csv
-Treasury bill, published & 0.000 & 0.992 & --- & 0.98 & --- \\ % artifact: research/published_target_values.csv
-\bottomrule
-\end{tabular}
-\end{table}
+\input{tables/ar1}
 
 The timing convention is not stated in the article and had to be recovered. Two
 variants are admissible: regressing the first window month on the level of the
@@ -620,33 +610,7 @@ is eligible for that label at any recovery rate, and both are classified
 Table~\ref{tab:baseline} reports the second pass for all eight registered models
 on the joint seventy-portfolio system over the 504 baseline months. % artifact: configs/baseline.yaml
 
-\begin{table}[htbp]
-\centering
-\small
-\caption{Baseline cross-sectional pricing, joint seventy-portfolio system,
-1972-01 to 2013-12, 504 months. Risk prices are monthly percentage points with % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
-Shanken $t$-ratios in parentheses. Fit is the article's centred cross-sectional
-variance ratio. All rows carry the label \texttt{documented\_reconstruction}.}
-\label{tab:baseline}
-\begin{tabular}{lccccccc}
-\toprule
-Model & $\lambda_{RM}$ & $\lambda_{\text{rate}}$ & RMSE & MAE & $\max|\alpha|$ & Fit & $\chi^2$ ($p$) \\ % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
-\midrule
-CAPM & 0.648 & --- & 0.1893 & 0.1466 & 0.4752 & $-0.613$ & 99.57 (0.009) \\ % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
- & (3.12) & & & & & & \\ % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
-Market + funds-rate & 0.601 & $-0.698$ & 0.1004 & 0.0816 & 0.2388 & 0.544 & 35.65 (1.000) \\ % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
- & (2.87) & ($-2.86$) & & & & & \\ % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
-Market + bill-rate & 0.620 & $-0.482$ & 0.1084 & 0.0858 & 0.2781 & 0.468 & 46.77 (0.977) \\ % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
- & (2.97) & ($-3.02$) & & & & & \\ % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
-\midrule
-Fama-French three & 0.612 & --- & 0.0798 & 0.0630 & 0.2409 & 0.712 & 82.31 (0.098) \\ % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
-Carhart four & 0.607 & --- & 0.0720 & 0.0560 & 0.2427 & 0.765 & 66.82 (0.449) \\ % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
-Fama-French five & 0.612 & --- & 0.0745 & 0.0595 & 0.1743 & 0.749 & 78.14 (0.127) \\ % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
-$q$-factor & 0.608 & --- & 0.0832 & 0.0664 & 0.2164 & 0.687 & 81.45 (0.095) \\ % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
-Liquidity & 0.615 & --- & 0.0796 & 0.0623 & 0.2354 & 0.713 & 81.77 (0.091) \\ % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
-\bottomrule
-\end{tabular}
-\end{table}
+\input{tables/baseline}
 
 The qualitative published result reproduces. Adding the funds-rate innovation to
 the market model lowers cross-sectional RMSE from 0.1893 to 0.1004 and raises the % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
@@ -752,22 +716,7 @@ The materiality standard was registered before any estimate existed, with the
 CAPM named in advance as the primary comparator and all three gates required to
 hold. Table~\ref{tab:h1} reports them.
 
-\begin{table}[htbp]
-\centering
-\caption{Incremental-pricing materiality against the ex ante CAPM comparator,
-joint seventy-portfolio system. All three gates must hold for the claim to be
-supported.}
-\label{tab:h1}
-\begin{tabular}{lcccl}
-\toprule
-Gate & Threshold & CAPM & Market + rate & Result \\
-\midrule
-RMSE reduction & $\geq 10$ percent & 0.1893 & 0.1004 & pass, 47.0 percent \\ % artifact: artifacts/diagnostics/h1_materiality.json
-MAE reduction & $\geq 10$ percent & 0.1466 & 0.0816 & pass, 44.3 percent \\ % artifact: artifacts/diagnostics/h1_materiality.json
-$\max|\alpha|$ reduction & $\geq 0.25$ monthly pp & 0.4752 & 0.2388 & \textbf{fail}, 0.2364 pp \\ % artifact: artifacts/diagnostics/h1_materiality.json
-\bottomrule
-\end{tabular}
-\end{table}
+\input{tables/h1}
 
 The registered classification is therefore \emph{unsupported}. The two relative
 gates clear by roughly a factor of four; the absolute gate fails by 0.0136 % artifact: artifacts/diagnostics/h1_materiality.json
@@ -823,23 +772,7 @@ evaluated on the second comparison, so no revised historical datum enters the
 temporal verdict. A fourth system applies the 2013-12 parameters unchanged to the % artifact: configs/extensions.yaml
 later months without re-estimating anything, and is genuinely out of sample.
 
-\begin{table}[htbp]
-\centering
-\caption{Temporal evaluations. The locked baseline and revised history share
-months and differ in vintage; the revised history and refitted extension share
-vintage and differ in months.}
-\label{tab:temporal}
-\begin{tabular}{lccccc}
-\toprule
-Evaluation & Months & $\lambda_{RM}$ & $\lambda_{\text{rate}}$ & RMSE & Fit \\
-\midrule
-Locked baseline, 1972--2013 & 504 & 0.6012 & $-0.6985$ & 0.1004 & 0.544 \\ % artifact: artifacts/tables/extension/temporal_evaluation.csv
-Revised history, same months & 504 & 0.6044 & $-0.6974$ & 0.1015 & 0.534 \\ % artifact: artifacts/tables/extension/temporal_evaluation.csv
-Frozen parameters on 2014--2025 & 144 & 0.6012 & $-0.6985$ & 0.4463 & $-0.691$ \\ % artifact: artifacts/tables/extension/temporal_evaluation.csv
-Refitted extension, 2014--2025 & 144 & 0.9972 & $-0.0825$ & 0.1918 & 0.450 \\ % artifact: artifacts/tables/extension/temporal_evaluation.csv
-\bottomrule
-\end{tabular}
-\end{table}
+\input{tables/temporal}
 
 The separation is clean. Recomputing the baseline window on a vintage nine years
 later moves the rate price of risk by 0.0011 and cross-sectional RMSE by 1.1 % artifact: artifacts/diagnostics/h2_temporal_stability.json
@@ -867,6 +800,19 @@ has far less variation in it: the innovation standard deviation falls from 0.585
 to 0.1707, and the share of months with the rate below half a percent rises from % artifact: artifacts/diagnostics/h2_temporal_stability.json
 12.3 to 41.7 percent. That invites the reading that the extension fails because % artifact: artifacts/diagnostics/h2_temporal_stability.json
 the factor is no longer identified rather than because the relation changed. % artifact: artifacts/diagnostics/h2_temporal_stability.json
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{figures/spread_reversal}
+\caption{Rate-attributable fitted-premium spread between extreme deciles, by
+anomaly family, in the baseline window and in the refitted extension. Five of the
+seven families reverse sign; the two that keep it do so with spreads that have
+collapsed toward zero.}
+\label{fig:spreads}
+
+\smallskip
+\small Source: \artifact{artifacts/tables/extension/fitted_premium_spreads.csv}.
+\end{figure}
 
 The registered identification gate is not the factor's own variance but the
 cross-sectional dispersion of standardized exposures, which is scale aware by
@@ -906,35 +852,37 @@ Section~\ref{sec:temporal} licenses: over the baseline window the vintage
 contribution is 1.1 percent of RMSE against temporal contributions of 89.0 % artifact: reports/monetary_regime_report.md
 percent. % artifact: reports/monetary_regime_report.md
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{figures/regime_innovation}
+\caption{The federal funds rate and its autoregressive innovation across the
+registered regimes, on the vintage-consistent panel. Dashed lines mark regime
+boundaries. The innovation that identifies the factor retains almost none of its
+earlier variation once the policy rate reaches the effective lower bound.}
+\label{fig:regimes}
+
+\smallskip
+\small Sources: \artifact{artifacts/tables/regimes/regime_monthly_series.csv} and
+\artifact{artifacts/tables/regimes/regime_eligibility.csv}.
+\end{figure}
+
 \subsection{Most regimes cannot support a standalone second pass}
 
-The eligibility floors were fixed before any regime was estimated. Applying them,
-only two of the six registered regimes clear the standalone second-pass tier:
-the conventional pre-lower-bound regime with 444 months and the % artifact: artifacts/tables/regimes/regime_eligibility.csv
-lower-bound and quantitative-easing regime with 84. The normalisation regime has % artifact: artifacts/tables/regimes/regime_eligibility.csv
-51 months and is limited to first-pass betas; the remaining three, at 24, 30 and % artifact: artifacts/tables/regimes/regime_eligibility.csv
-15 months, fall below the first-pass floor entirely. % artifact: artifacts/tables/regimes/regime_eligibility.csv
+The eligibility floors were fixed before any regime was estimated.
+Table~\ref{tab:eligibility} applies them. Only two of the six registered regimes
+clear the standalone second-pass tier, one of them limited to first-pass betas by
+the short-sample band and the remaining three falling below the first-pass floor
+entirely.
+
+\input{tables/eligibility}
+
 The confirmatory equivalence comparison therefore spans a single contrast. The
 four ineligible regimes are not dropped: they enter through the pooled
 interaction model, which borrows strength across the whole sample.
 
 \subsection{The two estimable regimes}
 
-\begin{table}[htbp]
-\centering
-\caption{Regime-specific second passes on the joint seventy-portfolio system,
-current vintage throughout. Dispersion is the cross-sectional standard deviation
-of rate-attributable fitted premia.}
-\label{tab:regimes}
-\begin{tabular}{lccccccc}
-\toprule
-Regime & Months & $\lambda_{RM}$ & $\lambda_{\text{rate}}$ & Shanken $t$ & RMSE & Fit & Dispersion \\
-\midrule
-Conventional, 1972--2008 & 444 & 0.458 & $-0.7259$ & $-2.87$ & 0.1046 & 0.596 & 0.1753 \\ % artifact: artifacts/tables/regimes/regime_second_pass.csv
-Lower bound, 2009--2015 & 84 & 1.327 & 0.0037 & 0.84 & 0.2220 & $-0.172$ & 0.0333 \\ % artifact: artifacts/tables/regimes/regime_second_pass.csv
-\bottomrule
-\end{tabular}
-\end{table}
+\input{tables/regimes}
 
 The conventional-regime estimate reproduces the baseline closely, at $-0.7259$ on % artifact: artifacts/tables/regimes/regime_second_pass.csv
 444 months against $-0.6985$ on the 504-month baseline, with the same Shanken % artifact: artifacts/tables/regimes/regime_second_pass.csv
@@ -1110,43 +1058,9 @@ Cell-level comparison was run against the statistics transcribed from Tables 3, 
 printed uncertainty measures give 123 unique published cells. All 123 were % artifact: artifacts/audit/published_target_audit.csv
 compared. % artifact: artifacts/audit/published_target_audit.csv
 
-\begin{table}[htbp]
-\centering
-\caption{Cell-level recovery by statistic. A cell counts as recovered when it
-agrees with the article to the precision the article prints, that is within half
-of the last printed increment.}
-\label{tab:recovery}
-\begin{tabular}{lccccc}
-\toprule
-Statistic & Cells & Recovered & Share & Median $|\Delta|$ & Max $|\Delta|$ \\
-\midrule
-Market risk price & 29 & 20 & 0.690 & 0.0033 & 0.0117 \\ % artifact: artifacts/audit/published_target_audit.csv
-Rate risk price & 16 & 3 & 0.188 & 0.0137 & 0.0901 \\ % artifact: artifacts/audit/published_target_audit.csv
-Cross-sectional fit & 29 & 3 & 0.103 & 0.0251 & 0.2863 \\ % artifact: artifacts/audit/published_target_audit.csv
-Specification statistic & 29 & 0 & 0.000 & 0.7458 & 7.4110 \\ % artifact: artifacts/audit/published_target_audit.csv
-Constrained fit & 5 & 1 & 0.200 & 0.0162 & 0.0492 \\ % artifact: artifacts/audit/published_target_audit.csv
-Comparator factor prices & 15 & 2 & 0.133 & 0.0193 & 0.1350 \\ % artifact: artifacts/audit/published_target_audit.csv
-\bottomrule
-\end{tabular}
-\end{table}
+\input{tables/recovery}
 
-\begin{table}[htbp]
-\centering
-\caption{Replication layer classification. No layer is eligible for an
-exact-replication label, since no input is an exact article input.}
-\label{tab:layers}
-\begin{tabular}{p{0.30\linewidth}p{0.14\linewidth}p{0.44\linewidth}}
-\toprule
-Layer & Recovered & Classification \\
-\midrule
-R1a short-rate innovations & 9/10, 10/10 & Approximately reproduced \\ % artifact: artifacts/audit/replication_layer_classification.csv
-R1b first-pass betas & --- & No published statistic-level target \\ % artifact: artifacts/audit/replication_layer_classification.csv
-R1c risk prices & 23 of 45 & Partially recovered \\ % artifact: artifacts/audit/replication_layer_classification.csv
-R1d pricing errors and fit & 3 of 58 & Partially recovered \\ % artifact: artifacts/audit/replication_layer_classification.csv
-R1e comparator models & 3 of 20 & Partially recovered \\ % artifact: artifacts/audit/replication_layer_classification.csv
-\bottomrule
-\end{tabular}
-\end{table}
+\input{tables/layers}
 
 R1b carries no statistic-level target. The article plots first-pass betas and
 reports beta-times-lambda decompositions for the extreme deciles, but tabulates
@@ -1202,19 +1116,19 @@ structural-break alignment is recorded separately from confirmatory claims.
 
 \section{Table and figure architecture}
 
-The manuscript table and figure map defines the planned main-text evidence
-sequence before result writing begins. % artifact: research/manuscript_table_figure_map.csv
-The architecture prioritizes a source-status table, baseline diagnostic table,
-replication-comparison table, weak-factor diagnostic table, baseline pricing
-table, comparator table, temporal-extension table, and regime-stability table.
-The planned main figures cover rate innovations and regimes, beta-return
-relations, rolling or expanding risk prices, pricing-error comparisons, and
-regime equivalence intervals.
+Every result table and figure in this paper is generated from the frozen
+artifacts rather than transcribed. \artifact{scripts/build_manuscript_tables.py}
+writes the eight result tables and
+\artifact{scripts/build_manuscript_figures.py} the two figures; the manuscript
+includes the emitted files, and each generated row carries a comment naming the
+artifact it came from. A test regenerates every table and fails if the committed
+file differs, so a regenerated artifact cannot leave a stale number in the paper. % artifact: research/manuscript_table_figure_map.csv
 
-The LaTeX shells and generation contracts contain no empirical cells and cannot
-be mistaken for output. % artifact: research/table_figure_generation_contracts.md
-Every shell is linked to a machine-readable source and an evidence gate. Result
-writing remains blocked until the required generated artifact exists.
+The registered architecture also anticipated figures for beta-return relations,
+rolling risk prices, and regime equivalence intervals. Those are not produced
+here. The equivalence intervals in particular would invite reading a
+per-portfolio contrast that Section~\ref{sec:regimes} shows the sample cannot
+resolve, and we prefer to state that limitation in text than to draw it. % artifact: research/table_figure_generation_contracts.md
 
 \section{Detailed out-of-sample design}
 

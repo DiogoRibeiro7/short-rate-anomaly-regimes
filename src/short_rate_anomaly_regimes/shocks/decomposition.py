@@ -357,6 +357,7 @@ def write_blocked_shock_report(
                 "",
                 "Missing inputs:",
                 *[f"- `{path.as_posix()}`" for path in missing_inputs],
+                "",
             ]
         ),
         encoding="utf-8",
