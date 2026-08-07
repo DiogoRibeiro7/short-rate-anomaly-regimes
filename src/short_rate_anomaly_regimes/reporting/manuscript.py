@@ -185,9 +185,22 @@ def validate_manuscript(
                         ),
                     )
                 )
-    for paragraph_start_line, paragraph in _iter_paragraphs(manuscript):
-        if EMPIRICAL_PARAGRAPH_PATTERN.search(paragraph):
-            issues.extend(_validate_empirical_context(paragraph_start_line, paragraph))
+    # Paragraphs are checked per source document, including every expanded
+    # input, so moving an empirical paragraph into an included file does not
+    # exempt it from declaring its context.
+    for origin, document in _source_documents(manuscript_path, manuscript):
+        where = f" in {origin}" if origin else ""
+        for paragraph_start_line, paragraph in _iter_paragraphs(document):
+            if not EMPIRICAL_PARAGRAPH_PATTERN.search(paragraph):
+                continue
+            for issue in _validate_empirical_context(paragraph_start_line, paragraph):
+                issues.append(
+                    ManuscriptIssue(
+                        line_number=issue.line_number,
+                        check=issue.check,
+                        message=f"{issue.message}{where}",
+                    )
+                )
     return issues
 
 
@@ -345,6 +358,48 @@ def _resolve_input(root: Path, target: str) -> Path:
     return included
 
 
+def _source_documents(
+    manuscript_path: Path,
+    manuscript: str,
+    *,
+    origin: str = "",
+    seen: frozenset[str] = frozenset(),
+) -> list[tuple[str, str]]:
+    r"""Return the manuscript and every document it includes, as whole texts.
+
+    Paragraph-level rules need each document intact rather than the flattened
+    line stream, because a blank line in an included file ends a paragraph there
+    and must not be read as continuing one in the parent.
+
+    Args:
+        manuscript_path: Path to the document being expanded.
+        manuscript: The document's source text.
+        origin: Label for the document, empty for the top-level manuscript.
+        seen: Documents already on the include path.
+
+    Returns:
+        Pairs of origin label and document text, parents before children.
+    """
+    documents = [(origin, manuscript)]
+    path_guard = seen | {manuscript_path.resolve().as_posix()}
+    for line in manuscript.splitlines():
+        include_match = INPUT_PATTERN.search(_strip_comment(line))
+        if include_match is None:
+            continue
+        included = _resolve_input(manuscript_path.parent, include_match.group("path"))
+        if not included.exists() or included.resolve().as_posix() in path_guard:
+            continue
+        documents.extend(
+            _source_documents(
+                included,
+                included.read_text(encoding="utf-8"),
+                origin=included.as_posix(),
+                seen=path_guard,
+            )
+        )
+    return documents
+
+
 def _missing_inputs(
     manuscript_path: Path,
     manuscript: str,
@@ -352,7 +407,7 @@ def _missing_inputs(
     origin: str = "",
     seen: frozenset[str] = frozenset(),
 ) -> list[tuple[str, int, Path]]:
-    """Find every ``\\input`` target that does not exist, following includes.
+    r"""Find every ``\\input`` target that does not exist, following includes.
 
     Recursion mirrors :func:`_source_lines`, so a missing include inside a
     generated table is reported rather than silently skipped during expansion.
@@ -396,7 +451,7 @@ def _source_lines(
     origin: str = "",
     seen: frozenset[str] = frozenset(),
 ) -> list[tuple[str, int, str]]:
-    """Yield the manuscript's lines with every ``\\input`` expanded in place.
+    r"""Yield the manuscript's lines with every ``\\input`` expanded in place.
 
     Generated result tables live in their own files so that they can be rebuilt
     from artifacts rather than transcribed. Expanding them here means the same

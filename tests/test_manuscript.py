@@ -374,3 +374,34 @@ def test_manuscript_checks_terminate_on_a_cyclic_input(tmp_path: Path) -> None:
         )
         == []
     )
+
+
+def test_empirical_paragraph_context_is_required_inside_included_files(tmp_path: Path) -> None:
+    """Moving an empirical paragraph into an include must not exempt it.
+
+    The context declaration is a governance rule about how a result is
+    described, so it has to survive the same relocation the numeric-tag rule
+    does.
+    """
+    artifact = tmp_path / "artifact.csv"
+    artifact.write_text("x\n", encoding="utf-8")
+    artifact_map_path = tmp_path / "map.csv"
+    artifact_map_path.write_text(
+        f"artifact_id,path,description\nartifact,{artifact.as_posix()},Fixture artifact\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "part.tex").write_text(
+        "This result paragraph is marked. % empirical-paragraph\n", encoding="utf-8"
+    )
+    manuscript_path = tmp_path / "paper.tex"
+    manuscript_path.write_text(
+        "\\title{Clean Title}\n\\section{Results}\n\\input{part}\n", encoding="utf-8"
+    )
+
+    issues = validate_manuscript(
+        manuscript_path=manuscript_path,
+        artifact_map_path=artifact_map_path,
+    )
+
+    assert [issue.check for issue in issues] == ["empirical_paragraph_context"]
+    assert "part.tex" in issues[0].message
