@@ -124,7 +124,7 @@ def validate_manuscript(
     current_environment: str | None = None
     environment_start_line = 0
     environment_artifact_paths: set[str] = set()
-    for origin, line_number, line in _source_lines(walk):
+    for origin, line_number, line in walk.lines:
         where = "" if not origin else f" in {origin}"
         section_match = SECTION_PATTERN.search(line)
         if section_match is not None:
@@ -366,14 +366,22 @@ class _IncludedDocument:
     """One document reachable from the manuscript, with its origin label."""
 
     origin: str
-    path: Path
     text: str
 
 
 @dataclass(frozen=True, slots=True)
 class _IncludeWalk:
-    """Every document reachable by ``\\input``, and every target that is not."""
+    """Everything the three manuscript checks need from the include tree.
 
+    ``lines`` is spliced at the include site rather than grouped by document,
+    because the line scan is stateful: it tracks the enclosing section and the
+    open table or figure environment. Appending an included file after its
+    parent would validate the include under whichever section the parent
+    happened to end in, so approved causal wording could be rejected and
+    unapproved wording accepted.
+    """
+
+    lines: tuple[tuple[str, int, str], ...]
     documents: tuple[_IncludedDocument, ...]
     missing: tuple[tuple[str, int, Path], ...]
 
@@ -387,11 +395,11 @@ def _walk_includes(
 ) -> _IncludeWalk:
     r"""Collect the manuscript and everything it includes, in one traversal.
 
-    Three checks need the include tree: numeric traceability and table sources
-    read the flattened line stream, the paragraph rule reads whole documents,
-    and the existence check reads unresolvable targets. Walking once and taking
-    three views of the result keeps the cycle guard, comment stripping, and path
-    resolution in a single place, so they cannot drift apart.
+    Three checks need the include tree: the stateful line scan reads the stream
+    spliced at each include site, the paragraph rule reads whole documents, and
+    the existence check reads unresolvable targets. Walking once and returning
+    all three keeps the cycle guard, comment stripping, and path resolution in a
+    single place, so they cannot drift apart.
 
     Expansion recurses, because a one-level walk would let a wrapper file that
     merely includes another smuggle untagged numbers past the checks. A file
@@ -406,13 +414,15 @@ def _walk_includes(
         seen: Documents already on the include path, guarding against cycles.
 
     Returns:
-        The reachable documents, parents before children, and the unresolvable
+        The spliced line stream, the reachable documents, and the unresolvable
         targets with the origin and line number that named them.
     """
-    documents = [_IncludedDocument(origin=origin, path=manuscript_path, text=manuscript)]
+    lines: list[tuple[str, int, str]] = []
+    documents = [_IncludedDocument(origin=origin, text=manuscript)]
     missing: list[tuple[str, int, Path]] = []
     path_guard = seen | {manuscript_path.resolve().as_posix()}
     for line_number, line in enumerate(manuscript.splitlines(), start=1):
+        lines.append((origin, line_number, line))
         include_match = INPUT_PATTERN.search(_strip_comment(line))
         if include_match is None:
             continue
@@ -428,30 +438,10 @@ def _walk_includes(
             origin=included.as_posix(),
             seen=path_guard,
         )
+        lines.extend(child.lines)
         documents.extend(child.documents)
         missing.extend(child.missing)
-    return _IncludeWalk(documents=tuple(documents), missing=tuple(missing))
-
-
-def _source_lines(walk: _IncludeWalk) -> list[tuple[str, int, str]]:
-    """Flatten the walked documents into an origin-tagged line stream.
-
-    Lines are grouped by document rather than spliced at the ``\\input`` site.
-    Every per-line rule is local to its line, so the ordering does not affect
-    any outcome, and keeping each document contiguous means a reported line
-    number always indexes the file the message names.
-
-    Args:
-        walk: The include traversal to flatten.
-
-    Returns:
-        Triples of origin label, line number within that origin, and line text.
-    """
-    return [
-        (document.origin, line_number, line)
-        for document in walk.documents
-        for line_number, line in enumerate(document.text.splitlines(), start=1)
-    ]
+    return _IncludeWalk(lines=tuple(lines), documents=tuple(documents), missing=tuple(missing))
 
 
 def _strip_comment(line: str) -> str:

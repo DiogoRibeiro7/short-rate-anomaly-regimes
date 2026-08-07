@@ -405,3 +405,40 @@ def test_empirical_paragraph_context_is_required_inside_included_files(tmp_path:
 
     assert [issue.check for issue in issues] == ["empirical_paragraph_context"]
     assert "part.tex" in issues[0].message
+
+
+def test_included_content_is_validated_under_its_include_site_section(tmp_path: Path) -> None:
+    """An include must inherit the section it is included from, not the last one.
+
+    The line scan is stateful in the enclosing section, so appending included
+    files after the parent would validate them under whichever section the
+    parent happened to end in. Here the approved section includes a file using
+    approved wording, and a later unapproved section follows it.
+    """
+    artifact = tmp_path / "artifact.csv"
+    artifact.write_text("x\n", encoding="utf-8")
+    artifact_map_path = tmp_path / "map.csv"
+    artifact_map_path.write_text(
+        f"artifact_id,path,description\nartifact,{artifact.as_posix()},Fixture artifact\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "shock.tex").write_text(
+        "The policy shock label is allowed here.\n", encoding="utf-8"
+    )
+    manuscript_path = tmp_path / "paper.tex"
+    manuscript_path.write_text(
+        "\\title{Clean Title}\n"
+        "\\section{Policy and Information Shocks}\n"
+        "\\input{shock}\n"
+        "\\section{Results}\n"
+        "Plain prose with no restricted terms.\n",
+        encoding="utf-8",
+    )
+
+    assert (
+        validate_manuscript(
+            manuscript_path=manuscript_path,
+            artifact_map_path=artifact_map_path,
+        )
+        == []
+    )
