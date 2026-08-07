@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+\centering
+\caption{Incremental-pricing materiality against the ex ante CAPM comparator,
+joint seventy-portfolio system. All three gates must hold for the claim to be
+supported; the registered classification is \texttt{unsupported}.}
+\label{tab:h1}
+\begin{tabular}{lcccl}
+\toprule
+Gate & Threshold & CAPM & Market + rate & Result \\
+\midrule
+RMSE reduction & $\geq 10\%$ & 0.1893 & 0.1004 & pass, 47.0\% \\ % artifact: artifacts/tables/robustness/h1_primary_comparison.csv
+MAE reduction & $\geq 10\%$ & 0.1466 & 0.0816 & pass, 44.3\% \\ % artifact: artifacts/tables/robustness/h1_primary_comparison.csv
+$\max|\alpha|$ reduction & $\geq 0.25$ pp & 0.4752 & 0.2388 & \textbf{fail}, 0.2364 pp \\ % artifact: artifacts/tables/robustness/h1_primary_comparison.csv
+\bottomrule
+\end{tabular}
+\end{table}

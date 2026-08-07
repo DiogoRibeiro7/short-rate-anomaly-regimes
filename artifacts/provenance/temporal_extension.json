@@ -9,10 +9,10 @@
     "data/processed/extension/revised_history_panel.parquet": "01ce15eeb3fbdaddcb2c7fab690463f32257599e6c563448d8a645d40ef08308"
   },
   "outputs": {
-    "artifacts/diagnostics/h2_temporal_stability.json": "170f9211306cbafff2cd2be77317ed6e5a6b0be141f51ffcde989d58894eaf3a",
-    "artifacts/tables/extension/fitted_premium_spreads.csv": "1bce0b15ae68137e9a9eabf31850295e41f1a225e22cafb426c50b86f5d8bc88",
-    "artifacts/tables/extension/temporal_evaluation.csv": "599330fd28fcd24ed1e62773c9e941c5f5bccd7d4f6f7e8a5e51559d18abeb1f",
-    "artifacts/tables/extension/vintage_decomposition.csv": "23e98e9ee40a41d427bdef31c26f80bc9801f15d67fa20eeff20de392b9fa435"
+    "artifacts/diagnostics/h2_temporal_stability.json": "e94515bd83f33d4cd4691aed301126bd5c987eea56f8172850416929b651272a",
+    "artifacts/tables/extension/fitted_premium_spreads.csv": "82a3e693914f94ee851180651e14c35f8631cc2a155eae26699aa7e39784d7f1",
+    "artifacts/tables/extension/temporal_evaluation.csv": "2b145b05596d8729c0ad30ba7fe7f02b4027b62f727603904fec49175d2fc81c",
+    "artifacts/tables/extension/vintage_decomposition.csv": "34758ab073d956a416ceb4dd1da47c29e461c1d34f8b991983977e17c9a5c2bc"
   },
   "script": "scripts/run_temporal_extension.py"
 }

@@ -4,8 +4,8 @@
     "data/processed/baseline_panel.parquet": "f1354c66d8983bfed626dc9dbc62204d31d236f1117b700158e3b9b04f8a1cc0"
   },
   "outputs": {
-    "artifacts/diagnostics/weak_factor/h4c_fitted_premium_precision.json": "81792a8a937a82926cb27ec372436140588649d4b85b7b2e56f587bbb6cbd17b",
-    "artifacts/tables/robustness/h4c_fitted_premium_intervals.csv": "078ebfe9de000d87999b9e97839afc268c4608db744e927933fd82211cd0c24c"
+    "artifacts/diagnostics/weak_factor/h4c_fitted_premium_precision.json": "acd21dba0b8125e54be93867d7b083a6828e1f9b73e8c78f7429808288618629",
+    "artifacts/tables/robustness/h4c_fitted_premium_intervals.csv": "e2ed64604f90ddca38e0d167d56c33cfc7b5e35529e202dc80760043b9f3fc98"
   },
   "rate_series": "fedfunds",
   "script": "scripts/run_h4c_precision.py",

@@ -1,0 +1,7 @@
+regime_id,start_month,end_month,months,test_assets,eligibility_tier,standalone_second_pass_permitted,regime_specific_first_pass_permitted
+conventional_pre_elb,1972-01,2008-12,444,70,eligible_first_pass_and_standalone_second_pass,True,True
+elb_qe,2009-01,2015-12,84,70,eligible_first_pass_and_standalone_second_pass,True,True
+normalisation,2016-01,2020-03,51,70,eligible_first_pass_with_short_sample_flag,False,True
+pandemic_elb_qe,2020-04,2022-03,24,70,blocked_for_regime_specific_estimation_below_36_months,False,False
+inflation_tightening,2022-04,2024-09,30,70,blocked_for_regime_specific_estimation_below_36_months,False,False
+post_tightening_easing,2024-10,2025-12,15,70,blocked_for_regime_specific_estimation_below_36_months,False,False

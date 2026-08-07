@@ -1,0 +1,55 @@
+{
+  "evidence_classes": {
+    "boundary_sensitivity": "confirmatory_H3_sensitivity",
+    "break_tests": "exploratory_E1",
+    "pooled_interaction_wald": "confirmatory_H3"
+  },
+  "inputs": {
+    "artifacts/tables/regimes/regime_eligibility.csv": "fe2af196a69c6c1cd5de4c2a72577d2dbbd4ff30f142ecb703bec15101b0a2e5",
+    "configs/regimes.yaml": "46d60dff8053e8671c2eaab358e868b1ed3ece074e2119469af5cdc964d94b7b",
+    "data/processed/regimes/monthly_regimes.parquet": "8d82c850712c8503633dd59b38b170edd6c788ca7039baa6ee6e68fa33c468d6"
+  },
+  "interaction_variable": "regime_primary",
+  "omitted_baseline_category": "conventional_pre_elb",
+  "outputs": {
+    "artifacts/diagnostics/h3_pooled_beta_stability.json": "74ffcca4be0742c78c2963608068404c81d27626471a24a319a8fc9a9244d75c",
+    "artifacts/tables/regimes/boundary_sensitivity.csv": "e983b03d835375b78d823fe84b332bcf7265523e0424d61ac810591e1e7f8192",
+    "artifacts/tables/regimes/break_tests.csv": "38946a0c76c6e35d8dde1cff3fed71bad7ce0021ecb7000defebd880323ad9c7",
+    "artifacts/tables/regimes/pooled_interaction_wald.csv": "344c7e44ab3c014febb127b597767443ba5ca831b306a77adcec742bebdf2c63"
+  },
+  "registered_boundary_months": [
+    "2008-12",
+    "2015-12",
+    "2020-03",
+    "2022-03",
+    "2024-09"
+  ],
+  "regressors": [
+    "RM",
+    "FFR_innovation"
+  ],
+  "replication_status": "documented_reconstruction",
+  "response": "portfolio_excess_return__<family>__decile_NN",
+  "script": "scripts/run_regime_interactions.py",
+  "single_omitted_category": true,
+  "sources": [
+    "research/statistical_protocol.md#structural-change",
+    "research/inference_contract.md#multiplicity-families",
+    "research/regime_registry.csv",
+    "configs/regimes.yaml"
+  ],
+  "thresholds": {
+    "alpha": 0.05,
+    "bai_perron_max_breaks": 2,
+    "boundary_shift_months": [
+      -3,
+      0,
+      3
+    ],
+    "chow_min_segment_months": 12,
+    "hac_lags": 6,
+    "multiple_testing_adjustment": "holm",
+    "multiplicity_family": "regime_stability",
+    "unknown_break_min_segment_months": 36
+  }
+}

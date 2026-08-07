@@ -1,0 +1,17 @@
+\begin{table}[htbp]
+\centering
+\caption{Temporal evaluations. The locked baseline and revised history share
+months and differ in vintage; the revised history and refitted extension share
+vintage and differ in months, so differencing isolates one change at a time.}
+\label{tab:temporal}
+\begin{tabular}{lccccc}
+\toprule
+Evaluation & Months & $\lambda_{RM}$ & $\lambda_{\text{rate}}$ & RMSE & Fit \\
+\midrule
+Locked baseline, 1972--2013 & 504 & 0.6012 & $-$0.6985 & 0.1004 & 0.544 \\ % artifact: artifacts/tables/extension/temporal_evaluation.csv
+Revised history, same months & 504 & 0.6044 & $-$0.6974 & 0.1015 & 0.534 \\ % artifact: artifacts/tables/extension/temporal_evaluation.csv
+Frozen parameters on 2014--2025 & 144 & 0.6012 & $-$0.6985 & 0.4463 & $-$0.691 \\ % artifact: artifacts/tables/extension/temporal_evaluation.csv
+Refitted extension, 2014--2025 & 144 & 0.9972 & $-$0.0825 & 0.1918 & 0.450 \\ % artifact: artifacts/tables/extension/temporal_evaluation.csv
+\bottomrule
+\end{tabular}
+\end{table}

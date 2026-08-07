@@ -381,8 +381,12 @@ def test_audit_replication_writes_missing_input_audit(tmp_path: Path) -> None:
     assert "missing-input audit" in str(result.exception)
 
 
-def test_robustness_diagnostics_writes_blocked_report(tmp_path: Path) -> None:
+def test_robustness_diagnostics_writes_blocked_report(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     report_path = tmp_path / "robustness_report.md"
+    monkeypatch.chdir(tmp_path)
 
     result = CliRunner().invoke(
         app,
@@ -392,15 +396,47 @@ def test_robustness_diagnostics_writes_blocked_report(tmp_path: Path) -> None:
     assert result.exit_code == 1
     assert report_path.is_file()
     assert "blocked robustness report" in str(result.exception)
-    assert "Verdict: `unidentified`" in report_path.read_text(encoding="utf-8")
+    report = report_path.read_text(encoding="utf-8")
+    assert "Verdict: `unidentified`" in report
+    assert "- `artifacts/diagnostics/h1_materiality.json`" in report
 
 
-def test_temporal_extension_writes_blocked_report(tmp_path: Path) -> None:
-    report_path = tmp_path / "temporal_extension_report.md"
+def test_robustness_diagnostics_reports_registered_gate_outcomes(tmp_path: Path) -> None:
+    report_path = tmp_path / "robustness_report.md"
 
     result = CliRunner().invoke(
         app,
-        ["temporal-extension", "--output", str(report_path)],
+        ["robustness-diagnostics", "--output", str(report_path)],
+    )
+
+    assert result.exit_code == 0
+    report = report_path.read_text(encoding="utf-8")
+    assert "Verdict: `unsupported`" in report
+    assert "H1 Primary Gates On The Headline Asset Set" in report
+    assert "Weak-Factor Gate Outcomes" in report
+    assert "documented_reconstruction" in report
+
+
+def test_temporal_extension_writes_blocked_report(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    report_path = tmp_path / "temporal_extension_report.md"
+    extension_config = str(Path("configs/extensions.yaml").resolve())
+    baseline_config = str(Path("configs/baseline.yaml").resolve())
+    monkeypatch.chdir(tmp_path)
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "temporal-extension",
+            "--config",
+            extension_config,
+            "--baseline-config",
+            baseline_config,
+            "--output",
+            str(report_path),
+        ],
     )
 
     assert result.exit_code == 1
@@ -409,9 +445,46 @@ def test_temporal_extension_writes_blocked_report(tmp_path: Path) -> None:
     report = report_path.read_text(encoding="utf-8")
     assert "Verdict: `blocked_missing_input`" in report
     assert "Latest common month: `2025-12`" in report
+    assert "- `artifacts/diagnostics/h2_temporal_stability.json`" in report
 
 
-def test_run_regimes_writes_blocked_report(tmp_path: Path) -> None:
+def test_temporal_extension_reports_registered_gate_outcomes(tmp_path: Path) -> None:
+    report_path = tmp_path / "temporal_extension_report.md"
+
+    result = CliRunner().invoke(
+        app,
+        ["temporal-extension", "--output", str(report_path)],
+    )
+
+    assert result.exit_code == 0
+    report = report_path.read_text(encoding="utf-8")
+    assert "Verdict: `post_publication_compatibility_unsupported`" in report
+    assert "Latest common month: `2025-12`" in report
+    assert "Registered Compatibility Gates" in report
+
+
+def test_run_regimes_writes_blocked_report(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    report_path = tmp_path / "regime_report.md"
+    regime_config = str(Path("configs/regimes.yaml").resolve())
+    monkeypatch.chdir(tmp_path)
+
+    result = CliRunner().invoke(
+        app,
+        ["run-regimes", "--config", regime_config, "--output", str(report_path)],
+    )
+
+    assert result.exit_code == 1
+    assert report_path.is_file()
+    assert "blocked regime report" in str(result.exception)
+    report = report_path.read_text(encoding="utf-8")
+    assert "Verdict: `blocked_missing_input`" in report
+    assert "- `artifacts/diagnostics/h3_regime_equivalence.json`" in report
+
+
+def test_run_regimes_reports_registered_h3_outcomes(tmp_path: Path) -> None:
     report_path = tmp_path / "regime_report.md"
 
     result = CliRunner().invoke(
@@ -419,10 +492,14 @@ def test_run_regimes_writes_blocked_report(tmp_path: Path) -> None:
         ["run-regimes", "--config", "configs/regimes.yaml", "--output", str(report_path)],
     )
 
-    assert result.exit_code == 1
-    assert report_path.is_file()
-    assert "blocked regime report" in str(result.exception)
-    assert "Verdict: `blocked_missing_input`" in report_path.read_text(encoding="utf-8")
+    assert result.exit_code == 0
+    report = report_path.read_text(encoding="utf-8")
+    assert (
+        "Verdict: `regime_stability_unsupported_under_the_registered_equivalence_standard`"
+        in report
+    )
+    assert "Pooled Interaction Beta Stability" in report
+    assert "documented_reconstruction" in report
 
 
 def test_shock_decomposition_writes_blocked_report(tmp_path: Path) -> None:
@@ -455,9 +532,32 @@ def test_out_of_sample_writes_blocked_report(tmp_path: Path) -> None:
     report = report_path.read_text(encoding="utf-8")
     assert "Verdict: `blocked_missing_input`" in report
     assert "must not be tuned after test errors are seen" in report
+    assert "has not been executed" in report
+    assert "- `artifacts/tables/out_of_sample/forecast_metrics.csv`" in report
 
 
-def test_build_report_writes_blocked_manuscript_report(tmp_path: Path) -> None:
+def test_build_report_writes_blocked_manuscript_report(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    report_path = tmp_path / "manuscript_output_report.md"
+    reporting_config = str(Path("configs/reporting.yaml").resolve())
+    monkeypatch.chdir(tmp_path)
+
+    result = CliRunner().invoke(
+        app,
+        ["build-report", "--config", reporting_config, "--output", str(report_path)],
+    )
+
+    assert result.exit_code == 1
+    assert report_path.is_file()
+    assert "blocked manuscript report" in str(result.exception)
+    report = report_path.read_text(encoding="utf-8")
+    assert "Verdict: `blocked_missing_input`" in report
+    assert "- `paper/manuscript.tex`" in report
+
+
+def test_build_report_records_manuscript_traceability(tmp_path: Path) -> None:
     report_path = tmp_path / "manuscript_output_report.md"
 
     result = CliRunner().invoke(
@@ -465,10 +565,11 @@ def test_build_report_writes_blocked_manuscript_report(tmp_path: Path) -> None:
         ["build-report", "--config", "configs/reporting.yaml", "--output", str(report_path)],
     )
 
-    assert result.exit_code == 1
-    assert report_path.is_file()
-    assert "blocked manuscript report" in str(result.exception)
-    assert "Verdict: `blocked_missing_input`" in report_path.read_text(encoding="utf-8")
+    assert result.exit_code == 0
+    report = report_path.read_text(encoding="utf-8")
+    assert "Verdict: `manuscript_outputs_validated`" in report
+    assert "Validation issues: 0" in report
+    assert "| reports/generated/regime_report.md |" in report
 
 
 def test_show_milestones_command_lists_release_gate() -> None:

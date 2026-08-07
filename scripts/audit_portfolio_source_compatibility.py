@@ -238,7 +238,7 @@ def main() -> None:
         )
 
     OUTPUT_CSV.parent.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame.from_records(rows).to_csv(OUTPUT_CSV, index=False)
+    pd.DataFrame.from_records(rows).to_csv(OUTPUT_CSV, index=False, lineterminator="\n")
 
     reversal_rows = []
     reversal_members: list[dict[str, str]] = []
@@ -264,7 +264,7 @@ def main() -> None:
         print(f"{member:34s} distance to published Table 2 row = {distance:.4f}")
     frame = pd.DataFrame.from_records(reversal_rows).sort_values("total_absolute_distance")
     frame["selected"] = [True] + [False] * (len(frame) - 1)
-    frame.to_csv(REVERSAL_CSV, index=False)
+    frame.to_csv(REVERSAL_CSV, index=False, lineterminator="\n")
     print(f"Closest reversal member: {frame.iloc[0]['member']}")
 
     _write_provenance(
@@ -325,7 +325,9 @@ def _write_provenance(
         ],
     }
     PROVENANCE_JSON.parent.mkdir(parents=True, exist_ok=True)
-    PROVENANCE_JSON.write_text(json.dumps(record, indent=2, sort_keys=True), encoding="utf-8")
+    PROVENANCE_JSON.write_text(
+        json.dumps(record, indent=2, sort_keys=True), encoding="utf-8", newline="\n"
+    )
 
 
 if __name__ == "__main__":

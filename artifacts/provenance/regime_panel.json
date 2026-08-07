@@ -1,0 +1,38 @@
+{
+  "comparators": [
+    "capm",
+    "fama_french_3",
+    "carhart_4",
+    "fama_french_5",
+    "q_factor",
+    "liquidity"
+  ],
+  "eligibility_floors": {
+    "regime_specific": 36,
+    "standalone_second_pass": 72,
+    "test_assets": 10
+  },
+  "end": "2025-12",
+  "inputs": {
+    "data/processed/baseline_panel.parquet": "f1354c66d8983bfed626dc9dbc62204d31d236f1117b700158e3b9b04f8a1cc0",
+    "data/processed/extension/monthly_panel.parquet": "e51abf8662938740243f315066c63cb78ffd3f25ac906d5058cb4ad3f658351a",
+    "data/processed/extension/revised_history_panel.parquet": "01ce15eeb3fbdaddcb2c7fab690463f32257599e6c563448d8a645d40ef08308"
+  },
+  "months": 648,
+  "outputs": {
+    "artifacts/tables/regimes/regime_eligibility.csv": "fe2af196a69c6c1cd5de4c2a72577d2dbbd4ff30f142ecb703bec15101b0a2e5",
+    "artifacts/tables/regimes/regime_monthly_series.csv": "6feb1e7f8ae0c9b6306a33988bfe390951dc5a84b577434d445e911b8e1bde6f",
+    "data/processed/regimes/monthly_regimes.parquet": "8d82c850712c8503633dd59b38b170edd6c788ca7039baa6ee6e68fa33c468d6"
+  },
+  "replication_status": "documented_reconstruction",
+  "script": "scripts/build_regime_panel.py",
+  "short_rate_ar": {
+    "intercept": 0.04303224619740586,
+    "note": "re-estimated once over the whole history, not spliced",
+    "slope": 0.9910155738449492
+  },
+  "start": "1972-01",
+  "transition_rule": "first_full_month_after_policy_action",
+  "vintage": "current_throughout",
+  "vintage_rationale": "two registered regimes straddle the 2013-12 vintage boundary; the Milestone 9 decomposition shows the vintage effect over the baseline window is 1.1 percent of RMSE against temporal effects of 89 percent"
+}

@@ -8,11 +8,15 @@ from pathlib import Path
 from typing import Any, Literal, cast
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 import statsmodels.api as sm
 from statsmodels.stats.diagnostic import acorr_ljungbox, het_arch
 
 CovarianceMethod = Literal["newey_west"]
+
+#: Explicit array alias. Newer numpy stubs reject a bare ``np.ndarray``.
+FloatArray = npt.NDArray[np.floating[Any]]
 
 
 @dataclass(frozen=True, slots=True)
@@ -304,7 +308,7 @@ def write_time_series_outputs(
     table.to_parquet(coefficients_path, index=False)
     result.residuals.to_parquet(residuals_path)
     result.diagnostics.to_json(diagnostics_path, orient="index", indent=2)
-    table.to_csv(table_path, index=False)
+    table.to_csv(table_path, index=False, lineterminator="\n")
     payload = {
         **metadata,
         "covariance": result.covariance,
@@ -319,10 +323,12 @@ def write_time_series_outputs(
             "dropped_incomplete_rows": result.alignment.dropped_incomplete_rows,
         },
     }
-    metadata_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    metadata_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8", newline="\n"
+    )
 
 
-def _newey_west_meat(x: np.ndarray, residuals: np.ndarray, *, hac_lags: int) -> np.ndarray:
+def _newey_west_meat(x: FloatArray, residuals: FloatArray, *, hac_lags: int) -> FloatArray:
     if hac_lags < 0:
         raise ValueError("hac_lags must be nonnegative")
     score = x * residuals[:, None]
@@ -333,4 +339,4 @@ def _newey_west_meat(x: np.ndarray, residuals: np.ndarray, *, hac_lags: int) -> 
         weight = 1.0 - lag / (hac_lags + 1.0)
         gamma = score[lag:].T @ score[:-lag]
         meat += weight * (gamma + gamma.T)
-    return cast(np.ndarray, meat)
+    return cast(FloatArray, meat)

@@ -118,7 +118,7 @@ def main() -> None:
         )
     frame = pd.DataFrame.from_records(rows)
     INTERVAL_CSV.parent.mkdir(parents=True, exist_ok=True)
-    frame.to_csv(INTERVAL_CSV, index=False)
+    frame.to_csv(INTERVAL_CSV, index=False, lineterminator="\n")
 
     failures = frame.loc[frame["h4c_gate"] == "fail", "family"].tolist()
     classification = (
@@ -153,6 +153,7 @@ def main() -> None:
             sort_keys=True,
         ),
         encoding="utf-8",
+        newline="\n",
     )
     PROVENANCE_JSON.write_text(
         json.dumps(
@@ -171,6 +172,7 @@ def main() -> None:
             sort_keys=True,
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
     print()

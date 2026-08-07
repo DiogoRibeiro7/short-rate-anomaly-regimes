@@ -350,7 +350,9 @@ def freeze_fred_series(
 
     manifest_root.mkdir(parents=True, exist_ok=True)
     manifest_path = manifest_root / f"{series_id}_{retrieval_date}.json"
-    manifest_path.write_text(json.dumps(asdict(record), indent=2, sort_keys=True), encoding="utf-8")
+    manifest_path.write_text(
+        json.dumps(asdict(record), indent=2, sort_keys=True), encoding="utf-8", newline="\n"
+    )
     return record
 
 

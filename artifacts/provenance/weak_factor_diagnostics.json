@@ -16,17 +16,17 @@
   ],
   "inputs": {
     "artifacts/estimates/time_series/baseline_first_pass_betas.parquet": "ef1ee06ceba52d49d95d27f6c34d3ab177dce1ba7a06abe0a4092ef80a36f4b7",
-    "artifacts/tables/cross_section/baseline_risk_prices.csv": "3a74666591854e87377174568f1a9b08a0e2bb5d0dbd18ea939559747d781e89",
+    "artifacts/tables/cross_section/baseline_risk_prices.csv": "2751383f466740daa9a67b4c796cdb356d139a7ce1339b4c6bf8b6fe329d995c",
     "data/processed/baseline_panel.parquet": "f1354c66d8983bfed626dc9dbc62204d31d236f1117b700158e3b9b04f8a1cc0",
     "data/processed/comparator_factors.parquet": "43d96e181c25a2de895f1da5eff30f37b8a2aba0c131cd315da645fd360bfb77"
   },
   "model": "market_plus_fedfunds_innovation",
   "multiplicity_family": "weak_factor_diagnostics",
   "outputs": {
-    "artifacts/diagnostics/weak_factor/h4a_identification_strength.json": "6379f40616410fcef279320570a12f65668a3f5d97ab520fcd11417949792a28",
-    "artifacts/diagnostics/weak_factor/h4b_influence_stability.json": "a27a17c6c206edb486080ea790f4c9343b08a3ca473e5593c618f155623bde62",
-    "artifacts/tables/robustness/dfbeta_influence.csv": "6cef5e8e63244a7124dbbf6b93c1949d02d757c0482eda0c79cf0e9230a5fce5",
-    "artifacts/tables/robustness/leave_one_family.csv": "c416e6a8eb7c686577ad9ada0267d8024bca692995bb1ee159a99b9b775855e2"
+    "artifacts/diagnostics/weak_factor/h4a_identification_strength.json": "32be901451fde7ecab03ed7f86ad718c8d03e215d23ca862dd1fbd4df4a423f9",
+    "artifacts/diagnostics/weak_factor/h4b_influence_stability.json": "b646c00f36ade42645732dbcfe6b2d813fbe045f98d325f81a266491f682f561",
+    "artifacts/tables/robustness/dfbeta_influence.csv": "ae4ef364a1d00f97116622f66503e5396c6c7cb3fab2b36d4030ba79bfbeb1f7",
+    "artifacts/tables/robustness/leave_one_family.csv": "0a1c09424684b8335092e5ccddd4ee6b7bd61db7d8f26453f0eb4d30dd3f78cf"
   },
   "script": "scripts/run_weak_factor_diagnostics.py",
   "spanning_regression": {

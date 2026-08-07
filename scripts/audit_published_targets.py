@@ -196,10 +196,10 @@ def main() -> None:
 
     audit = pd.DataFrame.from_records(records)
     AUDIT_CSV.parent.mkdir(parents=True, exist_ok=True)
-    audit.to_csv(AUDIT_CSV, index=False)
+    audit.to_csv(AUDIT_CSV, index=False, lineterminator="\n")
 
     layers = _classify_layers(audit)
-    layers.to_csv(LAYER_CSV, index=False)
+    layers.to_csv(LAYER_CSV, index=False, lineterminator="\n")
 
     PROVENANCE_JSON.parent.mkdir(parents=True, exist_ok=True)
     PROVENANCE_JSON.write_text(
@@ -222,6 +222,7 @@ def main() -> None:
             sort_keys=True,
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
     unique = audit.drop_duplicates(subset=["source_table", "portfolio_set", "model", "statistic"])

@@ -1,8 +1,10 @@
+import re
 from pathlib import Path
 
 import pytest
 
 from short_rate_anomaly_regimes.reporting.manuscript import (
+    APPROVED_LANGUAGE_SECTIONS,
     extract_latex_title,
     load_artifact_map,
     render_blocked_manuscript_report,
@@ -258,6 +260,178 @@ def test_manuscript_checks_ignore_author_affiliation_metadata(tmp_path: Path) ->
         "\\author{Diogo Ribeiro\\inst{1,2,*}\\orcidID{0009-0001-2022-7072}}\n"
         "\\authorrunning{D. Ribeiro}\n"
         "\\institute{Department A \\and Department B}\n",
+        encoding="utf-8",
+    )
+
+    assert (
+        validate_manuscript(
+            manuscript_path=manuscript_path,
+            artifact_map_path=artifact_map_path,
+        )
+        == []
+    )
+
+
+def test_every_approved_language_section_names_a_real_manuscript_section() -> None:
+    """The causal-language whitelist must name sections that actually exist.
+
+    A whitelist entry that matches no section title does not whitelist anything;
+    it silently bans the vocabulary everywhere, which is indistinguishable from
+    the rule working until someone tries to use the approved words.
+    """
+    manuscript = Path("paper/manuscript.tex").read_text(encoding="utf-8")
+    titles = set(re.findall(r"\\(?:sub)?section\{([^}]*)\}", manuscript))
+    matched = APPROVED_LANGUAGE_SECTIONS & titles
+    assert matched, (
+        "No approved-language section title matches the manuscript. "
+        f"Whitelist: {sorted(APPROVED_LANGUAGE_SECTIONS)}"
+    )
+
+
+def test_the_manuscript_reports_results_rather_than_a_pending_status() -> None:
+    """Guard against the results sections reverting to the pending-design draft."""
+    manuscript = Path("paper/manuscript.tex").read_text(encoding="utf-8")
+    assert "Status: Preliminary research design" not in manuscript
+    for heading in (r"\section{Baseline replication}", r"\section{Monetary-regime stability}"):
+        assert heading in manuscript
+    assert r"\section{Planned baseline replication}" not in manuscript
+
+
+def test_manuscript_checks_follow_nested_inputs(tmp_path: Path) -> None:
+    """A wrapper include must not smuggle an untagged number past the checks.
+
+    Expanding only one level would let `manuscript -> wrapper -> table` hide the
+    table's contents, which is exactly the guarantee the generated-table
+    pipeline depends on.
+    """
+    artifact = tmp_path / "artifact.csv"
+    artifact.write_text("x\n", encoding="utf-8")
+    artifact_map_path = tmp_path / "map.csv"
+    artifact_map_path.write_text(
+        f"artifact_id,path,description\nartifact,{artifact.as_posix()},Fixture artifact\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "wrapper.tex").write_text("\\input{deep}\n", encoding="utf-8")
+    (tmp_path / "deep.tex").write_text("The estimate is 0.42 with no tag.\n", encoding="utf-8")
+    manuscript_path = tmp_path / "paper.tex"
+    manuscript_path.write_text(
+        "\\title{Clean Title}\n\\section{Results}\n\\input{wrapper}\n", encoding="utf-8"
+    )
+
+    issues = validate_manuscript(
+        manuscript_path=manuscript_path,
+        artifact_map_path=artifact_map_path,
+    )
+
+    assert [issue.check for issue in issues] == ["numeric_artifact_mapping"]
+    assert "deep.tex" in issues[0].message
+
+
+def test_manuscript_checks_report_a_missing_nested_input(tmp_path: Path) -> None:
+    """An unresolvable include is an error wherever it appears."""
+    artifact = tmp_path / "artifact.csv"
+    artifact.write_text("x\n", encoding="utf-8")
+    artifact_map_path = tmp_path / "map.csv"
+    artifact_map_path.write_text(
+        f"artifact_id,path,description\nartifact,{artifact.as_posix()},Fixture artifact\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "wrapper.tex").write_text("\\input{absent}\n", encoding="utf-8")
+    manuscript_path = tmp_path / "paper.tex"
+    manuscript_path.write_text(
+        "\\title{Clean Title}\n\\section{Results}\n\\input{wrapper}\n", encoding="utf-8"
+    )
+
+    issues = validate_manuscript(
+        manuscript_path=manuscript_path,
+        artifact_map_path=artifact_map_path,
+    )
+
+    assert [issue.check for issue in issues] == ["input_exists"]
+    assert "wrapper.tex" in issues[0].message
+
+
+def test_manuscript_checks_terminate_on_a_cyclic_input(tmp_path: Path) -> None:
+    """A cycle must terminate rather than recurse until the stack gives out."""
+    artifact = tmp_path / "artifact.csv"
+    artifact.write_text("x\n", encoding="utf-8")
+    artifact_map_path = tmp_path / "map.csv"
+    artifact_map_path.write_text(
+        f"artifact_id,path,description\nartifact,{artifact.as_posix()},Fixture artifact\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "a.tex").write_text("\\input{b}\n", encoding="utf-8")
+    (tmp_path / "b.tex").write_text("\\input{a}\n", encoding="utf-8")
+    manuscript_path = tmp_path / "paper.tex"
+    manuscript_path.write_text(
+        "\\title{Clean Title}\n\\section{Results}\n\\input{a}\n", encoding="utf-8"
+    )
+
+    assert (
+        validate_manuscript(
+            manuscript_path=manuscript_path,
+            artifact_map_path=artifact_map_path,
+        )
+        == []
+    )
+
+
+def test_empirical_paragraph_context_is_required_inside_included_files(tmp_path: Path) -> None:
+    """Moving an empirical paragraph into an include must not exempt it.
+
+    The context declaration is a governance rule about how a result is
+    described, so it has to survive the same relocation the numeric-tag rule
+    does.
+    """
+    artifact = tmp_path / "artifact.csv"
+    artifact.write_text("x\n", encoding="utf-8")
+    artifact_map_path = tmp_path / "map.csv"
+    artifact_map_path.write_text(
+        f"artifact_id,path,description\nartifact,{artifact.as_posix()},Fixture artifact\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "part.tex").write_text(
+        "This result paragraph is marked. % empirical-paragraph\n", encoding="utf-8"
+    )
+    manuscript_path = tmp_path / "paper.tex"
+    manuscript_path.write_text(
+        "\\title{Clean Title}\n\\section{Results}\n\\input{part}\n", encoding="utf-8"
+    )
+
+    issues = validate_manuscript(
+        manuscript_path=manuscript_path,
+        artifact_map_path=artifact_map_path,
+    )
+
+    assert [issue.check for issue in issues] == ["empirical_paragraph_context"]
+    assert "part.tex" in issues[0].message
+
+
+def test_included_content_is_validated_under_its_include_site_section(tmp_path: Path) -> None:
+    """An include must inherit the section it is included from, not the last one.
+
+    The line scan is stateful in the enclosing section, so appending included
+    files after the parent would validate them under whichever section the
+    parent happened to end in. Here the approved section includes a file using
+    approved wording, and a later unapproved section follows it.
+    """
+    artifact = tmp_path / "artifact.csv"
+    artifact.write_text("x\n", encoding="utf-8")
+    artifact_map_path = tmp_path / "map.csv"
+    artifact_map_path.write_text(
+        f"artifact_id,path,description\nartifact,{artifact.as_posix()},Fixture artifact\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "shock.tex").write_text(
+        "The policy shock label is allowed here.\n", encoding="utf-8"
+    )
+    manuscript_path = tmp_path / "paper.tex"
+    manuscript_path.write_text(
+        "\\title{Clean Title}\n"
+        "\\section{Policy and Information Shocks}\n"
+        "\\input{shock}\n"
+        "\\section{Results}\n"
+        "Plain prose with no restricted terms.\n",
         encoding="utf-8",
     )
 

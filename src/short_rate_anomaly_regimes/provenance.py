@@ -57,4 +57,6 @@ def create_record(
 def write_record(record: ProvenanceRecord, path: Path) -> None:
     """Write a provenance record as stable, sorted JSON."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(asdict(record), indent=2, sort_keys=True), encoding="utf-8")
+    path.write_text(
+        json.dumps(asdict(record), indent=2, sort_keys=True), encoding="utf-8", newline="\n"
+    )

@@ -172,7 +172,9 @@ why the comparison between them is more informative than either alone.
 
 1. Milestone 10, monetary regimes, which is where the post-2013 change can be
    located in policy time rather than merely in calendar time.
-2. The 60-month standalone-second-pass floor decision, which constrains what
-   Milestone 10 can deliver and is still uncontaminated by any regime estimate.
-   It is now the binding open question: under the frozen floors only two of six
-   regimes support a standalone second pass.
+2. The 60-month standalone-second-pass floor decision, which constrained what
+   Milestone 10 could deliver and was, as of this report, the binding open
+   question: under the floors frozen at the time, only two of six regimes
+   supported a standalone second pass. *Resolved in Milestone 10: the floor is
+   now 72 months, and the same two regimes are the two that clear it. See
+   `reports/design_correction_changelog.md`.*

@@ -162,6 +162,7 @@ def write_checksum_manifest(
     output_path.write_text(
         "\n".join(f"{record['sha256']}  {record['path']}" for record in records) + "\n",
         encoding="utf-8",
+        newline="\n",
     )
 
 
@@ -214,6 +215,7 @@ def write_sbom(*, output_path: Path, pyproject_path: Path, lock_path: Path) -> N
         )
         + "\n",
         encoding="utf-8",
+        newline="\n",
     )
 
 
@@ -310,7 +312,9 @@ def write_release_gate(
         "issues": [asdict(issue) for issue in issues],
     }
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    output_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n"
+    )
     return issues
 
 
@@ -386,7 +390,7 @@ def render_release_notes(issues: list[ReleaseIssue]) -> str:
 def write_release_notes(*, output_path: Path, issues: list[ReleaseIssue]) -> None:
     """Write markdown release notes."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(render_release_notes(issues), encoding="utf-8")
+    output_path.write_text(render_release_notes(issues), encoding="utf-8", newline="\n")
 
 
 def build_release_environment_manifest(
@@ -428,6 +432,7 @@ def write_release_environment_manifest(
         )
         + "\n",
         encoding="utf-8",
+        newline="\n",
     )
 
 
@@ -510,6 +515,7 @@ def write_data_acquisition_guide(
             source_registry_path=source_registry_path,
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
 
@@ -566,7 +572,9 @@ def write_source_archive_manifest(
         ],
         "members": [normalise_repo_path(path) for path in members],
     }
-    output_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    output_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n"
+    )
 
 
 def render_adversarial_code_audit(issues: list[ReleaseIssue]) -> str:
@@ -680,10 +688,13 @@ def write_adversarial_reports(
     """Write human-readable adversarial release audit reports."""
     code_report_path.parent.mkdir(parents=True, exist_ok=True)
     econometric_report_path.parent.mkdir(parents=True, exist_ok=True)
-    code_report_path.write_text(render_adversarial_code_audit(issues), encoding="utf-8")
+    code_report_path.write_text(
+        render_adversarial_code_audit(issues), encoding="utf-8", newline="\n"
+    )
     econometric_report_path.write_text(
         render_adversarial_econometric_audit(issues),
         encoding="utf-8",
+        newline="\n",
     )
 
 

@@ -89,7 +89,7 @@ def main() -> None:
         rows.append(row)
     SUMMARY_CSV.parent.mkdir(parents=True, exist_ok=True)
     with SUMMARY_CSV.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()), lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
@@ -122,11 +122,13 @@ def main() -> None:
 
     VINTAGE_SUMMARY_CSV.parent.mkdir(parents=True, exist_ok=True)
     summary_frame = pd.concat(summaries, ignore_index=True)
-    summary_frame.to_csv(VINTAGE_SUMMARY_CSV, index=False)
-    pd.concat(differences, ignore_index=True).to_csv(VINTAGE_DIFFERENCES_CSV, index=False)
+    summary_frame.to_csv(VINTAGE_SUMMARY_CSV, index=False, lineterminator="\n")
+    pd.concat(differences, ignore_index=True).to_csv(
+        VINTAGE_DIFFERENCES_CSV, index=False, lineterminator="\n"
+    )
 
     consistency = _shared_factor_consistency(baseline_window)
-    consistency.to_csv(SHARED_FACTOR_CONSISTENCY_CSV, index=False)
+    consistency.to_csv(SHARED_FACTOR_CONSISTENCY_CSV, index=False, lineterminator="\n")
 
     print()
     print(summary_frame.to_string(index=False))

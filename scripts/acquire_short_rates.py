@@ -45,7 +45,7 @@ def main() -> None:
         rows.append(row)
     SUMMARY_CSV.parent.mkdir(parents=True, exist_ok=True)
     with SUMMARY_CSV.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()), lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
     print(f"Wrote {SUMMARY_CSV}")

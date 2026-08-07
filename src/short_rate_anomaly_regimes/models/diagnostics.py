@@ -4,14 +4,24 @@ from __future__ import annotations
 
 import json
 import math
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 from scipy.stats import f as f_distribution  # type: ignore[import-untyped]
+
+from short_rate_anomaly_regimes.reporting.artifact_evidence import (
+    artifact_field,
+    format_code,
+    format_sequence,
+    load_json_artifact,
+    markdown_table,
+    path_bullets,
+)
 
 RobustnessVerdict = Literal["robust", "conditionally_robust", "fragile", "unidentified"]
 RobustnessFamily = Literal[
@@ -669,9 +679,9 @@ def write_robustness_outputs(
             },
         }
     diagnostics_path.write_text(
-        json.dumps(diagnostics_payload, indent=2, sort_keys=True), encoding="utf-8"
+        json.dumps(diagnostics_payload, indent=2, sort_keys=True), encoding="utf-8", newline="\n"
     )
-    specification_results.to_csv(table_path, index=False)
+    specification_results.to_csv(table_path, index=False, lineterminator="\n")
     report_path.write_text(
         "\n".join(
             [
@@ -687,7 +697,366 @@ def write_robustness_outputs(
             ]
         ),
         encoding="utf-8",
+        newline="\n",
     )
+
+
+def render_robustness_evidence_report(
+    *,
+    materiality_path: Path,
+    identification_path: Path,
+    influence_path: Path,
+    precision_path: Path,
+) -> str:
+    """Render the robustness report from the frozen H1 and weak-factor artifacts.
+
+    Args:
+        materiality_path: Registered H1 incremental-pricing materiality artifact.
+        identification_path: Registered H4a identification-strength artifact.
+        influence_path: Registered H4b influence-stability artifact.
+        precision_path: Registered H4c fitted-premium precision artifact.
+
+    Returns:
+        The markdown report. Every displayed value is read from the artifacts and
+        every registered gate is reported, whether it passed or failed.
+    """
+    materiality = load_json_artifact(materiality_path)
+    identification = load_json_artifact(identification_path)
+    influence = load_json_artifact(influence_path)
+    precision = load_json_artifact(precision_path)
+    headline = str(artifact_field(materiality, "headline_asset_set"))
+    classification = artifact_field(
+        materiality, "asset_sets", headline, "h1_primary_classification"
+    )
+    lines = [
+        "# Robustness Report",
+        "",
+        f"Verdict: {format_code(classification)}",
+        "",
+        f"Verdict source: `asset_sets.{headline}.h1_primary_classification` in "
+        f"`{materiality_path.as_posix()}`",
+        f"Hypothesis: {format_code(artifact_field(materiality, 'hypothesis'))}",
+        f"Replication status: {format_code(artifact_field(materiality, 'replication_status'))}",
+        "Primary comparator: "
+        f"{format_code(artifact_field(materiality, 'primary_comparator', 'model'))}, selected "
+        "after observing RMSE: "
+        + format_code(
+            artifact_field(materiality, "primary_comparator", "selected_after_observing_rmse")
+        ),
+        "",
+        f"Decision rule: {artifact_field(materiality, 'decision_rule')}",
+        "",
+        f"Multiplicity: {artifact_field(materiality, 'multiplicity', 'status')}",
+        "",
+        *_h1_sections(materiality, headline=headline),
+        *_weak_factor_sections(
+            identification=identification,
+            influence=influence,
+            precision=precision,
+        ),
+        "All registered gates are reported above, whether they passed or failed; "
+        "significant-only robustness reporting is prohibited.",
+        "",
+        "## Artifacts Read",
+        "",
+        *path_bullets((materiality_path, identification_path, influence_path, precision_path)),
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def write_robustness_evidence_report(
+    *,
+    output_path: Path,
+    materiality_path: Path,
+    identification_path: Path,
+    influence_path: Path,
+    precision_path: Path,
+) -> None:
+    """Write the robustness report rendered from the frozen registered artifacts."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        render_robustness_evidence_report(
+            materiality_path=materiality_path,
+            identification_path=identification_path,
+            influence_path=influence_path,
+            precision_path=precision_path,
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+
+
+def write_blocked_robustness_report(*, output_path: Path, missing_inputs: tuple[Path, ...]) -> None:
+    """Write a blocked robustness report when the registered artifacts are absent."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        "\n".join(
+            [
+                "# Robustness Report",
+                "",
+                "Verdict: `unidentified`",
+                "",
+                "Robustness diagnostics are blocked until the registered H1 materiality and "
+                "weak-factor artifacts exist.",
+                "",
+                "Missing inputs:",
+                *path_bullets(missing_inputs),
+                "",
+                "No significant-only robustness reporting has been performed.",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+
+
+def _h1_sections(materiality: Mapping[str, Any], *, headline: str) -> list[str]:
+    gates = sorted(artifact_field(materiality, "thresholds"))
+    asset_sets = artifact_field(materiality, "asset_sets")
+    headline_primary = artifact_field(materiality, "asset_sets", headline, "primary_comparison")
+    lines = [
+        f"## H1 Primary Gates On The Headline Asset Set `{headline}`",
+        "",
+    ]
+    for model in sorted(headline_primary):
+        comparison = headline_primary[model]
+        lines.extend(
+            [
+                f"Treatment model {format_code(model)}, comparator "
+                f"{format_code(comparison['comparator_model'])}, "
+                f"{format_code(comparison['n_assets'])} assets, "
+                f"{format_code(comparison['n_months'])} months, "
+                f"{format_code(comparison['n_gates_passed'])} of "
+                f"{format_code(comparison['n_gates_total'])} gates passed, classification "
+                f"{format_code(comparison['classification'])}",
+                "",
+                *markdown_table(
+                    [
+                        "Gate",
+                        "Comparison",
+                        "Threshold",
+                        "Comparator",
+                        "Treatment",
+                        "Observed",
+                        "Passed",
+                    ],
+                    _h1_gate_rows(comparison, gates),
+                ),
+                "",
+            ]
+        )
+    lines.extend(
+        [
+            "## H1 Classification By Asset Set",
+            "",
+            *markdown_table(
+                [
+                    "Asset Set",
+                    "Treatment Model",
+                    "Primary Comparator",
+                    "Primary Classification",
+                    "Secondary Comparator",
+                    "Secondary Classification",
+                ],
+                _h1_asset_set_rows(asset_sets),
+            ),
+            "",
+            "## H1 Gate Values By Asset Set And Comparison",
+            "",
+            "Every classification in the table above is derived from the gate values below; "
+            "no asset set is classified from evidence that is not displayed.",
+            "",
+            *markdown_table(
+                [
+                    "Asset Set",
+                    "Treatment Model",
+                    "Comparison Role",
+                    "Comparator Model",
+                    "Gate",
+                    "Comparison",
+                    "Threshold",
+                    "Comparator Value",
+                    "Treatment Value",
+                    "Observed",
+                    "Passed",
+                ],
+                _h1_all_gate_rows(asset_sets, gates),
+            ),
+            "",
+        ]
+    )
+    return lines
+
+
+def _h1_gate_rows(comparison: Mapping[str, Any], gates: Sequence[str]) -> list[list[Any]]:
+    return [
+        [
+            gate,
+            comparison[f"{gate}__comparison"],
+            comparison[f"{gate}__threshold"],
+            comparison[f"{gate}__comparator_value"],
+            comparison[f"{gate}__treatment_value"],
+            comparison[f"{gate}__observed"],
+            comparison[f"{gate}__passed"],
+        ]
+        for gate in gates
+    ]
+
+
+#: Registered comparison slots stored under every H1 asset-set record. Both are
+#: rendered so the report displays a gate value for every classification it lists.
+H1_COMPARISON_SLOTS: tuple[str, ...] = ("primary_comparison", "secondary_adversarial_comparison")
+
+
+def _h1_all_gate_rows(asset_sets: Mapping[str, Any], gates: Sequence[str]) -> list[list[Any]]:
+    rows: list[list[Any]] = []
+    for asset_set in sorted(asset_sets):
+        record = asset_sets[asset_set]
+        for slot in H1_COMPARISON_SLOTS:
+            comparisons = record[slot]
+            for model in sorted(comparisons):
+                comparison = comparisons[model]
+                rows.extend(
+                    [
+                        asset_set,
+                        model,
+                        comparison["comparison_role"],
+                        comparison["comparator_model"],
+                        *gate_row,
+                    ]
+                    for gate_row in _h1_gate_rows(comparison, gates)
+                )
+    return rows
+
+
+def _h1_asset_set_rows(asset_sets: Mapping[str, Any]) -> list[list[Any]]:
+    rows: list[list[Any]] = []
+    for asset_set in sorted(asset_sets):
+        primary = asset_sets[asset_set]["primary_comparison"]
+        secondary = asset_sets[asset_set]["secondary_adversarial_comparison"]
+        for model in sorted(primary):
+            rows.append(
+                [
+                    asset_set,
+                    model,
+                    primary[model]["comparator_model"],
+                    primary[model]["classification"],
+                    secondary[model]["comparator_model"],
+                    secondary[model]["classification"],
+                ]
+            )
+    return rows
+
+
+def _weak_factor_sections(
+    *,
+    identification: Mapping[str, Any],
+    influence: Mapping[str, Any],
+    precision: Mapping[str, Any],
+) -> list[str]:
+    confirmatory = _confirmatory_system(identification)
+    spanning = artifact_field(identification, "rate_spanning_criterion")
+    thresholds = artifact_field(identification, "thresholds")
+    dfbeta = artifact_field(influence, "dfbeta_influence")
+    leave_one_family = artifact_field(influence, "leave_one_family_fitted_premium")
+    baseline = artifact_field(influence, "baseline")
+    dispersion_floor = thresholds["standardized_rate_exposure_dispersion"][
+        "min_share_of_market_dispersion"
+    ]
+    spanning_thresholds = thresholds["rate_spanning_criterion"]
+    dfbeta_bound = thresholds["dfbeta_influence"]["max_abs_standardized_dfbeta"]
+    return [
+        "## Weak-Factor Gate Outcomes",
+        "",
+        *markdown_table(
+            ["Hypothesis", "Outcome", "Gate Failures"],
+            [
+                [
+                    artifact_field(identification, "hypothesis"),
+                    artifact_field(identification, "passes"),
+                    format_sequence(artifact_field(identification, "gate_failures")),
+                ],
+                [
+                    artifact_field(influence, "hypothesis"),
+                    artifact_field(influence, "passes"),
+                    format_sequence(artifact_field(influence, "gate_failures")),
+                ],
+                [
+                    artifact_field(precision, "hypothesis"),
+                    artifact_field(precision, "classification"),
+                    format_sequence(artifact_field(precision, "failing_families")),
+                ],
+            ],
+        ),
+        "",
+        "### H4a Identification Strength",
+        "",
+        f"- Confirmatory system: {format_code(confirmatory['portfolio_set'])}, rank "
+        f"{format_code(confirmatory['rank'])} of {format_code(confirmatory['n_factors'])} priced "
+        f"factors, condition number {format_code(confirmatory['condition_number'])}",
+        "- Standardized rate-exposure dispersion share: "
+        f"{format_code(confirmatory['standardized_dispersion_share'])} against a floor of "
+        f"{format_code(dispersion_floor)}",
+        f"- Spanning R squared: {format_code(spanning['r2_span'])} against a ceiling of "
+        f"{format_code(spanning_thresholds['max_r2_span'])}; residual ratio "
+        f"{format_code(spanning['s_span'])} against a floor of "
+        f"{format_code(spanning_thresholds['min_s_span'])}",
+        "- Spanning regressors: "
+        + format_sequence(spanning["executed_regressors"])
+        + f", over {format_code(spanning['n_months'])} months",
+        "",
+        "### H4b Influence Stability",
+        "",
+        "- Maximum absolute standardized DFBETA: "
+        f"{format_code(dfbeta['max_abs_standardized_dfbeta'])} at "
+        f"{format_code(dfbeta['max_abs_standardized_dfbeta_asset'])}, against a bound of "
+        f"{format_code(dfbeta_bound)}",
+        f"- Assets reaching the bound: {format_code(dfbeta['n_assets_reaching_threshold'])} of "
+        f"{format_code(dfbeta['n_assets'])}",
+        f"- Leave-one-family refits pass: {format_code(leave_one_family['passes'])} across "
+        f"{format_code(len(leave_one_family['systems']))} refits",
+        f"- Baseline rate risk price: {format_code(baseline['lambda_rate'])}, Shanken standard "
+        f"error {format_code(baseline['shanken_se_lambda_rate'])}, t "
+        f"{format_code(baseline['shanken_t_lambda_rate'])}",
+        "",
+        "### H4c Fitted-Premium Precision",
+        "",
+        f"- Estimand: {format_code(artifact_field(precision, 'estimand'))}",
+        f"- Economic direction bound: "
+        f"{format_code(artifact_field(precision, 'economic_direction_bound'))}, "
+        f"{format_code(artifact_field(precision, 'draws'))} draws, block length "
+        f"{format_code(artifact_field(precision, 'block_length'))} selected by "
+        f"{format_code(artifact_field(precision, 'block_length_selected_by'))}",
+        "",
+        "The registered H4c gate is evaluated on the 95 percent bootstrap interval, so the "
+        "interval displayed here is the one the gate reads.",
+        "",
+        *markdown_table(
+            ["Family", "Point Estimate", "Lower 95", "Upper 95", "Spans Both Directions", "Gate"],
+            [
+                [
+                    family["family"],
+                    family["point_estimate"],
+                    family["lower_95"],
+                    family["upper_95"],
+                    family["interval_spans_both_directions"],
+                    family["h4c_gate"],
+                ]
+                for family in artifact_field(precision, "per_family")
+            ],
+        ),
+        "",
+    ]
+
+
+def _confirmatory_system(identification: Mapping[str, Any]) -> Mapping[str, Any]:
+    systems: list[Mapping[str, Any]] = list(artifact_field(identification, "systems"))
+    confirmatory = [system for system in systems if system["role"] == "confirmatory"]
+    if not confirmatory:
+        raise ValueError("H4a artifact contains no confirmatory system")
+    return confirmatory[0]
 
 
 def grs_test(*, returns: pd.DataFrame, factors: pd.DataFrame) -> pd.Series:

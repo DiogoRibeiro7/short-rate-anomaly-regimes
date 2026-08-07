@@ -77,9 +77,11 @@ def main() -> None:
         )
 
     AUDIT_CSV.parent.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame.from_records(summaries).to_csv(AUDIT_CSV, index=False)
-    pd.concat(difference_frames, ignore_index=True).to_csv(DIFFERENCES_CSV, index=False)
-    pd.DataFrame.from_records(decimal_records).to_csv(DECIMAL_CSV, index=False)
+    pd.DataFrame.from_records(summaries).to_csv(AUDIT_CSV, index=False, lineterminator="\n")
+    pd.concat(difference_frames, ignore_index=True).to_csv(
+        DIFFERENCES_CSV, index=False, lineterminator="\n"
+    )
+    pd.DataFrame.from_records(decimal_records).to_csv(DECIMAL_CSV, index=False, lineterminator="\n")
     print(f"Wrote {AUDIT_CSV}, {DIFFERENCES_CSV}, and {DECIMAL_CSV}")
 
 

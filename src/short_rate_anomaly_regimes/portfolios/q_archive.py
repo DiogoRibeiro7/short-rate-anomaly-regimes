@@ -245,7 +245,7 @@ def freeze_q_archive(
     )
     manifest_root.mkdir(parents=True, exist_ok=True)
     (manifest_root / f"{archive}_{vintage_label}.json").write_text(
-        json.dumps(asdict(record), indent=2, sort_keys=True), encoding="utf-8"
+        json.dumps(asdict(record), indent=2, sort_keys=True), encoding="utf-8", newline="\n"
     )
     return record, payload
 
@@ -349,7 +349,7 @@ def freeze_family_panel(
     )
     manifest_root.mkdir(parents=True, exist_ok=True)
     (manifest_root / f"{family}_{vintage_label}.json").write_text(
-        json.dumps(asdict(record), indent=2, sort_keys=True), encoding="utf-8"
+        json.dumps(asdict(record), indent=2, sort_keys=True), encoding="utf-8", newline="\n"
     )
     return record
 

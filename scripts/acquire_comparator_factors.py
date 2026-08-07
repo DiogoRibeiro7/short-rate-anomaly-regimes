@@ -195,7 +195,7 @@ def main() -> None:
         rows.append(row)
     SUMMARY_CSV.parent.mkdir(parents=True, exist_ok=True)
     with SUMMARY_CSV.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()), lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
@@ -213,7 +213,7 @@ def main() -> None:
     selection = pd.DataFrame.from_records(selection_rows).sort_values("total_absolute_distance")
     selection["selected"] = [True] + [False] * (len(selection) - 1)
     LIQUIDITY_SELECTION_CSV.parent.mkdir(parents=True, exist_ok=True)
-    selection.to_csv(LIQUIDITY_SELECTION_CSV, index=False)
+    selection.to_csv(LIQUIDITY_SELECTION_CSV, index=False, lineterminator="\n")
     chosen = selection.iloc[0]
     print(
         f"\nLIQ resolved to column {chosen['column']!r} scaled {chosen['scale']} "
@@ -248,7 +248,7 @@ def main() -> None:
         )
     )
     frame = pd.DataFrame.from_records(compatibility)
-    frame.to_csv(COMPATIBILITY_CSV, index=False)
+    frame.to_csv(COMPATIBILITY_CSV, index=False, lineterminator="\n")
     print()
     print(
         frame[

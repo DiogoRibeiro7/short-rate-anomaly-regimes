@@ -205,7 +205,7 @@ def _write_innovation_provenance(
     }
     INNOVATION_PROVENANCE_JSON.parent.mkdir(parents=True, exist_ok=True)
     INNOVATION_PROVENANCE_JSON.write_text(
-        json.dumps(record, indent=2, sort_keys=True), encoding="utf-8"
+        json.dumps(record, indent=2, sort_keys=True), encoding="utf-8", newline="\n"
     )
 
 
@@ -281,12 +281,14 @@ def main() -> None:
         path.mkdir(parents=True, exist_ok=True)
 
     pd.DataFrame.from_records([_record_row(item) for item in reconstructions]).to_csv(
-        DIAGNOSTIC_ROOT / "ar1_reconstruction_estimates.csv", index=False
+        DIAGNOSTIC_ROOT / "ar1_reconstruction_estimates.csv", index=False, lineterminator="\n"
     )
     comparison_frame = pd.concat(comparisons, ignore_index=True)
-    comparison_frame.to_csv(TABLE_ROOT / "ar1_published_target_comparison.csv", index=False)
+    comparison_frame.to_csv(
+        TABLE_ROOT / "ar1_published_target_comparison.csv", index=False, lineterminator="\n"
+    )
     pd.DataFrame.from_records(classifications).to_csv(
-        DIAGNOSTIC_ROOT / "r1a_classification.csv", index=False
+        DIAGNOSTIC_ROOT / "r1a_classification.csv", index=False, lineterminator="\n"
     )
 
     innovation_panel = pd.concat(
@@ -314,6 +316,7 @@ def main() -> None:
             sort_keys=True,
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
     print()

@@ -44,3 +44,35 @@ final_design_gate_changelog,reports/final_design_gate_changelog.md,Final consist
 short_rate_source_report,reports/short_rate_source_report.md,Short-rate acquisition provenance and monthly-aggregation audit
 anomaly_portfolio_availability,research/anomaly_portfolio_availability.csv,Per-family availability provider vintage definition and eligibility for the anomaly portfolios
 baseline_input_readiness,reports/baseline_input_readiness.md,Replication readiness report for the acquired baseline inputs
+ar1_reconstruction,artifacts/diagnostics/rates/ar1_reconstruction_estimates.csv,AR(1) short-rate innovation reconstruction estimates and diagnostics per series and timing variant
+r1a_classification,artifacts/diagnostics/rates/r1a_classification.csv,Replication classification for the short-rate innovation layer
+baseline_risk_prices,artifacts/tables/cross_section/baseline_risk_prices.csv,Second-pass risk prices fit and specification statistics for every model and asset set
+replication_layers,artifacts/audit/replication_layer_classification.csv,Replication layer classification R1a to R1e with recovered cell counts
+published_target_audit,artifacts/audit/published_target_audit.csv,Cell-level comparison of reconstructed statistics against published target values
+h1_materiality,artifacts/diagnostics/h1_materiality.json,Incremental pricing materiality gates against the ex ante CAPM comparator
+h4a_identification,artifacts/diagnostics/weak_factor/h4a_identification_strength.json,Beta rank standardized exposure dispersion and factor spanning gates
+h4b_influence,artifacts/diagnostics/weak_factor/h4b_influence_stability.json,Leave-one-family refits and standardized DFBETA influence gates
+h4c_precision,artifacts/diagnostics/weak_factor/h4c_fitted_premium_precision.json,Bootstrap intervals for rate-attributable fitted premium spreads
+temporal_evaluation,artifacts/tables/extension/temporal_evaluation.csv,Locked baseline revised history frozen parameter and refitted extension evaluations
+h2_temporal,artifacts/diagnostics/h2_temporal_stability.json,Post-publication compatibility gate outcomes and classification
+regime_eligibility,artifacts/tables/regimes/regime_eligibility.csv,Months eligibility tier and standalone second pass permission per registered regime
+regime_second_pass,artifacts/tables/regimes/regime_second_pass.csv,Regime-specific second pass estimates block lengths and specification statistics
+h3_equivalence,artifacts/tables/regimes/h3_equivalence.csv,Per-portfolio and aggregate equivalence tests with decision categories
+h3_regime_equivalence,artifacts/diagnostics/h3_regime_equivalence.json,Regime equivalence gate outcomes conditioning diagnostics and classification
+h3_pooled_stability,artifacts/diagnostics/h3_pooled_beta_stability.json,Pooled regime interaction Wald tests multiplicity boundary sensitivity and break battery
+regime_power,artifacts/diagnostics/regime_eligibility_power.json,Simulated precision of the two-pass estimator by regime window length
+monetary_regime_report,reports/monetary_regime_report.md,Monetary regime stability analysis and H3 classification
+temporal_extension_report,reports/temporal_extension_report.md,Temporal extension analysis separating vintage from post-publication differences
+robustness_weak_factor_report,reports/robustness_and_weak_factor_report.md,Robustness weak-factor and incremental pricing materiality analysis
+baseline_replication_audit,reports/baseline_replication_audit.md,Baseline replication audit across first pass second pass and published targets
+regime_power_report,reports/regime_eligibility_power_analysis.md,Power analysis of the regime estimation eligibility floors
+published_targets,research/published_target_values.csv,Transcribed published statistic targets from the article tables and supplement
+regime_fitted_premia,artifacts/tables/regimes/regime_fitted_premia.csv,Per-portfolio rate-attributable fitted premia by regime with changes and sensitivity
+ar1_published_comparison,artifacts/tables/factors/ar1_published_target_comparison.csv,Reconstructed AR(1) statistics compared cell by cell against the published Table 1 targets
+h1_primary_comparison,artifacts/tables/robustness/h1_primary_comparison.csv,Primary incremental-pricing materiality gates per asset set and short-rate specification
+manuscript_tables,artifacts/provenance/manuscript_tables.json,Manifest of the generated manuscript result tables
+manuscript_figures,artifacts/provenance/manuscript_figures.json,Manifest of the generated manuscript result figures and their sources
+fitted_premium_spreads,artifacts/tables/extension/fitted_premium_spreads.csv,Per-family rate-attributable fitted-premium spreads across baseline vintage and extension evaluations
+regime_series,artifacts/tables/regimes/regime_monthly_series.csv,Monthly short-rate level innovation and regime labels on the vintage-consistent panel
+table_builder,scripts/build_manuscript_tables.py,Generator that writes every manuscript result table from the frozen artifacts
+figure_builder,scripts/build_manuscript_figures.py,Generator that writes every manuscript result figure from the frozen artifacts

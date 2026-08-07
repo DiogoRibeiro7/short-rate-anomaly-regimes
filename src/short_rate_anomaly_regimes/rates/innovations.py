@@ -395,11 +395,15 @@ def write_factor_outputs(
     ]:
         path.parent.mkdir(parents=True, exist_ok=True)
     factor_panel.to_parquet(panel_path)
-    parameter_path.write_text(parameters.to_json(indent=2), encoding="utf-8")
-    diagnostic_path.write_text(json.dumps(diagnostics, indent=2, sort_keys=True), encoding="utf-8")
-    descriptives.to_csv(descriptive_path)
-    latex_path.write_text(descriptives.to_latex(float_format="%.6f"), encoding="utf-8")
-    correlations.to_csv(correlation_path)
+    parameter_path.write_text(parameters.to_json(indent=2), encoding="utf-8", newline="\n")
+    diagnostic_path.write_text(
+        json.dumps(diagnostics, indent=2, sort_keys=True), encoding="utf-8", newline="\n"
+    )
+    descriptives.to_csv(descriptive_path, lineterminator="\n")
+    latex_path.write_text(
+        descriptives.to_latex(float_format="%.6f"), encoding="utf-8", newline="\n"
+    )
+    correlations.to_csv(correlation_path, lineterminator="\n")
     return FactorOutputPaths(
         panel_parquet=str(panel_path),
         parameters_json=str(parameter_path),
