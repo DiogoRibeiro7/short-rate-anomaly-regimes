@@ -1,11 +1,21 @@
 {
-  "issues": [],
+  "issues": [
+    {
+      "failure_mechanism": "The distributed archive does not carry these generated artifacts, so a recipient cannot reproduce manuscript tables or extension claims from the archive alone.",
+      "issue_id": "empirical_artifacts_missing",
+      "location": "data/processed/factors/short_rate_innovations_baseline.parquet, data/processed/extension/monthly_panel.parquet, artifacts/estimates/time_series, artifacts/estimates/cross_section, artifacts/tables/time_series",
+      "required_fix": "Record redistribution rights and ship the generated artifacts, or release source-only and direct recipients to the `make reproduce` rebuild path.",
+      "severity": "major"
+    }
+  ],
   "verdict": {
     "critical_issue_count": 0,
-    "empirical_release": "permitted",
-    "empirical_result_tag": "allowed",
-    "major_issue_count": 0,
-    "release_verdict": "full_release_ready",
+    "empirical_rebuild": "rebuildable_from_public_sources",
+    "empirical_rebuild_entry_point": "make reproduce",
+    "empirical_release": "blocked",
+    "empirical_result_tag": "blocked",
+    "major_issue_count": 1,
+    "release_verdict": "source_only_release_ready",
     "source_release": "permitted",
     "source_tag": "source_only_tag_allowed"
   }

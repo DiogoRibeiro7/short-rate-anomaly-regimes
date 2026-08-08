@@ -40,10 +40,10 @@ effect with a data revision inside a single regime.
 The regime panel is therefore built on the **current vintage throughout**, by
 concatenating the revised-history panel (1972-2013) with the extension panel
 (2014-2025) into 648 months, 1972-01 to 2025-12. Milestone 9 licenses this: over
-the baseline window the vintage effect moves the rate risk price by 0.0011 and
-cross-sectional RMSE by 1.1 percent, against temporal effects of 0.6148 and 89
-percent. The vintage change is two orders of magnitude smaller than the effects
-measured here.
+the baseline window the vintage contribution moves the rate risk price by less
+than 0.00001 and cross-sectional RMSE by 0.003 percent, against temporal
+contributions of 0.6159 and 91 percent. The vintage change is negligible against
+the differences measured here.
 
 The short-rate autoregression is re-estimated once over the whole 648 months, so
 the factor is a single series rather than two spliced ones.

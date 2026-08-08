@@ -1,4 +1,15 @@
 {
+  "ar_timing_convention": {
+    "convention": "pre_window_lag",
+    "locked_baseline_recovered_first_lag": 4.1400000000000015,
+    "note": "every evaluation regresses its first window month on the observed level of the month before the window, read from the vintage that evaluation is estimated on, so the locked baseline and the revised history differ only in vintage",
+    "pre_window_lag_level": {
+      "extension_2014_2025": 0.09,
+      "locked_baseline_1972_2013": 4.14,
+      "revised_history_1972_2013": 4.14
+    },
+    "source": "data/interim/fred/FEDFUNDS_2026-08-01.csv"
+  },
   "classification": "post_publication_compatibility_unsupported",
   "frozen_ar_intercept": 0.04625557239964617,
   "frozen_ar_slope": 0.9905271145667265,
@@ -11,11 +22,11 @@
   "lambda_rate": {
     "locked_baseline": -0.6984645567038997,
     "refitted_extension": -0.08254587683833087,
-    "revised_history": -0.6973734348518139
+    "revised_history": -0.6984669483024644
   },
   "replication_status": "documented_reconstruction",
   "rmse_relative_change_vs_locked_baseline": 0.910147644504307,
-  "rmse_relative_change_vs_revised_history": 0.8896646010113816,
+  "rmse_relative_change_vs_revised_history": 0.9102026136819019,
   "standardized_rate_exposure_dispersion_share": {
     "locked_baseline": 0.254,
     "note": "the H4a dispersion gate floor is 0.10; the extension window clears it more comfortably than the baseline, so the temporal result is not attributable to a weakly identified factor",

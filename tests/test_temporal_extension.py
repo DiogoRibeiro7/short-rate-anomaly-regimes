@@ -1,8 +1,22 @@
+import json
 from dataclasses import replace
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
+from scripts.run_temporal_extension import (
+    BASELINE_PARQUET,
+    EXTENSION_PARQUET,
+    FEDFUNDS_CSV,
+    RATE,
+    REVISED_PARQUET,
+    _load,
+    lagged_level,
+    load_current_vintage_rate,
+    pre_window_lag,
+    rate_level,
+)
 
 from short_rate_anomaly_regimes.extensions.temporal import (
     TemporalFreeze,
@@ -18,6 +32,7 @@ from short_rate_anomaly_regimes.extensions.temporal import (
     write_boundary_figure,
     write_temporal_extension_outputs,
 )
+from short_rate_anomaly_regimes.models.block_bootstrap import recover_lagged_level
 
 
 def _freeze() -> TemporalFreeze:
@@ -423,3 +438,121 @@ def test_write_temporal_extension_outputs(tmp_path: Path) -> None:
     assert "vintages are labelled" in (tmp_path / "reports" / "temporal.md").read_text(
         encoding="utf-8"
     )
+
+
+# --------------------------------------------------------------------------- #
+# H2 autoregressive timing convention
+#
+# The vintage-isolation design compares the locked baseline with the revised
+# history over the same months, so the difference between them is a vintage
+# difference only if the two share an autoregressive timing convention. The
+# project's frozen convention is the pre-window lag: the month *before* the
+# window supplies the lag for the window's first month. Seeding a window's
+# recursion with its own first month instead silently changes the timing of one
+# system and turns the vintage comparison into a vintage-plus-timing comparison.
+# --------------------------------------------------------------------------- #
+
+H2_STABILITY = Path("artifacts/diagnostics/h2_temporal_stability.json")
+
+PANEL_INPUTS = (BASELINE_PARQUET, EXTENSION_PARQUET, REVISED_PARQUET, FEDFUNDS_CSV)
+
+requires_panels = pytest.mark.skipif(
+    not all(path.is_file() for path in PANEL_INPUTS),
+    reason="the H2 panels and the frozen rate series are not present in this checkout",
+)
+
+
+def test_the_h2_diagnostic_declares_one_pre_window_lag_for_every_evaluation() -> None:
+    """The published H2 artifact must record the timing convention it was run under.
+
+    This is the committed-artifact half of the guard: the shipped diagnostic has
+    to state that every evaluation used the pre-window lag, and the lag it records
+    for the locked baseline has to be the same number the revised history used.
+    If those two ever diverge, the vintage decomposition is measuring a timing
+    change as though it were a data revision.
+    """
+    stability = json.loads(H2_STABILITY.read_text(encoding="utf-8"))
+    timing = stability["ar_timing_convention"]
+
+    assert timing["convention"] == "pre_window_lag"
+    levels = timing["pre_window_lag_level"]
+    assert levels["locked_baseline_1972_2013"] == pytest.approx(
+        levels["revised_history_1972_2013"], abs=1e-12
+    )
+    assert timing["locked_baseline_recovered_first_lag"] == pytest.approx(
+        levels["locked_baseline_1972_2013"], abs=1e-8
+    )
+
+
+@requires_panels
+def test_every_h2_evaluation_lags_its_first_month_on_the_preceding_month() -> None:
+    """Each AR(1) must start from the observed month before its own window.
+
+    Three claims are asserted together because the design needs all three: the
+    locked baseline's recovered first lag is the observed December 1971 level, the
+    revised history is built with that same lag rather than with its own January
+    1972 level, and the extension window starts from the observed December 2013
+    level rather than from a row of the baseline panel.
+    """
+    rate = load_current_vintage_rate()
+    baseline = _load(BASELINE_PARQUET)
+    revised = _load(REVISED_PARQUET)
+    extension = _load(EXTENSION_PARQUET)
+
+    december_1971 = rate_level(rate, pd.Period("1971-12", freq="M"))
+    december_2013 = rate_level(rate, pd.Period("2013-12", freq="M"))
+
+    recovered_baseline_first_lag = float(
+        recover_lagged_level(
+            baseline[f"short_rate_level__{RATE}"].to_numpy(dtype=float),
+            baseline[f"short_rate_innovation__{RATE}"].to_numpy(dtype=float),
+        )[0]
+    )
+    assert recovered_baseline_first_lag == pytest.approx(december_1971, abs=1e-8)
+
+    revised_first_lag = lagged_level(revised, previous_level=pre_window_lag(rate, revised))[0]
+    assert revised_first_lag == pytest.approx(recovered_baseline_first_lag, abs=1e-8)
+    # The bug the guard exists for: the first window month used as its own lag.
+    assert revised_first_lag != pytest.approx(float(revised[f"short_rate_level__{RATE}"].iloc[0]))
+
+    assert pre_window_lag(rate, extension) == pytest.approx(december_2013, abs=1e-12)
+    assert pre_window_lag(rate, extension) == pytest.approx(
+        float(baseline[f"short_rate_level__{RATE}"].iloc[-1]), abs=1e-12
+    )
+
+
+@requires_panels
+def test_the_two_historical_vintage_designs_share_an_identical_lag_vector() -> None:
+    """The locked baseline and the revised history must lag every month alike.
+
+    Agreement on the first month alone would not settle it, so the whole recovered
+    baseline lag vector is compared against the revised design. Any difference
+    that survives here would enter the vintage decomposition as though a rate
+    revision had caused it.
+    """
+    rate = load_current_vintage_rate()
+    baseline = _load(BASELINE_PARQUET)
+    revised = _load(REVISED_PARQUET)
+
+    recovered = recover_lagged_level(
+        baseline[f"short_rate_level__{RATE}"].to_numpy(dtype=float),
+        baseline[f"short_rate_innovation__{RATE}"].to_numpy(dtype=float),
+    )
+    built = lagged_level(revised, previous_level=pre_window_lag(rate, revised))
+
+    assert np.allclose(recovered, built, atol=1e-8)
+
+
+def test_pre_window_lag_refuses_to_substitute_a_missing_preceding_month() -> None:
+    """A series that stops at the window start must raise rather than improvise."""
+    rate = pd.Series(
+        [3.51, 3.30, 3.83],
+        index=pd.period_range("1972-01", periods=3, freq="M"),
+    )
+    panel = pd.DataFrame(
+        {f"short_rate_level__{RATE}": [3.51, 3.30, 3.83]},
+        index=pd.period_range("1972-01", periods=3, freq="M"),
+    )
+
+    with pytest.raises(ValueError, match="1971-12"):
+        pre_window_lag(rate, panel)
