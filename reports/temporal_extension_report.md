@@ -44,7 +44,7 @@ portfolio construction is constant across the comparison.
 | Evaluation | Months | lambda_market | lambda_rate | Shanken t | RMSE | Article fit |
 |---|---|---|---|---|---|---|
 | Locked baseline | 504 | 0.6012 | **-0.6985** | -2.86 | 0.1004 | 0.5439 |
-| Revised history | 504 | 0.6044 | **-0.6974** | -2.86 | 0.1015 | 0.5340 |
+| Revised history | 504 | 0.6030 | **-0.6985** | -2.86 | 0.1004 | 0.5440 |
 | Frozen parameter on 2014-2025 | 144 | 0.6012 | -0.6985 | -2.86 | **0.4463** | **-0.6913** |
 | Refitted extension | 144 | 0.9972 | **-0.0825** | -1.49 | 0.1918 | 0.4502 |
 
@@ -52,15 +52,23 @@ portfolio construction is constant across the comparison.
 
 | Comparison | lambda_rate change | RMSE relative change | Max abs. spread change |
 |---|---|---|---|
-| **Vintage** (locked vs revised history) | +0.0011 | +1.1 percent | 0.0237 |
-| **Temporal** (revised history vs refitted extension) | **+0.6148** | **+89.0 percent** | **0.9806** |
+| **Vintage** (locked vs revised history) | -0.0000 | -0.003 percent | 0.0007 |
+| **Temporal** (revised history vs refitted extension) | **+0.6159** | **+91.0 percent** | **0.9881** |
 | Combined, confounded, for completeness | +0.6159 | +91.0 percent | 0.9876 |
 
-On every dimension the temporal effect is one to two orders of magnitude larger
-than the vintage effect. Recomputing the baseline window on a nine-year-later
-vintage moves the rate risk price by about one tenth of one percent of its
-value. Moving to the post-publication window moves it by 88 percent of its
-value.
+The vintage contribution is negligible on every dimension. Recomputing the
+baseline window on a nine-year-later vintage leaves the rate risk price and the
+cross-sectional RMSE unchanged to four decimals; moving to the post-publication
+window moves the risk price by 88 percent of its value.
+
+It is this small because the federal funds series is not revised and both
+panels read the same frozen file, so the rate innovation is identical across
+vintages by construction, and the test assets are the same portfolio vintage in
+every window. Only the market and risk-free factors differ, and over these
+months that difference does not move the cross-section measurably. An earlier
+version of this table reported a vintage contribution of +0.0011 on the risk
+price; that was an artifact of a timing error in the revised-history
+autoregression, corrected in the peer-review revision.
 
 This is the separation the acceptance gate asks for, and it is clean: the
 post-2013 change cannot be attributed to revised historical data.
@@ -71,22 +79,23 @@ post-2013 change cannot be attributed to revised historical data.
 |---|---|---|---|
 | Sign compatibility of fitted-premium spreads | all families | 2 of 7 compatible | **fail** |
 | Fitted-premium magnitude change | within 0.25 monthly pp | 1 of 7 within | **fail** |
-| RMSE deterioration | at most 10 percent | +89.0 percent | **fail** |
+| RMSE deterioration | at most 10 percent | +91.0 percent | **fail** |
 
 Per family, the rate-attributable fitted-premium spread
 `pi(decile_10) - pi(decile_01)`:
 
-| Family | Baseline | Refitted extension | Temporal change | Sign kept |
-|---|---|---|---|---|
-| `book_to_market` | 0.5353 | -0.3908 | -0.9119 | no |
-| `earnings_to_price` | 0.4071 | -0.5804 | -0.9806 | no |
-| `equity_duration` | -0.4617 | 0.4565 | +0.9049 | no |
-| `long_term_reversal` | -0.2992 | 0.6536 | +0.9291 | no |
-| `ppe_investment` | -0.2981 | 0.5600 | +0.8600 | no |
-| `investment_to_assets` | -0.3283 | -0.0251 | +0.3069 | yes |
-| `inventory_growth` | -0.1908 | -0.0553 | +0.1289 | yes |
+| Family | Locked baseline | Revised history | Refitted extension | Temporal change | Sign kept |
+|---|---|---|---|---|---|
+| `book_to_market` | 0.5353 | 0.5353 | -0.3908 | -0.9261 | no |
+| `earnings_to_price` | 0.4071 | 0.4077 | -0.5804 | -0.9881 | no |
+| `equity_duration` | -0.4617 | -0.4622 | 0.4565 | +0.9187 | no |
+| `long_term_reversal` | -0.2992 | -0.2993 | 0.6536 | +0.9529 | no |
+| `ppe_investment` | -0.2981 | -0.2984 | 0.5600 | +0.8583 | no |
+| `investment_to_assets` | -0.3283 | -0.3291 | -0.0251 | +0.3039 | yes |
+| `inventory_growth` | -0.1908 | -0.1911 | -0.0553 | +0.1358 | yes |
 
-Five of seven families reverse sign. The two that keep their sign do so with
+The temporal change is measured from the revised history, which is the
+registered comparator for that gate. Five of seven families reverse sign. The two that keep their sign do so with
 spreads that have collapsed toward zero.
 
 ## 5. The obvious benign explanation, and why it does not hold

@@ -4,15 +4,16 @@
     "rmse_deterioration": 0.1
   },
   "inputs": {
+    "data/interim/fred/FEDFUNDS_2026-08-01.csv": "b492202f08be4d5e817e8f2a374c33d86dfc32882b48cd4f1aeccc82f05c0bb2",
     "data/processed/baseline_panel.parquet": "f1354c66d8983bfed626dc9dbc62204d31d236f1117b700158e3b9b04f8a1cc0",
     "data/processed/extension/monthly_panel.parquet": "e51abf8662938740243f315066c63cb78ffd3f25ac906d5058cb4ad3f658351a",
     "data/processed/extension/revised_history_panel.parquet": "01ce15eeb3fbdaddcb2c7fab690463f32257599e6c563448d8a645d40ef08308"
   },
   "outputs": {
-    "artifacts/diagnostics/h2_temporal_stability.json": "e94515bd83f33d4cd4691aed301126bd5c987eea56f8172850416929b651272a",
-    "artifacts/tables/extension/fitted_premium_spreads.csv": "82a3e693914f94ee851180651e14c35f8631cc2a155eae26699aa7e39784d7f1",
-    "artifacts/tables/extension/temporal_evaluation.csv": "2b145b05596d8729c0ad30ba7fe7f02b4027b62f727603904fec49175d2fc81c",
-    "artifacts/tables/extension/vintage_decomposition.csv": "34758ab073d956a416ceb4dd1da47c29e461c1d34f8b991983977e17c9a5c2bc"
+    "artifacts/diagnostics/h2_temporal_stability.json": "9ee01cecb0c04923bb8c3d05d3ce886e4d27031cdfceb6f6786200d45689b559",
+    "artifacts/tables/extension/fitted_premium_spreads.csv": "e62e4637c5a60d85516d4d28f0ec74a7a669afd19a8ffd9b4d152d126468efef",
+    "artifacts/tables/extension/temporal_evaluation.csv": "85c180a18dd87afb646f1c4e88bea4029154cc5a4a4c01a0618f0cebab5406a8",
+    "artifacts/tables/extension/vintage_decomposition.csv": "24c35bdf3c6101d5028923c931bd572657dda30f3976463f4ad9ac647cbdd85b"
   },
   "script": "scripts/run_temporal_extension.py"
 }

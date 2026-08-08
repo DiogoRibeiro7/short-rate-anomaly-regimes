@@ -24,10 +24,10 @@ Revision policy: `audit_separately`
 |---|---|
 | locked_baseline | -0.698465 |
 | refitted_extension | -0.0825459 |
-| revised_history | -0.697373 |
+| revised_history | -0.698467 |
 
 - RMSE relative change against the locked baseline: `0.910148`
-- RMSE relative change against the revised history: `0.889665`
+- RMSE relative change against the revised history: `0.910203`
 - Frozen autoregression intercept: `0.0462556`, slope `0.990527`
 - Standardized rate-exposure dispersion share: locked baseline `0.254`, refitted extension `0.58`
 
@@ -42,7 +42,7 @@ Vintage isolation: the temporal gates compare the refitted extension with the re
 | locked_baseline_1972_2013 | publication_era | 504 | 0.601228 | -0.698465 | -2.85954 | 0.100393 | 0.0816409 | 0.238831 | 0.543937 | documented_reconstruction |
 | frozen_parameter_extension_2014_2025 | current | 144 | 0.601228 | -0.698465 | -2.85954 | 0.446254 | 0.355177 | 0.963638 | -0.691281 | documented_reconstruction |
 | refitted_extension_2014_2025 | current | 144 | 0.997163 | -0.0825459 | -1.49336 | 0.191766 | 0.146386 | 0.683394 | 0.45021 | documented_reconstruction |
-| revised_history_1972_2013 | current | 504 | 0.604393 | -0.697373 | -2.86141 | 0.101481 | 0.0821065 | 0.25359 | 0.533951 | documented_reconstruction |
+| revised_history_1972_2013 | current | 504 | 0.602986 | -0.698467 | -2.85914 | 0.10039 | 0.0816393 | 0.238822 | 0.543963 | documented_reconstruction |
 
 The baseline and extension vintages are labelled separately. The revised-history evaluation is the current-vintage comparator for the registered temporal gates, so revised historical values do enter the temporal verdict, as the quantity the refitted extension is measured against. What the shared vintage removes is the publication-era against current-vintage revision effect, which the locked-baseline comparison reports separately.
 

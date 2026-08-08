@@ -33,6 +33,7 @@ No public processed data file is currently redistributed beyond tracked placehol
 
 1. Clone the repository into an empty workspace.
 2. Run `poetry install`.
-3. Run `make check` to execute source checks, dry-run data acquisition, catalog creation, release audit generation, and tests.
-4. Register restricted files with `poetry run srar register-manual-source` only when you have legal access; do not copy those files into Git.
-5. Rebuild release assets with `poetry run srar release-audit`.
+3. Run `make check` to execute source checks, dry-run data acquisition, catalog creation, release audit generation, and tests. This stage needs no network access and no rebuilt data.
+4. Run `make reproduce` to rebuild the empirical artifacts from the frozen public sources listed above. The acquisition stage needs network access; the bootstrap and simulation stages take hours. Individual stages are available as `make reproduce-acquire`, `reproduce-panels`, `reproduce-estimates`, `reproduce-extension`, `reproduce-regimes`, and `reproduce-reports`.
+5. Register restricted files with `poetry run srar register-manual-source` only when you have legal access; do not copy those files into Git.
+6. Rebuild release assets with `poetry run srar release-audit`.

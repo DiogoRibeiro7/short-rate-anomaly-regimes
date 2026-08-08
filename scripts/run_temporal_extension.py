@@ -25,6 +25,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from short_rate_anomaly_regimes.data.short_rate_freeze import load_normalized_series
 from short_rate_anomaly_regimes.models.article_second_pass import (
     ArticleSecondPassResult,
     estimate_article_second_pass,
@@ -36,10 +37,21 @@ from short_rate_anomaly_regimes.models.time_series import (
     estimate_time_series_betas,
 )
 from short_rate_anomaly_regimes.portfolios.q_archive import FAMILY_MEMBERS
+from short_rate_anomaly_regimes.rates.baseline_reconstruction import monthly_rate_from_freeze
 
 BASELINE_PARQUET = Path("data/processed/baseline_panel.parquet")
 EXTENSION_PARQUET = Path("data/processed/extension/monthly_panel.parquet")
 REVISED_PARQUET = Path("data/processed/extension/revised_history_panel.parquet")
+
+#: The frozen current-vintage federal funds file that
+#: ``scripts/build_extension_panels.py`` reads to build both the extension and the
+#: revised-history panel, and that ``scripts/build_baseline_panel.py`` reads for
+#: the locked baseline's rate column. Every evaluation here draws its pre-window
+#: lag from this file, so each lag is the observed preceding month on the vintage
+#: that evaluation is actually estimated on.
+FRED_ROOT = Path("data/interim/fred")
+FRED_DATE = "2026-08-01"
+FEDFUNDS_CSV = FRED_ROOT / f"FEDFUNDS_{FRED_DATE}.csv"
 
 EVALUATION_CSV = Path("artifacts/tables/extension/temporal_evaluation.csv")
 SPREAD_CSV = Path("artifacts/tables/extension/fitted_premium_spreads.csv")
@@ -79,6 +91,72 @@ def _spread_pairs(columns: list[str]) -> dict[str, tuple[int, int]]:
     }
 
 
+def load_current_vintage_rate() -> pd.Series:
+    """Load the current-vintage monthly federal funds level, indexed by month."""
+    return monthly_rate_from_freeze(load_normalized_series(FEDFUNDS_CSV))
+
+
+def rate_level(rate: pd.Series, month: pd.Period) -> float:
+    """Return one month's observed rate level.
+
+    Args:
+        rate: Monthly rate level indexed by monthly periods.
+        month: The month to read.
+
+    Returns:
+        The observed level for that month.
+
+    Raises:
+        ValueError: If the series does not carry the month.
+    """
+    levels = dict(zip(rate.index, rate.to_numpy(dtype=float), strict=True))
+    if month not in levels:
+        raise ValueError(f"The rate series does not carry {month}")
+    return float(levels[month])
+
+
+def pre_window_lag(rate: pd.Series, panel: pd.DataFrame) -> float:
+    """Return the observed rate level of the month before a panel's first month.
+
+    The project's frozen AR(1) timing convention, registered in
+    ``reports/short_rate_source_report.md`` and implemented by
+    :func:`short_rate_anomaly_regimes.rates.baseline_reconstruction.estimate_ar1_reconstruction`
+    under ``pre_window_lag``, regresses the first window month on the level of the
+    month *before* the window. Seeding the recursion with the first window month
+    instead would regress that month on itself and would give the evaluation a
+    different AR timing from the locked baseline, which is what the
+    vintage-isolation comparison depends on.
+
+    Args:
+        rate: Monthly rate level for the vintage the panel is built on.
+        panel: The evaluation panel whose first month needs a lag.
+
+    Returns:
+        The observed level of the month preceding the panel window.
+
+    Raises:
+        ValueError: If the series does not reach the preceding month. No value is
+            substituted, because a substituted lag would silently reintroduce the
+            timing mismatch this function exists to prevent.
+    """
+    first = pd.Period(panel.index[0], freq="M")
+    previous = first - 1
+    try:
+        return rate_level(rate, previous)
+    except ValueError as error:
+        raise ValueError(
+            f"The rate series does not reach {previous}, which is the pre-window "
+            f"lag required for the window starting {first}"
+        ) from error
+
+
+def lagged_level(panel: pd.DataFrame, *, previous_level: float) -> FloatArray:
+    """Build a panel's one-month lagged rate level under the pre-window convention."""
+    level = panel[f"short_rate_level__{RATE}"].to_numpy(dtype=float)
+    lags: FloatArray = np.concatenate([[previous_level], level[:-1]])
+    return lags
+
+
 def _ar_parameters(panel: pd.DataFrame) -> tuple[float, float]:
     """Recover the AR(1) intercept and slope embedded in a panel's innovation."""
     level = panel[f"short_rate_level__{RATE}"].to_numpy(dtype=float)
@@ -94,8 +172,9 @@ def _innovation_from_frozen_ar(
 ) -> FloatArray:
     """Apply frozen AR(1) parameters to a later window without re-estimating them."""
     level = panel[f"short_rate_level__{RATE}"].to_numpy(dtype=float)
-    lagged = np.concatenate([[previous_level], level[:-1]])
-    innovation: FloatArray = level - intercept - slope * lagged
+    innovation: FloatArray = (
+        level - intercept - slope * lagged_level(panel, previous_level=previous_level)
+    )
     return innovation
 
 
@@ -147,6 +226,27 @@ def main() -> None:
     if _asset_columns(extension) != columns or _asset_columns(revised) != columns:
         raise ValueError("Panels disagree on the test-asset set")
 
+    rate = load_current_vintage_rate()
+    # The locked baseline does not carry its own lag column, so its pre-window lag
+    # is recovered from the level and the AR residual it does carry. Checking the
+    # recovered value against the observed preceding month proves that the two
+    # historical-window evaluations share one timing convention, which is what
+    # makes the locked-against-revised difference a pure vintage difference.
+    baseline_pre_window_lag = pre_window_lag(rate, baseline)
+    recovered_baseline_lag = float(
+        recover_lagged_level(
+            baseline[f"short_rate_level__{RATE}"].to_numpy(dtype=float),
+            baseline[f"short_rate_innovation__{RATE}"].to_numpy(dtype=float),
+        )[0]
+    )
+    if abs(recovered_baseline_lag - baseline_pre_window_lag) > 1e-8:
+        raise ValueError(
+            "The locked baseline's first AR lag "
+            f"({recovered_baseline_lag:.6f}) is not the observed level of the month "
+            f"before its window ({baseline_pre_window_lag:.6f}), so the baseline and "
+            "the revised history do not share the pre-window-lag timing convention"
+        )
+
     intercept, slope = _ar_parameters(baseline)
     baseline_innovation = baseline[f"short_rate_innovation__{RATE}"].to_numpy(dtype=float)
     baseline_betas, _, baseline_result = _fit_system(baseline, baseline_innovation, "baseline")
@@ -156,7 +256,10 @@ def main() -> None:
     # Frozen-parameter: the AR parameters, the betas and the risk prices are all
     # the 2013-12 values. The only post-2013 information used is the realised
     # data the frozen model is scored against.
-    previous_level = float(baseline[f"short_rate_level__{RATE}"].iloc[-1])
+    # The extension panel is on the current vintage, so its pre-window lag is the
+    # current-vintage December 2013 level, the month immediately preceding the
+    # extension window, rather than the last row of the locked baseline panel.
+    previous_level = pre_window_lag(rate, extension)
     # With the betas and the risk prices both frozen, the fitted premium is a
     # pure function of baseline parameters, so the extension innovation does not
     # enter this evaluation at all. The frozen AR coefficients still matter,
@@ -176,9 +279,8 @@ def main() -> None:
     frozen_spreads = baseline_spreads  # parameters frozen, so the spreads are too
 
     # Refitted: everything re-estimated on the extension window alone.
-    refit_lagged_previous = previous_level
     refit_level = extension[f"short_rate_level__{RATE}"].to_numpy(dtype=float)
-    refit_lagged = np.concatenate([[refit_lagged_previous], refit_level[:-1]])
+    refit_lagged = lagged_level(extension, previous_level=previous_level)
     refit_design = np.column_stack([np.ones(refit_level.size), refit_lagged])
     refit_ar = np.linalg.lstsq(refit_design, refit_level, rcond=None)[0]
     refit_innovation = refit_level - refit_design @ refit_ar
@@ -186,11 +288,12 @@ def main() -> None:
     refit_lambda_rate = float(refit_result.risk_prices["FFR_innovation"])
     refit_spreads = _spreads(refit_betas, refit_lambda_rate, columns)
 
-    # Revised history: baseline months, current vintage.
+    # Revised history: baseline months, current vintage. The pre-window lag is the
+    # current-vintage December 1971 level, so this AR shares the locked baseline's
+    # timing convention and the two differ only in vintage.
+    revised_previous_level = pre_window_lag(rate, revised)
     revised_innovation_level = revised[f"short_rate_level__{RATE}"].to_numpy(dtype=float)
-    revised_lagged = np.concatenate(
-        [[float(baseline[f"short_rate_level__{RATE}"].iloc[0])], revised_innovation_level[:-1]]
-    )
+    revised_lagged = lagged_level(revised, previous_level=revised_previous_level)
     revised_design = np.column_stack([np.ones(revised_innovation_level.size), revised_lagged])
     revised_ar = np.linalg.lstsq(revised_design, revised_innovation_level, rcond=None)[0]
     revised_innovation = revised_innovation_level - revised_design @ revised_ar
@@ -340,6 +443,22 @@ def main() -> None:
                 "rmse_relative_change_vs_locked_baseline": rmse_vs_locked,
                 "frozen_ar_intercept": intercept,
                 "frozen_ar_slope": slope,
+                "ar_timing_convention": {
+                    "convention": "pre_window_lag",
+                    "source": FEDFUNDS_CSV.as_posix(),
+                    "note": (
+                        "every evaluation regresses its first window month on the "
+                        "observed level of the month before the window, read from the "
+                        "vintage that evaluation is estimated on, so the locked "
+                        "baseline and the revised history differ only in vintage"
+                    ),
+                    "pre_window_lag_level": {
+                        "locked_baseline_1972_2013": baseline_pre_window_lag,
+                        "revised_history_1972_2013": revised_previous_level,
+                        "extension_2014_2025": previous_level,
+                    },
+                    "locked_baseline_recovered_first_lag": recovered_baseline_lag,
+                },
                 "lambda_rate": {
                     "locked_baseline": baseline_lambda_rate,
                     "revised_history": revised_lambda_rate,
@@ -373,7 +492,12 @@ def main() -> None:
                 "script": "scripts/run_temporal_extension.py",
                 "inputs": {
                     p.as_posix(): _sha256(p)
-                    for p in (BASELINE_PARQUET, EXTENSION_PARQUET, REVISED_PARQUET)
+                    for p in (
+                        BASELINE_PARQUET,
+                        EXTENSION_PARQUET,
+                        REVISED_PARQUET,
+                        FEDFUNDS_CSV,
+                    )
                 },
                 "outputs": {
                     p.as_posix(): _sha256(p)

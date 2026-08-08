@@ -38,26 +38,33 @@ Section~\ref{sec:data}.
 \begin{abstract}
 This paper asks whether short-term interest-rate innovations help explain the
 cross section of stock-market anomaly returns, and whether that relation is
-stable after the publication sample and across monetary regimes. We rebuild the
-design of \citet{maio_santaclara_2017} from independently acquired sources,
-holding every threshold and decision rule fixed in advance, and separate
-documented reconstruction from new extension evidence throughout.
-On the 1972--2013 baseline the reconstruction recovers the published pattern: the % artifact: configs/baseline.yaml
-short-rate innovation carries a negative price of risk that is significant under
-the Shanken correction, and it cuts cross-sectional pricing errors against the
-market model by roughly a half. Three pre-registered findings qualify that.
-First, the incremental-pricing standard registered in advance is not met on the
-headline asset set, and every traded multi-factor comparator attains a lower
-cross-sectional RMSE on the same seventy portfolios. Second, the
-relation does not survive the publication sample: refitted post-2013 estimates % artifact: configs/extensions.yaml
-reverse sign for five of seven anomaly families, and we show this is not a
-data-vintage artifact and not, by the registered identification gate, a weak-factor
-artifact. Third, exposures are regime dependent, with the pooled interaction test
-rejecting stability decisively, while the regime-specific equivalence tests are
-too imprecise at feasible regime lengths to certify either equivalence or
-difference for any individual portfolio. A power analysis shows this imprecision
-is a property of the estimator at those sample sizes rather than a finding about
-the periods themselves.
+stable after the publication sample and across monetary regimes. Because
+\citet{maio_santaclara_2017} identify their data providers rather than their
+files, we do not attempt a numerical replication. We build the closest
+\emph{documented reconstruction} obtainable from identifiable public inputs,
+hold every threshold and decision rule fixed in advance, and report each
+registered gate whether it passes or fails.
+On the 1972--2013 baseline the reconstruction recovers the published pattern % artifact: configs/baseline.yaml
+qualitatively: the short-rate innovation carries a negative price of risk that is
+significant under the Shanken correction, and it cuts cross-sectional pricing
+errors against the market model by roughly a half. Recovery of the published
+cells at printed precision is much weaker, particularly for pricing-error and fit
+statistics, so the exercise supports statements about patterns and not about
+arithmetic.
+That pattern proves markedly less robust once economic materiality, alternative
+factor models, later data, beta-estimation error, and regime dependence are
+considered. The incremental-pricing standard registered in advance is not met on
+the headline asset set, and every registered traded multi-factor comparator
+attains a lower in-sample cross-sectional RMSE on the same seventy portfolios,
+albeit on richer factor sets. Refitted post-2013 estimates reverse sign for five % artifact: configs/extensions.yaml
+of seven anomaly families, which we show is neither a data-vintage artifact nor,
+by the registered identification gate, a weak-factor artifact. Rate exposures are
+regime dependent under a pooled interaction test, while regime-specific
+differences in the price of risk cannot be identified at feasible regime lengths.
+A calibrated simulation points to what these share: two thirds of the
+cross-sectional dispersion of estimated rate betas is sampling noise even in the
+full sample, and the nominal Shanken interval for the rate price attains its
+stated coverage at no simulated sample size.
 \end{abstract}
 
 \section{Introduction}
@@ -91,7 +98,9 @@ risk of $-0.6985$ per month with a Shanken $t$ of $-2.86$, and it roughly halves
 cross-sectional pricing errors relative to the market model. % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
 Against that, the incremental-pricing standard we registered in advance is not
 met on the joint asset set, and every traded multi-factor comparator we examine
-attains a lower cross-sectional RMSE and a higher fit on the same portfolios. The
+attains a lower in-sample cross-sectional RMSE on the same portfolios, though on
+factor sets of higher dimension, so that comparison ranks fit rather than
+models. The
 relation then fails to extend past the publication sample, in a way we can
 attribute to the passage of time rather than to data revisions or to weak
 identification. Finally, short-rate exposures differ across monetary regimes,
@@ -620,11 +629,23 @@ gives the same sign and a comparable $t$-ratio, so the finding does not hinge on
 which short rate is used. % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
 
 Two features of the table qualify that reading, and both work against the
-short-rate model. First, every traded multi-factor comparator attains a lower
-RMSE and a higher fit than the short-rate specification: the Carhart model
-reaches an RMSE of 0.0720 against 0.1004. The short-rate model is a large % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
-improvement on the market model alone and is simultaneously the weakest of the
-multi-factor specifications on these test assets. % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
+short-rate model. First, every registered traded multi-factor comparator attains
+a lower in-sample cross-sectional RMSE and a higher fit than the short-rate
+specification: the Carhart model reaches an RMSE of 0.0720 against 0.1004. % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
+
+That comparison is stated as an in-sample one deliberately, and it does not
+support a ranking of the models. The comparators carry three to five factors
+against the short-rate model's two, and a larger factor set has more freedom to
+span a fixed cross-section of seventy average returns; because the first-pass
+betas are re-estimated for each model, this is not a nested comparison in which
+the usual degrees-of-freedom correction applies cleanly either. Raw RMSE is
+therefore not a complexity-neutral criterion. What the table establishes is that
+the short-rate specification, while a large improvement on the market model
+alone, does not achieve a smaller in-sample pricing error than any registered
+traded alternative on these test assets. Establishing that it is worse as a
+pricing model would require a genuinely predictive comparison or a
+complexity-adjusted criterion, neither of which this paper runs; the
+out-of-sample design in Appendix~\ref{sec:oos} is where that question belongs.
 
 Second, the specification test is not evidence in the short-rate model's favour
 despite its $p$-value of essentially one. The Shanken multiplier for that model
@@ -680,9 +701,18 @@ for the second pass to identify a price of risk. The economic one is whether the
 factor reduces pricing errors by a material amount against comparator models
 chosen in advance. The first is answered affirmatively; the second is not.
 
-\subsection{The factor is well identified}
+\subsection{The factor is identified in the cross-section, but its betas are noisy}
+\label{sec:identification}
 
-All three identification gates pass. The beta matrix attains full rank. The
+Two distinct properties are at stake here and the paper keeps them apart, because
+its own evidence separates them. The first is whether the estimated exposures
+vary enough across assets, and are distinct enough from the traded factors, for
+the second pass to identify a price of risk at all. They do. The second is
+whether an individual estimated beta is a reliable measurement of that asset's
+exposure. Largely they are not, and Section~\ref{sec:power} quantifies how far
+from reliable.
+
+All three registered identification gates pass. The beta matrix attains full rank. The
 standardized rate-exposure dispersion is 0.2540 of the standardized market % artifact: artifacts/diagnostics/weak_factor/h4a_identification_strength.json
 dispersion against a floor of 0.10, and per family it ranges from 0.1903 to % artifact: artifacts/diagnostics/weak_factor/h4a_identification_strength.json
 0.3894, so no family sits near the floor. % artifact: artifacts/diagnostics/weak_factor/h4a_identification_strength.json
@@ -696,19 +726,51 @@ price of risk moves within $[-0.7519, -0.6777]$ with no sign reversal, and the %
 largest standardized influence of any single portfolio on it is 0.0896 against a % artifact: artifacts/diagnostics/weak_factor/h4b_influence_stability.json
 bound of one. % artifact: artifacts/diagnostics/weak_factor/h4b_influence_stability.json
 
-Fitted-premium precision passes for every family. The rate-attributable
-fitted-premium spread between extreme deciles has a bootstrap interval that
-excludes at least one economic direction in all seven families, so no family is
-so imprecisely estimated that its sign is uninformative. % artifact: artifacts/diagnostics/weak_factor/h4c_fitted_premium_precision.json
+The registered precision gate passes for every family, and its content is
+narrower than the word precision suggests. The gate asks whether the bootstrap
+interval for a family's rate-attributable fitted-premium spread accommodates
+economically large effects of \emph{both} signs, that is whether it contains
+both $+0.25$ and $-0.25$. None does, so all seven pass. % artifact: artifacts/diagnostics/weak_factor/h4c_fitted_premium_precision.json
+
+That is an economic-exclusion criterion, not a statement about statistical
+significance, and it must not be read as one. Five of the seven intervals
+contain zero, so for those five the sign of the spread is not established. Only
+book-to-market, at $[0.0223, 0.8321]$, and investment-to-assets, at % artifact: artifacts/tables/robustness/h4c_fitted_premium_intervals.csv
+$[-0.5342, -0.0239]$, exclude zero. % artifact: artifacts/tables/robustness/h4c_fitted_premium_intervals.csv
+We report the gate as registered and decline to restate it as sign
+identification, which it never was.
+
 Intervals come from a moving-block bootstrap with 10,000 repetitions in which % artifact: research/bootstrap_contract.md
 each draw resamples calendar months jointly and recomputes the entire chain: the
 autoregression, all seventy first-pass betas, the no-intercept second pass, and
 the fitted premia. The block length of six months was selected by the
 Politis-White rule rather than set by hand. % artifact: research/bootstrap_contract.md
 
-Taken together these say the short-rate factor is well enough identified, stable
-enough to test-asset composition, and precisely enough estimated to carry a
-pricing interpretation. They do not say the interpretation is correct.
+\subsection{What the identification gates do and do not license}
+
+Together the gates say the short-rate factor is distinct from the traded factor
+set, that its estimated exposures are dispersed enough across assets for a
+second pass to run, that the risk price is not the artifact of any one anomaly
+family, and that no family's fitted-premium spread is consistent with large
+effects in both directions at once. That is enough to take the cross-sectional
+estimate seriously as an estimate.
+
+It is not enough to treat an individual estimated beta as a measurement. The
+simulation in Section~\ref{sec:power}, calibrated to this process, attributes
+66.7 percent of the cross-sectional dispersion of estimated rate betas to % artifact: artifacts/diagnostics/regime_eligibility_power.json
+first-pass sampling noise even at 648 months, against 2.9 percent for market % artifact: artifacts/diagnostics/regime_eligibility_power.json
+betas. % artifact: artifacts/diagnostics/regime_eligibility_power.json
+The dispersion gate is satisfied by dispersion that is substantially noise, and
+the gate was never designed to distinguish the two. We flag this as a limitation
+of the registered identification standard rather than a finding against the
+factor: a scale-aware dispersion floor is a test of whether a second pass can be
+run, not of how well its inputs are measured.
+
+The consequence runs through the rest of the paper. It is why the regime
+contrasts in Section~\ref{sec:regimes} are underpowered at feasible sample
+lengths, and it is the most plausible reconciliation of a risk price that is
+significant in the full sample with economic quantities that are unstable across
+subsamples.
 
 \subsection{The incremental-pricing standard is not met}
 
@@ -718,9 +780,15 @@ hold. Table~\ref{tab:h1} reports them.
 
 \input{tables/h1}
 
-The registered classification is therefore \emph{unsupported}. The two relative
-gates clear by roughly a factor of four; the absolute gate fails by 0.0136 % artifact: artifacts/diagnostics/h1_materiality.json
-monthly percentage points. % artifact: artifacts/diagnostics/h1_materiality.json
+The registered classification is therefore \emph{unsupported}, and the
+classification being binary is no reason for the economic reading to be. The two
+relative gates clear by roughly a factor of four. The absolute gate fails by
+0.0136 monthly percentage points. The substantive finding is not that the % artifact: artifacts/diagnostics/h1_materiality.json
+short-rate factor adds no incremental pricing content, which the table plainly
+contradicts, but that its improvement over the market model falls just short of
+the definition of economically sufficient that we fixed in advance, on one
+unusually demanding gate. We report the classification as registered and the
+magnitude alongside it, and neither should be quoted without the other.
 
 That asymmetry deserves to be on the record, because it alone determines the
 headline classification. The market model's own maximum absolute pricing error on
@@ -768,24 +836,46 @@ with a change in data vintage. We therefore estimate a third system on the
 \emph{baseline months} using the \emph{current} vintage. Differencing it against
 the locked baseline isolates the vintage contribution; differencing the refitted
 extension against it isolates the temporal contribution. The registered gates are
-evaluated on the second comparison, so no revised historical datum enters the
-temporal verdict. A fourth system applies the 2013-12 parameters unchanged to the % artifact: configs/extensions.yaml
+evaluated on the second comparison.
+
+That does not mean revised data are absent from the temporal verdict, and it
+would be wrong to say so: the revised-history system \emph{is} the comparator
+against which two of the three gates are evaluated, so revised values enter the
+reference quantity directly. What the construction achieves is narrower and
+still worth having. Both sides of the temporal comparison are built on the same
+vintage, so the revision contribution is common to them and differences out, leaving
+the change between the historical and extension windows separable from the
+publication-era-to-current revision that the locked-baseline comparison reports
+on its own.
+
+A fourth system applies the 2013-12 parameters unchanged to the % artifact: configs/extensions.yaml
 later months without re-estimating anything, and is genuinely out of sample.
 
 \input{tables/temporal}
 
-The separation is clean. Recomputing the baseline window on a vintage nine years
-later moves the rate price of risk by 0.0011 and cross-sectional RMSE by 1.1 % artifact: artifacts/diagnostics/h2_temporal_stability.json
-percent. Moving to the post-publication window moves them by 0.6148 and 89.0 % artifact: artifacts/diagnostics/h2_temporal_stability.json
-percent. On every dimension the temporal contribution is one to two orders of
-magnitude larger than the vintage contribution, so the post-2013 change cannot be % artifact: artifacts/diagnostics/h2_temporal_stability.json
-attributed to revised historical data. % artifact: artifacts/diagnostics/h2_temporal_stability.json
+The separation is clean, and cleaner than we first measured it. Recomputing the
+baseline window on a vintage nine years later moves the rate price of risk by
+$-0.0000$ and cross-sectional RMSE by $-0.003$ percent. Moving to the % artifact: artifacts/tables/extension/vintage_decomposition.csv
+post-publication window moves them by 0.6159 and 91.0 percent. The vintage % artifact: artifacts/tables/extension/vintage_decomposition.csv
+contribution is negligible on every dimension, so the post-2013 change cannot be % artifact: artifacts/tables/extension/vintage_decomposition.csv
+attributed to revised historical data. % artifact: artifacts/tables/extension/vintage_decomposition.csv
+
+The vintage contribution is this small for a reason worth stating, because a
+reader who expected revisions to matter should know why they do not here. The
+federal funds series is not revised, and both panels read the same frozen file,
+so the rate innovation is identical across the two vintages by construction. The
+test assets are the same portfolio vintage in every window. What actually differs
+between the locked baseline and the revised history is the market and risk-free
+factors, and over these months that difference does not move the cross-section
+measurably. An earlier version of this comparison reported a vintage contribution
+of 0.0011 on the rate price; that figure was an artifact of a timing error in the % artifact: artifacts/tables/extension/vintage_decomposition.csv
+revised-history autoregression, not a vintage difference, and is corrected here.
 
 \subsection{All three registered gates fail}
 
 Sign compatibility of the rate-attributable fitted-premium spreads holds for two
 of seven families; the magnitude gate holds for one of seven; and RMSE
-deteriorates by 89.0 percent against a bound of 10 percent. The registered % artifact: artifacts/diagnostics/h2_temporal_stability.json
+deteriorates by 91.0 percent against a bound of 10 percent. The registered % artifact: artifacts/diagnostics/h2_temporal_stability.json
 classification is \emph{unsupported}. % artifact: artifacts/diagnostics/h2_temporal_stability.json
 Five of the seven families reverse the sign of their spread, and the two that
 keep it do so with spreads that have collapsed toward zero. Applying the 2013-12 % artifact: artifacts/tables/extension/temporal_evaluation.csv
@@ -831,9 +921,9 @@ The temporal analysis uses the extension-compatible monthly panel, frozen and
 refitted versions of the registered two-factor system, the same source-compatible
 anomaly portfolios in every window, and the predeclared temporal comparisons.
 Uncertainty is the Shanken covariance with the registered identification
-diagnostics; the economic magnitude is an 89.0 percent deterioration in % artifact: artifacts/diagnostics/h2_temporal_stability.json
+diagnostics; the economic magnitude is a 91.0 percent deterioration in % artifact: artifacts/diagnostics/h2_temporal_stability.json
 cross-sectional RMSE against a 10 percent bound. % empirical-paragraph % artifact: artifacts/diagnostics/h2_temporal_stability.json
-% empirical-context: sample=extension_compatible_monthly_panel_144_months; model=frozen_and_refitted_two_factor_system; estimator=predeclared_temporal_comparison_with_vintage_isolation; test_assets=source_compatible_anomaly_portfolios; uncertainty=shanken_covariance_and_registered_identification_gates; economic_magnitude=rmse_deterioration_89_0_percent_against_10_percent_bound
+% empirical-context: sample=extension_compatible_monthly_panel_144_months; model=frozen_and_refitted_two_factor_system; estimator=predeclared_temporal_comparison_with_vintage_isolation; test_assets=source_compatible_anomaly_portfolios; uncertainty=shanken_covariance_and_registered_identification_gates; economic_magnitude=rmse_deterioration_91_0_percent_against_10_percent_bound
 
 \section{Monetary-regime stability}
 \label{sec:regimes}
@@ -849,7 +939,7 @@ switched vintage at its natural break would confound a policy difference with a
 data revision inside a single regime. The regime panel is built on the current
 vintage throughout, spanning 648 months from 1972-01 to 2025-12, which % artifact: reports/monetary_regime_report.md
 Section~\ref{sec:temporal} licenses: over the baseline window the vintage
-contribution is 1.1 percent of RMSE against temporal contributions of 89.0 % artifact: reports/monetary_regime_report.md
+contribution is under 0.01 percent of RMSE against temporal contributions of 91.0 % artifact: reports/monetary_regime_report.md
 percent. % artifact: reports/monetary_regime_report.md
 
 \begin{figure}[htbp]
@@ -919,7 +1009,7 @@ because one dimension demonstrates an exceedance. Had that gate also been
 inconclusive the registered outcome would have been the inconclusive one, since
 no other equivalence dimension supplies affirmative evidence. % artifact: artifacts/diagnostics/h3_regime_equivalence.json
 
-\subsection{The pooled model settles the direction}
+\subsection{Exposures are regime dependent}
 
 Using all 648 months and interacting both factors with the regime label, the % artifact: artifacts/diagnostics/h3_pooled_beta_stability.json
 restriction that rate betas are equal across regimes is rejected with a statistic
@@ -945,27 +1035,81 @@ a monetary-policy date, and formal tests at the registered boundaries do not
 reject at the 5 percent level. The dates on which this cross-section breaks are % artifact: artifacts/diagnostics/h3_pooled_beta_stability.json
 not the dates on which monetary policy changed. % artifact: artifacts/diagnostics/h3_pooled_beta_stability.json
 
-\subsection{Why the equivalence tests could not resolve the question}
+\subsection{What the regime evidence establishes, in three parts}
 
-A simulation calibrated to the estimated process, with 2,000 replications at each % artifact: artifacts/diagnostics/regime_eligibility_power.json
-of sixteen window lengths, shows the inconclusive verdicts are a property of the
-estimator at these sample sizes. On the joint seventy-asset system, resolving
+The pooled and regime-specific halves answer different questions, and reading
+them as one verdict would overstate both. Separating them:
+
+\begin{enumerate}
+\item \textbf{Rate exposures differ across the registered regimes.} This is
+established, by the pooled interaction test on all 648 months, and it survives % artifact: artifacts/diagnostics/h3_pooled_beta_stability.json
+adjustment over the completed multiplicity family and a three-month shift of
+every boundary. It is a statement about first-pass betas.
+\item \textbf{Regime-specific differences in the price of risk and in
+rate-attributable fitted premia are not identified at feasible regime lengths.}
+Of the seventy per-portfolio equivalence tests, 26 certify equivalence, 44 are % artifact: artifacts/tables/regimes/h3_equivalence.csv
+inconclusive, and none demonstrates a difference beyond the registered bound. % artifact: artifacts/tables/regimes/h3_equivalence.csv
+This is neither evidence of stability nor evidence of change.
+\item \textbf{One aggregate pricing measure deteriorates beyond its bound.}
+Relative cross-sectional RMSE has its entire 90 percent interval above the 10 % artifact: artifacts/tables/regimes/h3_equivalence.csv
+percent bound. This is the single affirmative exceedance in the milestone and it
+is what carries the registered classification. % artifact: artifacts/tables/regimes/h3_equivalence.csv
+\end{enumerate}
+
+Instability of exposures does not by itself imply instability of the price of
+risk, and we do not claim it does. A factor whose betas move across regimes can
+still be priced identically in each; establishing otherwise requires the
+regime-specific second passes, which is exactly where the sample runs out. The
+break tests reinforce the caution rather than the narrative: the dates this
+cross-section actually breaks on are not policy dates.
+
+\subsection{Why the equivalence tests could not resolve the question}
+\label{sec:power}
+
+A simulation with 2,000 replications at each of sixteen window lengths asks how % artifact: artifacts/diagnostics/regime_eligibility_power.json
+much sample the registered equivalence problem needs. It is a calibrated
+experiment, not a general property of the two-pass estimator, and its design
+choices all favour the estimator: factors and disturbances are independent and
+Gaussian, and the full-sample estimated betas are treated as true, so the process
+is not a fixed point of the estimator it is used to study and the simulated
+cross-section is better identified than the real one. Read as such, the finding
+is that \emph{under this calibrated design}, samples of the observed regime
+lengths do not supply the precision the registered equivalence problem requires.
+
+On the joint seventy-asset system, resolving
 fitted-premium spreads against the 0.25 bound requires 180 months; the % artifact: artifacts/diagnostics/regime_eligibility_power.json
 lower-bound regime has 84. Driving the probability of a sign error on the rate % artifact: artifacts/diagnostics/regime_eligibility_power.json
 price of risk below 5 percent requires 444 months. % artifact: artifacts/diagnostics/regime_eligibility_power.json
+Because the design flatters the estimator, these are lower bounds on what the
+real problem would need.
 
 The mechanism is errors-in-variables attenuation, and it does not wash out with
 sample size: even at 648 months, 66.7 percent of the cross-sectional dispersion % artifact: artifacts/diagnostics/regime_eligibility_power.json
 of estimated rate betas is first-pass sampling noise, against 2.9 percent for % artifact: artifacts/diagnostics/regime_eligibility_power.json
 market betas. The sampling standard deviation of the rate price of risk is
 essentially flat, 0.1499 at 12 months and 0.1167 at 648, so a longer window moves % artifact: artifacts/diagnostics/regime_eligibility_power.json
-the estimate rather than tightening it. The market price of risk is the control
-that shows the machinery is sound, with coverage between 0.943 and 0.959 at every % artifact: artifacts/diagnostics/regime_eligibility_power.json
-window length. % artifact: artifacts/diagnostics/regime_eligibility_power.json
-Because the calibration treats estimated betas as true, these levels are
-comparable across window lengths rather than interpretable as absolute
-measurements, and the simulated cross-section is if anything better identified
-than the real one.
+the estimate rather than tightening it. % artifact: artifacts/diagnostics/regime_eligibility_power.json
+
+One by-product of the exercise deserves more weight than its role as a power
+calculation, because it bears on every Shanken interval in this paper. Under the
+calibrated design the nominal 95 percent Shanken interval for the rate price of % artifact: artifacts/diagnostics/regime_eligibility_power.json
+risk never attains coverage inside $[0.90, 0.99]$ at any simulated window % artifact: artifacts/diagnostics/regime_eligibility_power.json
+length. It runs from 0.227 at 12 months to 0.650 at 648, with a minimum of 0.176 % artifact: artifacts/diagnostics/regime_eligibility_power.json
+at 30 months. % artifact: artifacts/diagnostics/regime_eligibility_power.json
+The same interval for the market price of risk is well behaved throughout, with
+coverage between 0.943 and 0.959 at every length, which is the control showing % artifact: artifacts/diagnostics/regime_eligibility_power.json
+the machinery itself is sound. The gap between the two is the errors-in-variables
+problem again: the Shanken correction adjusts for beta estimation error under
+assumptions that a factor with this noise share strains.
+
+Two consequences follow, and we prefer to state them plainly rather than bury
+them. The Shanken $t$-ratio of $-2.86$ on the baseline rate price should be read % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
+as weaker evidence than its nominal size suggests. And this, rather than any
+regime-specific story, is the most coherent account of how a risk price that is
+significant in the full sample coexists with economic quantities that will not
+hold still across subsamples. It also qualifies the identification discussion in
+Section~\ref{sec:identification}: passing a dispersion floor is not the same as
+measuring exposures well.
 
 The regime analysis uses the vintage-consistent 648-month panel, the predeclared % artifact: reports/monetary_regime_report.md
 regime indicators, pooled interaction tests for exposures and separate
@@ -999,16 +1143,29 @@ intended, and it alone determines the headline classification. The threshold was
 frozen before any estimate existed and is applied as frozen; a future
 pre-registration should express the three gates on a common scale.
 
-The third limitation is econometric and is the binding one for the regime
-evidence. Cross-sectional pricing is fragile when betas carry a large share of
-sampling noise, and the simulation in Section~\ref{sec:regimes} shows that share
-is 66.7 percent for rate betas even at 648 months. Regime-length samples cannot % artifact: artifacts/diagnostics/regime_eligibility_power.json
-resolve fitted-premium differences against the registered bound, which is why 44 % artifact: artifacts/diagnostics/regime_eligibility_power.json
-of 70 equivalence tests are inconclusive. This is a statement about what the % artifact: artifacts/diagnostics/regime_eligibility_power.json
-estimator can support at those sample sizes, and it applies to any study that
-partitions a monthly cross-section into policy regimes.
+The third limitation is econometric, and it is the binding one for the whole
+paper rather than for the regime evidence alone. Cross-sectional pricing is
+fragile when betas carry a large share of sampling noise, and the calibrated
+simulation in Section~\ref{sec:power} puts that share at 66.7 percent for rate % artifact: artifacts/diagnostics/regime_eligibility_power.json
+betas even at 648 months, against 2.9 percent for market betas. Two consequences % artifact: artifacts/diagnostics/regime_eligibility_power.json
+run through the results. Regime-length samples cannot resolve fitted-premium
+differences against the registered bound, which is why 44 of 70 equivalence tests % artifact: artifacts/diagnostics/regime_eligibility_power.json
+are inconclusive. And the nominal Shanken interval for the rate price of risk
+attains its stated coverage at no simulated sample size, so the baseline
+$t$-ratio of $-2.86$ overstates the strength of the evidence behind it. % artifact: artifacts/diagnostics/regime_eligibility_power.json
+Both statements are properties of the calibrated design rather than measurements
+of the real one, and the design flatters the estimator, so they bound the problem
+from the optimistic side. They apply to any study that prices a
+generated-regressor factor on a cross-section of this size, and with more force
+to any study that partitions one into policy regimes.
 
-The fourth limitation is interpretive. A priced covariance with a rate innovation
+A fourth limitation is that our registered identification standard does not test
+what its name suggests. The dispersion floor asks whether estimated exposures
+vary enough across assets for a second pass to run, and it is satisfied here by
+dispersion that is substantially noise. A future pre-registration should pair it
+with a reliability criterion on the exposures themselves.
+
+The fifth limitation is interpretive. A priced covariance with a rate innovation
 would not by itself establish a narrow monetary transmission mechanism. Our
 regime evidence sharpens the point in an unwelcome direction: the exploratory
 break tests locate their breaks at dates that are not policy dates. We therefore
@@ -1018,16 +1175,23 @@ usable event data exist.
 
 \section{Conclusion}
 
-Rebuilding \citet{maio_santaclara_2017} from independently acquired sources, we
-recover the published qualitative result on the original window: short-rate
-innovations carry a negative and statistically significant price of risk in the
-cross section of anomaly portfolios, and adding the factor to the market model
-roughly halves cross-sectional pricing errors.
+This paper is a documented reconstruction, not a numerical replication, and the
+distinction governs what may be concluded from it. The article identifies its
+providers rather than its files, so we built the closest system obtainable from
+identifiable public inputs. On that system the published qualitative result
+recovers: short-rate innovations carry a negative and statistically significant
+price of risk in the cross section of anomaly portfolios, and adding the factor
+to the market model roughly halves cross-sectional pricing errors. Numerical
+recovery of the published cells is much weaker, particularly for pricing-error
+and fit statistics, and the audit in Appendix~\ref{sec:audit} reports it in
+full. Nothing here should be read as a check on the article's arithmetic; the
+inputs differ, and where a cell falls outside the published rounding we cannot
+say which of the two is responsible.
 
 The extensions are where the paper contributes, and both are negative. The
 short-rate factor does not meet the incremental-pricing standard we registered in
-advance, and on the same seventy portfolios every traded multi-factor comparator
-prices more accurately than it does. The relation then does not survive its own
+advance, and every registered traded multi-factor comparator attains a smaller
+in-sample pricing error on the same seventy portfolios. The relation then does not survive its own
 publication sample: refitted post-2013 estimates reverse sign for five of seven % artifact: artifacts/diagnostics/h2_temporal_stability.json
 anomaly families and deteriorate far beyond the registered bound. We can rule out
 two benign readings of that failure, since the change is an order of magnitude
@@ -1041,17 +1205,27 @@ direction. We report that asymmetry rather than resolving it, because the
 simulation shows the imprecision is a property of two-pass estimation on
 regime-length samples rather than a fact about the periods.
 
-What survives is narrower than the original claim and, we think, more useful: a
-short-rate innovation is well identified and was priced in the cross-section of
-anomaly returns through 2013, it was never the most accurate available pricing % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
-model on those assets by cross-sectional RMSE, and the evidence that it remained
-priced afterwards is absent. We stop short of the stronger claim that it ceased
-to be priced, because the post-2013 window is too short to separate a relation % artifact: configs/extensions.yaml
-that has weakened from one estimated imprecisely.
+What survives is narrower than the original claim and, we think, more useful.
+The short-rate pricing pattern reconstructs qualitatively, and it is fragile as
+a general asset-pricing proposition: its incremental economic performance is
+threshold-sensitive, richer factor specifications fit the historical
+cross-section better in sample, its post-publication behaviour changes
+substantially, estimated rate exposures are regime dependent, and the data are
+insufficient to estimate regime-specific pricing differences with the precision
+that strong economic conclusions would require.
+
+We stop short of three stronger claims that the evidence does not carry. We do
+not say the factor ceased to be priced, because the post-2013 window is too % artifact: configs/extensions.yaml
+short to separate a weakened relation from an imprecisely estimated one. We do
+not rank the short-rate model against the traded comparators, because in-sample
+pricing error on factor sets of different dimension is not a model-selection
+criterion. And we do not say the original result was wrong, because a
+reconstruction built from different inputs is not positioned to say so.
 
 \appendix
 
 \section{Table-level replication audit}
+\label{sec:audit}
 
 The table-level audit maps the article and supplement targets to replication
 statuses. It covers the article tables and the supplement appendix tables through
@@ -1134,6 +1308,7 @@ per-portfolio contrast that Section~\ref{sec:regimes} shows the sample cannot
 resolve, and we prefer to state that limitation in text than to draw it. % artifact: research/table_figure_generation_contracts.md
 
 \section{Detailed out-of-sample design}
+\label{sec:oos}
 
 The out-of-sample design freezes an initial training endpoint at 1999-12 and uses a predeclared annual refit schedule. % artifact: configs/extensions.yaml
 Forecast records must store model vintage, training dates, factor definition,

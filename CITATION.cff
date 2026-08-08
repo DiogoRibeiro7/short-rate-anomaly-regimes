@@ -2,16 +2,56 @@ cff-version: 1.2.0
 title: Short Rate Anomaly Regimes
 message: Please cite this repository and the replicated article.
 type: software
+abstract: >-
+  Research compendium reconstructing and extending the two-factor ICAPM of Maio
+  and Santa-Clara (2017), in which the pricing factors are the market excess
+  return and the innovation in a short-term interest rate. Every estimate is a
+  documented reconstruction rather than an exact replication, because the article
+  names data providers rather than files.
 authors:
   - given-names: Diogo
     family-names: Ribeiro
+    orcid: https://orcid.org/0009-0001-2022-7072
+    affiliation: School of Media Arts and Design, Polytechnic of Porto, Portugal
+    email: dfr@esmad.ipp.pt
 year: 2026
+version: 0.1.0
 license: MIT
 repository-code: https://github.com/DiogoRibeiro7/short-rate-anomaly-regimes
+keywords:
+  - asset pricing
+  - empirical finance
+  - econometrics
+  - replication
+  - reproducibility
+  - intertemporal CAPM
+  - short-term interest rates
+  - monetary policy regimes
+  - stock market anomalies
+  - cross-sectional asset pricing
+  - weak factors
+  - data provenance
 preferred-citation:
   type: article
   title: Short Term Interest Rate Innovations Across Monetary Regimes
   authors:
     - given-names: Diogo
       family-names: Ribeiro
+      orcid: https://orcid.org/0009-0001-2022-7072
+      affiliation: School of Media Arts and Design, Polytechnic of Porto, Portugal
   year: 2026
+references:
+  - type: article
+    title: Short-Term Interest Rates and Stock Market Anomalies
+    authors:
+      - given-names: Paulo F.
+        family-names: Maio
+      - given-names: Pedro
+        family-names: Santa-Clara
+    journal: Journal of Financial and Quantitative Analysis
+    volume: 52
+    issue: 3
+    start: 927
+    end: 961
+    year: 2017
+    doi: 10.1017/S002210901700028X
