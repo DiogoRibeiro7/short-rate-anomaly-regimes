@@ -1,6 +1,6 @@
 {
   "archive_path": "artifacts/release/source_release.zip",
-  "archive_sha256": "4b95e21f173a68a557096ff777eba14861133921a2c14368e007f1d98c7284a2",
+  "archive_sha256": "f36c6fa9a29f2acfc422de80efe8d9ed42bea1257e4ba7c380d2437ff6643483",
   "excluded": [
     "prompts/",
     "references/private/",

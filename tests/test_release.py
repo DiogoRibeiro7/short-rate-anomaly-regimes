@@ -1,6 +1,8 @@
 import json
+import subprocess
 from pathlib import Path
 
+import pytest
 from typer.testing import CliRunner
 
 from short_rate_anomaly_regimes.cli import app
@@ -512,3 +514,36 @@ def test_rebuild_whitelist_covers_every_script_make_reproduce_runs() -> None:
     assert chain, "the reproduce chain was not found in the Makefile"
     assert invoked, "no scripts found in the reproduce chain"
     assert invoked <= declared, f"not declared as rebuild inputs: {sorted(invoked - declared)}"
+
+
+def test_no_tracked_file_differs_from_its_stored_bytes_by_line_endings() -> None:
+    """Guard the integrity manifest against line-ending drift.
+
+    ``build_checksum_manifest`` hashes files from the working tree, while git
+    stores them under the repository's ``text=auto eol=lf`` rule. A tool that
+    writes CRLF therefore produces a manifest whose hashes no recipient of a
+    clone can reproduce, which is the one failure an integrity record must not
+    have. Editors and generators must write LF; this fails when one does not.
+    """
+    crlf = bytes((13, 10))
+    lf = bytes((10,))
+    try:
+        listing = subprocess.run(
+            ["git", "ls-files"], capture_output=True, text=True, check=True
+        ).stdout.splitlines()
+    except (OSError, subprocess.CalledProcessError):  # pragma: no cover - git absent
+        pytest.skip("git is not available")
+
+    drifted = []
+    for name in listing:
+        path = Path(name)
+        if not path.is_file():
+            continue
+        disk = path.read_bytes()
+        stored = subprocess.run(
+            ["git", "show", f"HEAD:{name}"], capture_output=True, check=False
+        ).stdout
+        if disk != stored and disk.replace(crlf, lf) == stored:
+            drifted.append(name)
+
+    assert not drifted, f"line-ending drift against the stored bytes: {drifted}"
