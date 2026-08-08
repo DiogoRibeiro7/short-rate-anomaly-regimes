@@ -1,5 +1,4 @@
 import json
-import re
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -482,9 +481,34 @@ def test_rebuild_whitelist_covers_every_script_make_reproduce_runs() -> None:
     gains a script and the list does not, the gate would certify a rebuild path
     that a recipient cannot actually execute.
     """
-    makefile = Path("Makefile").read_text(encoding="utf-8")
-    invoked = set(re.findall(r"python (scripts/[\w/]+\.py)", makefile))
+    # Only the reproduce chain is in scope. Scanning every recipe would let an
+    # unrelated developer target either fail this test or force a script into
+    # the release contract that no rebuild needs.
+    recipes: dict[str, list[str]] = {}
+    current = None
+    for line in Path("Makefile").read_text(encoding="utf-8").splitlines():
+        if line[:1].isalpha() and ":" in line:
+            current = line.split(":", 1)[0].strip()
+            recipes[current] = []
+        elif line.startswith("	") and current is not None:
+            recipes[current].append(line)
+        elif not line.strip():
+            current = None
+    chain = [
+        target
+        for target in recipes
+        if target == REBUILD_ENTRY_POINT_TARGET
+        or target.startswith(REBUILD_ENTRY_POINT_TARGET + "-")
+    ]
+    invoked = {
+        word
+        for target in chain
+        for line in recipes[target]
+        for word in line.split()
+        if word.startswith("scripts/") and word.endswith(".py")
+    }
     declared = set(REQUIRED_EMPIRICAL_REBUILD_INPUTS)
 
-    assert invoked, "no scripts found in the Makefile"
+    assert chain, "the reproduce chain was not found in the Makefile"
+    assert invoked, "no scripts found in the reproduce chain"
     assert invoked <= declared, f"not declared as rebuild inputs: {sorted(invoked - declared)}"

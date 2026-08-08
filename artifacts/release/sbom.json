@@ -2,7 +2,7 @@
   "bom_format": "custom-poetry-lock-sbom",
   "lock_file": {
     "path": "poetry.lock",
-    "sha256": "7d6a9845f478f062be06ebbb516be10f00e8fd451e55521417d25db21c2bd17c"
+    "sha256": "56118ef64461f24fb40f80f6b37370bcf2d809e3cb9adb5bb20d8258bad4962c"
   },
   "packages": [
     {

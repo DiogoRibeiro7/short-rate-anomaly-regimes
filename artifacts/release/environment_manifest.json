@@ -1,6 +1,6 @@
 {
   "config_hashes": {
-    "configs/baseline.yaml": "18194a944f2ef8be08858570d37a56901bef6b67db599c25c62eec4d7e02b2bc",
+    "configs/baseline.yaml": "86052796e8b470a595bc846fb3fd5cf1937117c69d24681f35ab659fdb059433",
     "configs/data_sources.yaml": "c6ee2e79bd5f024cdd826643ae61b3cfa8cf7c45d12d2dac390fd69311935226",
     "configs/extensions.yaml": "fe84c1b4a94412e8add2b63c852528b828968fd7b264a6f27dd9be5cca70d7a8",
     "configs/regimes.yaml": "46d60dff8053e8671c2eaab358e868b1ed3ece074e2119469af5cdc964d94b7b",
@@ -370,7 +370,7 @@
     "pgvector": "0.4.2",
     "pickleshare": "0.7.5",
     "pillow": "12.3.0",
-    "pinn": "0.1.1",
+    "pinn": "0.2.0",
     "pip": "24.0",
     "pip-api": "0.0.34",
     "pip-requirements-parser": "32.0.1",

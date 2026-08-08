@@ -13,10 +13,12 @@ from short_rate_anomaly_regimes.data.aggregation_audit import (
     exact_decimal_rounding_check,
     summarise_aggregation,
 )
-from short_rate_anomaly_regimes.data.short_rate_freeze import load_normalized_series
+from short_rate_anomaly_regimes.data.short_rate_freeze import (
+    FRED_INTERIM_ROOT,
+    FROZEN_FRED_VINTAGE,
+    load_normalized_series,
+)
 
-RETRIEVAL_DATE = "2026-08-01"
-NORMALIZED_ROOT = Path("data/interim/fred")
 RAW_ROOT = Path("data/raw/fred")
 AUDIT_CSV = Path("artifacts/data_quality/aggregation_audit.csv")
 DIFFERENCES_CSV = Path("artifacts/data_quality/aggregation_differences.csv")
@@ -31,7 +33,7 @@ COMPARISONS: tuple[tuple[str, str, AggregationRule], ...] = (
 
 
 def _load(series_id: str) -> pd.Series:
-    return load_normalized_series(NORMALIZED_ROOT / f"{series_id}_{RETRIEVAL_DATE}.csv")
+    return load_normalized_series(FRED_INTERIM_ROOT / f"{series_id}_{FROZEN_FRED_VINTAGE}.csv")
 
 
 def main() -> None:
@@ -62,8 +64,8 @@ def main() -> None:
         if rule == "month_end_last_observation":
             continue
         check = exact_decimal_rounding_check(
-            monthly_raw_path=RAW_ROOT / monthly_id / f"{monthly_id}_{RETRIEVAL_DATE}.csv",
-            daily_raw_path=RAW_ROOT / daily_id / f"{daily_id}_{RETRIEVAL_DATE}.csv",
+            monthly_raw_path=RAW_ROOT / monthly_id / f"{monthly_id}_{FROZEN_FRED_VINTAGE}.csv",
+            daily_raw_path=RAW_ROOT / daily_id / f"{daily_id}_{FROZEN_FRED_VINTAGE}.csv",
             monthly_series_id=monthly_id,
             daily_series_id=daily_id,
             rule=rule,
