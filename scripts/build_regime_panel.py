@@ -8,8 +8,9 @@ mid-way would confound a policy effect with a data revision.
 The panel is therefore built on the **current vintage throughout**, by
 concatenating the revised-history panel with the extension panel. Milestone 9
 established that the vintage effect over the baseline window is negligible
-against the effects being measured here: it moves the rate risk price by 0.0011
-and cross-sectional RMSE by 1.1 percent. See
+against the differences being measured here: it leaves the rate risk price and
+cross-sectional RMSE unchanged to four decimals, because the federal funds series
+is not revised and both panels read the same frozen file. See
 ``reports/temporal_extension_report.md`` section 3.
 
 Labels follow the frozen registry. The primary transition rule assigns a regime
@@ -175,7 +176,8 @@ def main() -> None:
                 "vintage_rationale": (
                     "two registered regimes straddle the 2013-12 vintage boundary; the "
                     "Milestone 9 decomposition shows the vintage effect over the baseline "
-                    "window is 1.1 percent of RMSE against temporal effects of 89 percent"
+                    "window is under 0.01 percent of RMSE against temporal "
+                    "contributions of 91 percent"
                 ),
                 "months": len(panel),
                 "start": str(panel.index[0]),

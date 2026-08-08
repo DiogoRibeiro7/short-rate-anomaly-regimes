@@ -4,7 +4,7 @@ Verdict: `manuscript_outputs_validated`
 
 Manuscript: `paper/manuscript.tex`
 Artifact map: `research/manuscript_artifact_map.csv`
-Mapped artifacts: 77, of which 0 are absent
+Mapped artifacts: 79, of which 0 are absent
 Validation issues: 0
 
 ## Validation Issues By Check

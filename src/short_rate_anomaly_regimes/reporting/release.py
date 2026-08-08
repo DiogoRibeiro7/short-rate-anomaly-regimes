@@ -50,6 +50,56 @@ REQUIRED_EMPIRICAL_RELEASE_INPUTS: tuple[str, ...] = (
     "artifacts/tables/time_series",
     "artifacts/tables/cross_section",
 )
+
+# Files a recipient needs in order to rebuild the empirical artifacts from the
+# frozen public sources. These are checked against the same distributed-file set
+# as REQUIRED_EMPIRICAL_RELEASE_INPUTS, so a rebuild path that exists only on the
+# author's disk cannot satisfy the gate either.
+REQUIRED_EMPIRICAL_REBUILD_INPUTS: tuple[str, ...] = (
+    "Makefile",
+    "configs/baseline.yaml",
+    "configs/data_sources.yaml",
+    "configs/extensions.yaml",
+    "configs/regimes.yaml",
+    "research/data_access_matrix.csv",
+    "scripts/acquire_short_rates.py",
+    "scripts/acquire_french_factors.py",
+    "scripts/acquire_anomaly_portfolios.py",
+    "scripts/acquire_comparator_factors.py",
+    "scripts/reconstruct_rate_innovations.py",
+    "scripts/build_baseline_panel.py",
+    "scripts/build_comparator_panel.py",
+    "scripts/build_extension_panels.py",
+    "scripts/build_regime_panel.py",
+    "scripts/run_baseline_replication.py",
+    "scripts/run_temporal_extension.py",
+    "scripts/run_regime_equivalence.py",
+    "scripts/run_regime_interactions.py",
+    "scripts/analyse_regime_power.py",
+    "scripts/build_manuscript_tables.py",
+    "scripts/build_manuscript_figures.py",
+    "scripts/audit_rate_aggregation.py",
+    "scripts/audit_portfolio_source_compatibility.py",
+    "scripts/audit_published_targets.py",
+    "scripts/run_h1_materiality.py",
+    "scripts/run_h4c_precision.py",
+    "scripts/run_weak_factor_diagnostics.py",
+    "scripts/verify_title.py",
+    "scripts/verify_manuscript.py",
+)
+REBUILD_ENTRY_POINT_FILE = "Makefile"
+REBUILD_ENTRY_POINT_TARGET = "reproduce"
+REBUILD_ENTRY_POINT = f"make {REBUILD_ENTRY_POINT_TARGET}"
+REBUILD_BLOCKING_ISSUE_IDS: frozenset[str] = frozenset(
+    {
+        "empirical_rebuild_path_incomplete",
+        "empirical_rebuild_entry_point_missing",
+    }
+)
+
+# A directory placeholder is not evidence that a directory carries content.
+PLACEHOLDER_FILENAMES: frozenset[str] = frozenset({".gitkeep"})
+
 RELEASE_CONFIG_PATHS: tuple[Path, ...] = (
     Path("configs/baseline.yaml"),
     Path("configs/extensions.yaml"),
@@ -72,8 +122,17 @@ class ReleaseIssue:
 
 
 def normalise_repo_path(path: Path) -> str:
-    """Return a stable POSIX-style relative path."""
-    return path.as_posix().lstrip("./")
+    """Return a stable POSIX-style relative path.
+
+    Only a leading ``./`` is removed. ``str.lstrip`` takes a set of characters
+    rather than a prefix, so stripping ``"./"`` also ate the leading dot of every
+    dotfile: ``.zenodo.json`` was recorded as ``zenodo.json``, and a recipient
+    verifying the checksum manifest could not find the file it names.
+    """
+    posix = path.as_posix()
+    while posix.startswith("./"):
+        posix = posix[2:]
+    return posix
 
 
 def is_disallowed_release_path(path: str) -> bool:
@@ -132,6 +191,59 @@ def disallowed_tracked_paths(paths: tuple[Path, ...]) -> tuple[str, ...]:
         for path in paths
         if is_disallowed_release_path(normalise_repo_path(path))
     )
+
+
+def distributed_release_files(
+    *,
+    cwd: Path = Path("."),
+    paths: tuple[Path, ...] | None = None,
+) -> frozenset[str]:
+    """Return the paths a release recipient actually receives.
+
+    Presence is evaluated against the membership of the source archive that
+    :func:`write_source_archive` builds, never against the author's working
+    tree. A file that exists locally but is ignored, or excluded from the
+    archive, is absent as far as this gate is concerned.
+    """
+    return frozenset(
+        normalise_repo_path(path) for path in build_archive_file_list(cwd=cwd, paths=paths)
+    )
+
+
+def is_distributed_path(required: str, distributed: frozenset[str]) -> bool:
+    """Return whether a required file or directory is carried by the release archive.
+
+    A directory counts as distributed only when the archive carries at least one
+    member below it that is not a directory placeholder; a lone ``.gitkeep`` is
+    an empty directory, not an artifact.
+    """
+    normalised = normalise_repo_path(Path(required))
+    if normalised in distributed:
+        return True
+    prefix = f"{normalised}/"
+    return any(
+        member.startswith(prefix) and Path(member).name not in PLACEHOLDER_FILENAMES
+        for member in distributed
+    )
+
+
+def missing_distributed_paths(
+    required: tuple[str, ...],
+    distributed: frozenset[str],
+) -> tuple[str, ...]:
+    """Return required paths the release archive does not carry."""
+    return tuple(path for path in required if not is_distributed_path(path, distributed))
+
+
+def declares_make_target(makefile_text: str, target: str) -> bool:
+    """Return whether a Makefile declares a rule for ``target``."""
+    for line in makefile_text.splitlines():
+        if not line or line.startswith("\t") or line.lstrip().startswith("#") or ":" not in line:
+            continue
+        names = line.split(":", 1)[0].split()
+        if target in names and not names[0].startswith("."):
+            return True
+    return False
 
 
 def build_checksum_manifest(
@@ -254,19 +366,58 @@ def build_release_issues(
             )
         )
 
-    missing_inputs = [
-        path for path in REQUIRED_EMPIRICAL_RELEASE_INPUTS if not (cwd / path).exists()
-    ]
+    # Presence is judged against what the recipient gets, not against the
+    # author's working tree. Checking ``Path.exists()`` here reported the
+    # author's local, gitignored panels as shipped and flipped the empirical
+    # verdict to permitted for an archive that carries only placeholders.
+    distributed = distributed_release_files(cwd=cwd, paths=selected_paths)
+
+    missing_inputs = missing_distributed_paths(REQUIRED_EMPIRICAL_RELEASE_INPUTS, distributed)
     if missing_inputs:
         issues.append(
             ReleaseIssue(
                 severity="major",
                 issue_id="empirical_artifacts_missing",
                 location=", ".join(missing_inputs),
-                failure_mechanism="The repository cannot reproduce manuscript tables or extension "
-                "claims from a fresh checkout with the current public inputs.",
-                required_fix="Freeze source definitions, register permitted data, generate the "
-                "baseline and extension artifacts, and rerun release-audit.",
+                failure_mechanism="The distributed archive does not carry these generated "
+                "artifacts, so a recipient cannot reproduce manuscript tables or extension "
+                "claims from the archive alone.",
+                required_fix="Record redistribution rights and ship the generated artifacts, or "
+                f"release source-only and direct recipients to the `{REBUILD_ENTRY_POINT}` "
+                "rebuild path.",
+            )
+        )
+
+    missing_rebuild_inputs = missing_distributed_paths(
+        REQUIRED_EMPIRICAL_REBUILD_INPUTS, distributed
+    )
+    if missing_rebuild_inputs:
+        issues.append(
+            ReleaseIssue(
+                severity="major",
+                issue_id="empirical_rebuild_path_incomplete",
+                location=", ".join(missing_rebuild_inputs),
+                failure_mechanism="The distributed archive omits acquisition, panel, or "
+                "estimation entry points, so a recipient can neither use the shipped artifacts "
+                "nor rebuild them from the frozen public sources.",
+                required_fix="Ship the acquisition, panel-construction, estimation, and "
+                "manuscript scripts together with the frozen source registry and configs.",
+            )
+        )
+    elif not declares_make_target(
+        (cwd / REBUILD_ENTRY_POINT_FILE).read_text(encoding="utf-8"),
+        REBUILD_ENTRY_POINT_TARGET,
+    ):
+        issues.append(
+            ReleaseIssue(
+                severity="major",
+                issue_id="empirical_rebuild_entry_point_missing",
+                location=REBUILD_ENTRY_POINT_FILE,
+                failure_mechanism="The rebuild scripts ship without a single documented entry "
+                "point, so the dependency order between acquisition, panels, estimation, "
+                "extension, and regimes is left for the recipient to infer.",
+                required_fix=f"Declare a `{REBUILD_ENTRY_POINT_TARGET}` target that runs the "
+                "pipeline in dependency order.",
             )
         )
 
@@ -288,11 +439,20 @@ def release_verdict(issues: list[ReleaseIssue]) -> dict[str, Any]:
     """Classify release status from issues."""
     critical = [issue for issue in issues if issue.severity == "critical"]
     major = [issue for issue in issues if issue.severity == "major"]
+    # ``empirical_release`` answers "are the results in the box"; ``empirical_rebuild``
+    # answers "can the recipient rebuild them". The second is not a softer version of
+    # the first: it is blocked by its own issues, and by anything critical, and it
+    # never turns a blocked empirical release into a permitted one.
+    rebuild_blocked = bool(critical) or any(
+        issue.issue_id in REBUILD_BLOCKING_ISSUE_IDS for issue in issues
+    )
     return {
         "critical_issue_count": len(critical),
         "major_issue_count": len(major),
         "source_release": "blocked" if critical else "permitted",
         "empirical_release": "blocked" if critical or major else "permitted",
+        "empirical_rebuild": "blocked" if rebuild_blocked else "rebuildable_from_public_sources",
+        "empirical_rebuild_entry_point": REBUILD_ENTRY_POINT,
         "source_tag": "blocked" if critical else "source_only_tag_allowed",
         "empirical_result_tag": "blocked" if critical or major else "allowed",
         # The verdict must track both dimensions. Reporting
@@ -337,34 +497,61 @@ def render_release_notes(issues: list[ReleaseIssue]) -> str:
         "",
         f"- Source-code release: `{verdict['source_release']}`",
         f"- Empirical-results release: `{verdict['empirical_release']}`",
+        f"- Empirical rebuild: `{verdict['empirical_rebuild']}`",
+        f"- Rebuild entry point: `{verdict['empirical_rebuild_entry_point']}`",
         f"- Source-only tag status: `{verdict['source_tag']}`",
         f"- Empirical-result tag status: `{verdict['empirical_result_tag']}`",
         f"- Critical issues: `{verdict['critical_issue_count']}`",
         f"- Major issues: `{verdict['major_issue_count']}`",
         "",
+        "`empirical_release` reports whether the generated artifacts travel inside this "
+        "archive. `empirical_rebuild` reports whether the archive carries a documented, "
+        "deterministic path to regenerate them from the frozen public sources. The two are "
+        "independent; the second never substitutes for the first.",
+        "",
+        "## What This Archive Contains",
+        "",
+        "- Source code, configuration, the frozen source registry, the pre-registration, the "
+        "acquisition and estimation scripts, the manuscript with its generated tables and "
+        "figures, and the result tables and diagnostics that the manuscript cites.",
+        "- It does not contain raw or processed data panels, first-pass and second-pass "
+        "estimate stores, or any other artifact whose redistribution rights are unrecorded. "
+        "Those are rebuilt, not shipped.",
+        "",
         "## Exact Results",
         "",
-        "- No empirical table is currently classified as exact replication.",
+        "- No result is classified as exact replication. The article identifies providers and "
+        "people rather than files, so every estimate carries `documented_reconstruction`.",
         "",
         "## Approximate Results",
         "",
-        "- No empirical table is currently classified as approximate reconstruction.",
+        "- Short-rate innovations are classified "
+        "`approximately_reproduced_under_documented_reconstruction`.",
+        "- Risk prices, pricing errors and fit, and comparator models are classified "
+        "`partially_recovered_under_documented_reconstruction`. See "
+        "`docs/REPLICATION_STATUS.md` for the layer table.",
         "",
         "## Blocked Results",
         "",
-        "- Baseline replication, temporal extension, monetary-regime stability, shock "
-        "decomposition, out-of-sample falsification, and manuscript numerical conclusions "
-        "remain blocked by missing generated empirical artifacts.",
+        "- Reproduction from this archive alone. The generated data panels and estimate stores "
+        f"are not distributed; regenerate them with `{REBUILD_ENTRY_POINT}`.",
+        "- The article's useless-factor bootstrap, Table 5 and the appendix tables, "
+        "equal-weighted results, and security-level reconstruction remain blocked by inputs "
+        "this repository cannot obtain.",
+        "- The high-frequency shock decomposition and the out-of-sample falsification are not "
+        "run; their generated reports record `blocked_missing_input` with the inputs named.",
         "",
         "## Contradicted Results",
         "",
-        "- No contradiction is currently recorded because the empirical comparison has not run.",
+        "- No contradiction is recorded. Every input is a reconstruction, so a failure to "
+        "recover a published cell cannot be attributed to the article rather than the inputs.",
         "",
         "## Extension Results",
         "",
-        "- Temporal extension, monetary-regime stability, shock decomposition, and "
-        "out-of-sample falsification are predeclared but blocked by missing generated "
-        "extension artifacts.",
+        "- The temporal extension and the monetary-regime analysis are run, and both are "
+        "unsupported against their predeclared standards.",
+        "- The shock decomposition and the out-of-sample falsification remain predeclared "
+        "appendix designs and are blocked by missing event-level and forecast inputs.",
         "",
         "## Major Unresolved Issues",
         "",
@@ -387,9 +574,15 @@ def render_release_notes(issues: list[ReleaseIssue]) -> str:
             "",
             "## Reproduction",
             "",
-            "Use `make check` and `make release-check` from a clean checkout. See "
-            "`docs/DATA_ACQUISITION.md` for sources that cannot be redistributed. Public data "
-            "acquisition remains disabled until exact source definitions are frozen.",
+            "Verify the archive with `make check` and `make release-check` from a clean "
+            "checkout; neither needs network access or rebuilt data.",
+            "",
+            f"Rebuild the empirical artifacts with `{REBUILD_ENTRY_POINT}`. It runs source "
+            "acquisition, panel construction, baseline estimation, the temporal extension, the "
+            "regime analysis, and the paper build in dependency order. The acquisition stage "
+            "needs network access and pulls the frozen vintages recorded in "
+            "`configs/data_sources.yaml`; the bootstrap and simulation stages take hours. See "
+            "`docs/DATA_ACQUISITION.md` for source-by-source access and redistribution status.",
             "",
         ]
     )
@@ -500,10 +693,16 @@ def render_data_acquisition_guide(
             "1. Clone the repository into an empty workspace.",
             "2. Run `poetry install`.",
             "3. Run `make check` to execute source checks, dry-run data acquisition, catalog "
-            "creation, release audit generation, and tests.",
-            "4. Register restricted files with `poetry run srar register-manual-source` only "
+            "creation, release audit generation, and tests. This stage needs no network access "
+            "and no rebuilt data.",
+            f"4. Run `{REBUILD_ENTRY_POINT}` to rebuild the empirical artifacts from the frozen "
+            "public sources listed above. The acquisition stage needs network access; the "
+            "bootstrap and simulation stages take hours. Individual stages are available as "
+            "`make reproduce-acquire`, `reproduce-panels`, `reproduce-estimates`, "
+            "`reproduce-extension`, `reproduce-regimes`, and `reproduce-reports`.",
+            "5. Register restricted files with `poetry run srar register-manual-source` only "
             "when you have legal access; do not copy those files into Git.",
-            "5. Rebuild release assets with `poetry run srar release-audit`.",
+            "6. Rebuild release assets with `poetry run srar release-audit`.",
             "",
         ]
     )
@@ -596,6 +795,11 @@ def render_adversarial_code_audit(issues: list[ReleaseIssue]) -> str:
         "Source-only release is permitted when no critical restricted-path issue is present. "
         "Empirical-results release is blocked while major missing-input issues remain.",
         "",
+        "Required-input presence is evaluated against the membership of the source archive "
+        "that this audit writes, not against the working tree it runs in. A file that exists "
+        "locally but is ignored, or excluded from the archive, counts as absent, and a "
+        "directory carrying only a `.gitkeep` placeholder counts as empty.",
+        "",
         "## Findings",
         "",
     ]
@@ -625,6 +829,11 @@ def render_adversarial_code_audit(issues: list[ReleaseIssue]) -> str:
             "- Checksum records exclude prompt files, restricted sources, local catalogs, and "
             "temporary artifacts.",
             "- Dependency disclosure is generated from `poetry.lock`.",
+            "- Required empirical inputs are resolved against distributed archive membership, "
+            "so a locally generated but undistributed artifact cannot satisfy the gate.",
+            "- The rebuild path is checked as shipped files plus a declared "
+            f"`{REBUILD_ENTRY_POINT}` entry point, and is reported separately from whether the "
+            "artifacts themselves ship.",
             "- Empirical commands remain blocked rather than rendering selective placeholder "
             "tables.",
             "",
@@ -644,8 +853,14 @@ def render_adversarial_econometric_audit(issues: list[ReleaseIssue]) -> str:
             "",
             "Classification: `potentially_publishable_after_major_revision`.",
             "",
-            "The current contribution is a release-ready research scaffold, not an identified "
-            "empirical asset-pricing result.",
+            "The empirical programme is run and its registered gates are reported, but the "
+            "state variable is not identified, so the contribution is a documented "
+            "reconstruction and extension rather than an identified asset-pricing result.",
+            "",
+            "The archive ships the result tables and diagnostics the manuscript cites. It does "
+            "not ship the data panels or estimate stores behind them; those are regenerated "
+            f"with `{REBUILD_ENTRY_POINT}` from the frozen public sources. A reviewer who wants "
+            "to re-derive rather than re-read the numbers must run that rebuild.",
             "",
             "## Findings",
             "",
@@ -661,27 +876,30 @@ def render_adversarial_econometric_audit(issues: list[ReleaseIssue]) -> str:
             "- Repair: keep causal interpretation out of non-identification sections and require "
             "the shock-decomposition gate before stronger language.",
             "",
-            "### MAJOR: Two-pass inference is unverified under missing generated artifacts",
+            "### MAJOR: Two-pass inference is not independently verifiable from the archive",
             "",
             "- Claim threatened: the short-rate factor earns one common cross-sectional price of "
             "risk.",
             "- Econometric reason: factor strength, standardized exposure dispersion, sample "
-            "intersection, and covariance corrections cannot be evaluated without first-pass "
-            "and cross-section artifacts.",
+            "intersection, and covariance corrections cannot be re-evaluated from the shipped "
+            "result tables alone, because the first-pass and cross-section estimate stores are "
+            "not distributed.",
             "- Decisive diagnostic: inspect standardized exposure dispersion, weak-factor flags, "
             "GRS tests, Fama-MacBeth uncertainty, and leave-one-anomaly-family systems.",
-            "- Repair: generate baseline artifacts and rerun robustness diagnostics before "
-            "reporting a pricing verdict.",
+            f"- Repair: rebuild the baseline artifacts with `{REBUILD_ENTRY_POINT}` and rerun "
+            "the robustness diagnostics against the rebuilt estimate stores.",
             "",
-            "### MAJOR: Extension and out-of-sample claims are blocked",
+            "### MAJOR: Out-of-sample and shock-decomposition claims remain blocked",
             "",
-            "- Claim threatened: post-2013 performance, monetary-regime instability, and forecast "
-            "falsification.",
-            "- Econometric reason: the extension panel and frozen training vintages are absent, so "
-            "there is no valid holdout comparison or predeclared regime inference.",
-            "- Decisive diagnostic: rerun temporal, regime, shock, and out-of-sample gates after "
-            "compatible panels exist.",
-            "- Repair: freeze source vintages, produce monthly panels, and preserve null or "
+            "- Claim threatened: forecast falsification and the policy-information split of the "
+            "aggregate innovation.",
+            "- Econometric reason: the frozen training vintages and the event-level "
+            "high-frequency inputs do not exist in this repository at all, so there is no valid "
+            "holdout comparison and no decomposed shock series. This is a missing-input "
+            "blocker, not a redistribution one, and the rebuild path does not resolve it.",
+            "- Decisive diagnostic: rerun the shock and out-of-sample gates once compatible "
+            "event-level and forecast inputs exist.",
+            "- Repair: acquire the event-level data or retire the design, and preserve null or "
             "unstable results in the reports.",
             "",
         ]

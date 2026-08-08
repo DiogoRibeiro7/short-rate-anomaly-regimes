@@ -1,6 +1,6 @@
 {
   "archive_path": "artifacts/release/source_release.zip",
-  "archive_sha256": "47d64443351436479f48a6a651f4e283bb2ae0a0193c65397bb147d1a94f2bf9",
+  "archive_sha256": "985e72a98bb9c43a40be5a3969e373d68d54ba027e87b8adcc3c0c47fa9958b0",
   "excluded": [
     "prompts/",
     "references/private/",
@@ -11,6 +11,18 @@
   ],
   "file_count": 345,
   "members": [
+    ".editorconfig",
+    ".env.example",
+    ".gitattributes",
+    ".github/CODEOWNERS",
+    ".github/ISSUE_TEMPLATE/bug_report.yml",
+    ".github/ISSUE_TEMPLATE/research_task.yml",
+    ".github/dependabot.yml",
+    ".github/pull_request_template.md",
+    ".github/workflows/ci.yml",
+    ".gitignore",
+    ".pre-commit-config.yaml",
+    ".zenodo.json",
     "CITATION.cff",
     "CONTRIBUTING.md",
     "LICENSE",
@@ -158,16 +170,6 @@
     "docs/DATA_POLICY.md",
     "docs/RELEASE_NOTES.md",
     "docs/REPLICATION_STATUS.md",
-    "editorconfig",
-    "env.example",
-    "gitattributes",
-    "github/CODEOWNERS",
-    "github/ISSUE_TEMPLATE/bug_report.yml",
-    "github/ISSUE_TEMPLATE/research_task.yml",
-    "github/dependabot.yml",
-    "github/pull_request_template.md",
-    "github/workflows/ci.yml",
-    "gitignore",
     "notebooks/.gitkeep",
     "notebooks/README.md",
     "paper/figures/regime_innovation.pdf",
@@ -184,7 +186,6 @@
     "paper/tables/regimes.tex",
     "paper/tables/temporal.tex",
     "poetry.lock",
-    "pre-commit-config.yaml",
     "pyproject.toml",
     "reports/README.md",
     "reports/baseline_input_readiness.md",
@@ -354,7 +355,6 @@
     "tests/test_time_series.py",
     "tests/test_validation.py",
     "tests/test_verify_title.py",
-    "tests/test_weak_factor_gates.py",
-    "zenodo.json"
+    "tests/test_weak_factor_gates.py"
   ]
 }

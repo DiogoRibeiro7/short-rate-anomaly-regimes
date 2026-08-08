@@ -76,3 +76,5 @@ fitted_premium_spreads,artifacts/tables/extension/fitted_premium_spreads.csv,Per
 regime_series,artifacts/tables/regimes/regime_monthly_series.csv,Monthly short-rate level innovation and regime labels on the vintage-consistent panel
 table_builder,scripts/build_manuscript_tables.py,Generator that writes every manuscript result table from the frozen artifacts
 figure_builder,scripts/build_manuscript_figures.py,Generator that writes every manuscript result figure from the frozen artifacts
+h4c_intervals,artifacts/tables/robustness/h4c_fitted_premium_intervals.csv,Per-family bootstrap intervals for the rate-attributable fitted-premium spread
+vintage_decomposition,artifacts/tables/extension/vintage_decomposition.csv,Vintage temporal and combined decomposition of the post-publication change

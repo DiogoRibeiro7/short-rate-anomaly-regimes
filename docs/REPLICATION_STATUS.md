@@ -4,6 +4,19 @@ The empirical programme is complete through Milestone 10. The baseline is recons
 
 **No result is eligible for an exact-replication label.** The article names its data providers without series codes or archive vintages, and the anomaly decile panels come from the original author's source in a later rebuild that matches no published descriptive row on all five statistics. Every estimate therefore carries `documented_reconstruction`, and the layer classifications below say partially recovered rather than reproduced or contradicted.
 
+## What This Release Contains
+
+This section describes the archive you received. The release gate reports the two facts separately, and resolves them against distributed archive membership rather than against an author's working tree, so a fresh clone and a working checkout return the same verdict.
+
+| Gate field | Value | Meaning |
+|---|---|---|
+| `empirical_release` | `blocked` | The generated data panels and the first- and second-pass estimate stores are not distributed. |
+| `empirical_rebuild` | `rebuildable_from_public_sources` | `make reproduce` regenerates them from the frozen public sources. |
+
+- **Shipped.** Source, configuration, the frozen source registry, the pre-registration, the acquisition and estimation scripts, the manuscript and its compiled PDF, and every result table, figure, diagnostic, and provenance record the manuscript cites. The first-pass per-asset stores are not among them; the manuscript cites no table from `artifacts/tables/time_series`, which ships as an empty placeholder. All classifications in this document can be read from the archive without running anything.
+- **Not shipped, rebuildable.** `data/raw`, `data/interim`, `data/processed`, `artifacts/estimates/time_series`, `artifacts/estimates/cross_section`, and `artifacts/tables/time_series`. The release gate names a subset of these under `empirical_artifacts_missing`: the two processed parquet panels and the three directories. It does not enumerate `data/raw` or `data/interim`, which are withheld by the same policy but are inputs rather than required release artifacts. The data policy forbids redistributing these sources. A fresh clone carries only `.gitkeep` placeholders there. Rebuild with `make reproduce`; only its acquisition stage needs network access, and the bootstrap and simulation stages take hours. See [`docs/RELEASE_NOTES.md`](RELEASE_NOTES.md) and [`docs/DATA_ACQUISITION.md`](DATA_ACQUISITION.md).
+- **Not rebuildable.** Everything under Remaining Blockers below. Those are missing-input blockers, not redistribution ones, and no rebuild resolves them.
+
 ## Current State
 
 Estimated: eight models on eight asset sets, 64 systems, over the 504 baseline months from 1972-01 to 2013-12, using the article's own estimators. First pass is OLS with an intercept; second pass is the no-intercept cross-sectional regression on full-sample betas; uncertainty is the Shanken (1992) covariance applied to risk prices and pricing errors; the specification test and centred fit metric follow the article's equations.

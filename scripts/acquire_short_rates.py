@@ -7,13 +7,15 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
-from short_rate_anomaly_regimes.data.short_rate_freeze import freeze_fred_series
+from short_rate_anomaly_regimes.data.short_rate_freeze import (
+    FRED_INTERIM_ROOT,
+    FROZEN_FRED_VINTAGE,
+    freeze_fred_series,
+)
 
-RETRIEVAL_DATE = "2026-08-01"
 SERIES = ("FEDFUNDS", "TB3MS", "DTB3", "DFF")
 
 RAW_ROOT = Path("data/raw/fred")
-NORMALIZED_ROOT = Path("data/interim/fred")
 MANIFEST_ROOT = Path("artifacts/provenance/short_rate")
 SUMMARY_CSV = Path("artifacts/provenance/short_rate_freeze_summary.csv")
 
@@ -24,9 +26,9 @@ def main() -> None:
     for series_id in SERIES:
         record = freeze_fred_series(
             series_id=series_id,
-            retrieval_date=RETRIEVAL_DATE,
+            retrieval_date=FROZEN_FRED_VINTAGE,
             raw_root=RAW_ROOT,
-            normalized_root=NORMALIZED_ROOT,
+            normalized_root=FRED_INTERIM_ROOT,
             manifest_root=MANIFEST_ROOT,
         )
         records.append(record)

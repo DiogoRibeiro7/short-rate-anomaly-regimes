@@ -34,5 +34,5 @@
   "start": "1972-01",
   "transition_rule": "first_full_month_after_policy_action",
   "vintage": "current_throughout",
-  "vintage_rationale": "two registered regimes straddle the 2013-12 vintage boundary; the Milestone 9 decomposition shows the vintage effect over the baseline window is 1.1 percent of RMSE against temporal effects of 89 percent"
+  "vintage_rationale": "two registered regimes straddle the 2013-12 vintage boundary; the Milestone 9 decomposition shows the vintage effect over the baseline window is under 0.01 percent of RMSE against temporal contributions of 91 percent"
 }

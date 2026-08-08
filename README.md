@@ -4,7 +4,7 @@
 
 A reproducible replication and extension of Maio and Santa-Clara (2017), *Short-Term Interest Rates and Stock Market Anomalies*, asking whether short-rate innovations still price equity anomalies after the publication sample and across monetary regimes.
 
-The paper is written and builds from this repository: [`paper/manuscript.pdf`](paper/manuscript.pdf), 24 pages.
+The paper is written and builds from this repository: [`paper/manuscript.pdf`](paper/manuscript.pdf), 26 pages.
 
 ## Status
 
@@ -12,7 +12,31 @@ The empirical programme is complete through Milestone 10. Every result table and
 
 **Every estimate carries the label `documented_reconstruction`.** The article names its data providers without series codes or archive vintages, and the anomaly decile panels come from the original author's source in a later rebuild, so no result is eligible for an exact-replication label at any recovery rate. The reconstruction can show that a published pattern reappears, and that a pattern fails to extend; it cannot attribute a cell-level discrepancy to the article rather than to the inputs.
 
-The adversarial release gate reports `0` critical and `0` major issues, with `release_verdict: full_release_ready`. See [`artifacts/release/release_gate.json`](artifacts/release/release_gate.json) and [`docs/RELEASE_NOTES.md`](docs/RELEASE_NOTES.md).
+The adversarial release gate reports `0` critical and `1` major issue, with `release_verdict: source_only_release_ready`. The single major issue is that the generated data panels and estimate stores are not distributed. See [`artifacts/release/release_gate.json`](artifacts/release/release_gate.json) and [`docs/RELEASE_NOTES.md`](docs/RELEASE_NOTES.md).
+
+## What you received, and what you can rebuild
+
+These instructions describe the archive in your hands. The gate reports two independent facts, and neither substitutes for the other.
+
+| Gate field | Value | Meaning |
+|---|---|---|
+| `empirical_release` | `blocked` | The generated data panels and first- and second-pass estimate stores are **not** in this archive. |
+| `empirical_rebuild` | `rebuildable_from_public_sources` | The archive carries a documented, deterministic path to regenerate them: `make reproduce`. |
+
+**In the archive.** Source code, configuration, the frozen source registry, the pre-registration, the acquisition and estimation scripts, the manuscript and its compiled PDF, and the result tables, figures, and diagnostics that the manuscript cites. Every numeric claim in the paper can be traced to a shipped artifact and re-read without running anything.
+
+**Not in the archive.** `data/raw`, `data/interim`, `data/processed`, the estimate stores under `artifacts/estimates/time_series` and `artifacts/estimates/cross_section`, and the first-pass table directory `artifacts/tables/time_series`. The release gate names a subset under `empirical_artifacts_missing`: the two processed parquet panels and the three directories. `data/raw` and `data/interim` are withheld by the same policy but are inputs rather than required release artifacts, so the gate does not list them. The data policy forbids redistributing these sources, so they are rebuilt rather than shipped. A fresh clone contains only `.gitkeep` placeholders under `data/`; the release gate resolves required inputs against distributed archive membership, so it says so rather than reading an author's working tree.
+
+**Not rebuildable at all.** The article's exact input files, the event-level high-frequency data for the shock decomposition, and the frozen training vintages for the out-of-sample falsification. These are missing-input blockers that no rebuild resolves. See [`docs/REPLICATION_STATUS.md`](docs/REPLICATION_STATUS.md).
+
+To rebuild:
+
+```bash
+poetry install
+make reproduce
+```
+
+`make reproduce` runs acquisition, panel construction, estimation, the temporal extension, the regime analysis, the generated reports, and the paper build in dependency order. Only the first stage needs network access. Budget hours: the precision, equivalence, interaction, and power stages run 10,000-draw bootstraps, an exhaustive Bai-Perron search, and 32,000 Monte Carlo replications. Stages can be run individually as `make reproduce-acquire`, `reproduce-panels`, `reproduce-estimates`, `reproduce-extension`, `reproduce-regimes`, and `reproduce-reports`.
 
 ## Findings
 
@@ -26,9 +50,9 @@ Thresholds, comparators, and decision rules were fixed before the corresponding 
 | **H3** regime stability | `regime_stability_unsupported_under_the_registered_equivalence_standard` |
 | **H4a/b/c** weak-factor identification, influence, precision | all `pass` |
 
-On the baseline the short-rate innovation earns a price of risk of `-0.6985` per month with a Shanken *t* of `-2.86`, and roughly halves cross-sectional pricing errors against the market model. Two qualifications follow, and both are pre-registered. The registered materiality standard is not met on the headline asset set, failing its absolute gate by `0.0136` monthly percentage points, and every traded multi-factor comparator attains a lower cross-sectional RMSE on the same seventy portfolios. Refitted post-2013 estimates then reverse sign for five of seven anomaly families, which the design shows is neither a data-vintage artifact nor, by the registered identification gate, a weak-factor artifact.
+On the baseline the short-rate innovation earns a price of risk of `-0.6985` per month with a Shanken *t* of `-2.86`, and roughly halves cross-sectional pricing errors against the market model. Two qualifications follow, and both are pre-registered. The registered materiality standard is not met on the headline asset set, failing its absolute gate by `0.0136` monthly percentage points, and every registered traded multi-factor comparator attains a lower in-sample cross-sectional RMSE on the same seventy portfolios, though on richer factor sets, so that comparison ranks fit rather than models. Refitted post-2013 estimates then reverse sign for five of seven anomaly families, which the design shows is neither a data-vintage artifact nor, by the registered identification gate, a weak-factor artifact.
 
-Across regimes the evidence is deliberately asymmetric. The pooled interaction model rejects beta stability on all 648 months, while of the seventy per-portfolio equivalence tests 26 certify equivalence, 44 are inconclusive, and none demonstrates a change beyond the registered bound. A simulation shows that imprecision is a property of two-pass estimation at regime-length samples rather than a fact about the periods: resolving fitted-premium spreads against the `0.25` bound needs 180 months, and the lower-bound regime has 84.
+Across regimes the evidence is deliberately asymmetric. The pooled interaction model rejects beta stability on all 648 months, while of the seventy per-portfolio equivalence tests 26 certify equivalence, 44 are inconclusive, and none demonstrates a change beyond the registered bound. A calibrated simulation locates the shared limitation: two thirds of the cross-sectional dispersion of estimated rate betas is sampling noise even in the full sample, and the nominal Shanken interval for the rate price attains its stated coverage at no simulated sample size. Resolving fitted-premium spreads against the `0.25` bound needs 180 months, and the lower-bound regime has 84.
 
 ## Research question
 
@@ -76,7 +100,7 @@ The test suite also runs from an uninstalled source checkout:
 PYTHONPATH=src python -m pytest
 ```
 
-Raw and processed data are not redistributed. See [`docs/DATA_ACQUISITION.md`](docs/DATA_ACQUISITION.md) for source-by-source acquisition and redistribution guidance, and [`research/data_access_matrix.csv`](research/data_access_matrix.csv) for the licence and definition status of each input.
+Nothing above needs network access or rebuilt data; it verifies the archive as received. Raw and processed data are not redistributed, and `make reproduce` is how you obtain them. See [`docs/DATA_ACQUISITION.md`](docs/DATA_ACQUISITION.md) for source-by-source acquisition and redistribution guidance, and [`research/data_access_matrix.csv`](research/data_access_matrix.csv) for the licence and definition status of each input.
 
 ## Quality gates
 
@@ -99,27 +123,22 @@ poetry run pytest
 make paper
 ```
 
-This regenerates the result tables and figures from the artifacts, validates the manuscript, and compiles `paper/manuscript.pdf`. `latexmk` runs from `paper/` so that `\bibliography{references}` resolves, with auxiliary files sent to `paper/build/`.
+This regenerates the result tables and figures from the shipped artifacts, validates the manuscript, and compiles `paper/manuscript.pdf`. It needs no network access and no rebuilt data. `latexmk` runs from `paper/` so that `\bibliography{references}` resolves, with auxiliary files sent to `paper/build/`.
 
 ## Analysis scripts
 
-The empirical pipeline lives in [`scripts/`](scripts/), run in dependency order. Each writes artifacts under `artifacts/` with a provenance record carrying input and output checksums.
+The empirical pipeline lives in [`scripts/`](scripts/) and is driven by `make reproduce`, which runs it in dependency order. Each script writes artifacts under `artifacts/` with a provenance record carrying input and output checksums.
 
-```bash
-PYTHONPATH=src poetry run python scripts/acquire_short_rates.py
-PYTHONPATH=src poetry run python scripts/reconstruct_rate_innovations.py
-PYTHONPATH=src poetry run python scripts/build_baseline_panel.py
-PYTHONPATH=src poetry run python scripts/run_baseline_replication.py
-PYTHONPATH=src poetry run python scripts/run_h1_materiality.py
-PYTHONPATH=src poetry run python scripts/run_weak_factor_diagnostics.py
-PYTHONPATH=src poetry run python scripts/build_extension_panels.py
-PYTHONPATH=src poetry run python scripts/run_temporal_extension.py
-PYTHONPATH=src poetry run python scripts/build_regime_panel.py
-PYTHONPATH=src poetry run python scripts/run_regime_equivalence.py
-PYTHONPATH=src poetry run python scripts/run_regime_interactions.py
-```
+| Stage | Target | Notes |
+|---|---|---|
+| Acquisition | `make reproduce-acquire` | **Network required.** Pulls the frozen vintages in `configs/data_sources.yaml`. Raw bytes are written once; delete `data/raw` and `data/interim` before re-acquiring against a new vintage. |
+| Panels | `make reproduce-panels` | Source audits, AR(1) innovation reconstruction, baseline, comparator, and extension panels. Minutes. |
+| Estimation | `make reproduce-estimates` | Baseline replication, published-target audit, H1 materiality, weak-factor diagnostics. **Slow:** `run_h4c_precision.py` is a 10,000-draw moving-block bootstrap. |
+| Extension | `make reproduce-extension` | Post-2013 temporal evaluation. Minutes. |
+| Regimes | `make reproduce-regimes` | **Slowest.** 10,000 draws per eligible regime, an exhaustive Bai-Perron search at three boundary shifts, and 2,000 replications at each of sixteen window lengths. |
+| Reports | `make reproduce-reports` | Rewrites `reports/generated/` and the release assets from the rebuilt artifacts. |
 
-Two are slow: the pooled interaction script runs an exhaustive Bai-Perron search, and `analyse_regime_power.py` simulates 2,000 replications at each of sixteen window lengths.
+The replication, shock-decomposition, and out-of-sample commands in the report stage exit non-zero by design: their gates are blocked by inputs this repository cannot obtain, and they write a blocked report naming those inputs.
 
 ## Repository map
 

@@ -17,7 +17,11 @@ from typing import Any
 import pandas as pd
 
 from short_rate_anomaly_regimes.data.aggregation_audit import aggregate_daily_to_monthly
-from short_rate_anomaly_regimes.data.short_rate_freeze import load_normalized_series
+from short_rate_anomaly_regimes.data.short_rate_freeze import (
+    FRED_INTERIM_ROOT,
+    FROZEN_FRED_VINTAGE,
+    load_normalized_series,
+)
 from short_rate_anomaly_regimes.exceptions import DataValidationError
 from short_rate_anomaly_regimes.provenance import sha256_file
 from short_rate_anomaly_regimes.rates.baseline_reconstruction import (
@@ -31,8 +35,6 @@ from short_rate_anomaly_regimes.rates.baseline_reconstruction import (
 
 SCRIPT_NAME = "scripts/reconstruct_rate_innovations.py"
 
-RETRIEVAL_DATE = "2026-08-01"
-NORMALIZED_ROOT = Path("data/interim/fred")
 FREEZE_MANIFEST_ROOT = Path("artifacts/provenance/short_rate")
 WINDOW_START = "1972-01"
 WINDOW_END = "2013-12"
@@ -108,8 +110,8 @@ def _verified_input(series_id: str) -> dict[str, str]:
         DataValidationError: If the manifest or the file is missing, the manifest
             names a different normalized path, or the checksums disagree.
     """
-    normalized_path = NORMALIZED_ROOT / f"{series_id}_{RETRIEVAL_DATE}.csv"
-    manifest_path = FREEZE_MANIFEST_ROOT / f"{series_id}_{RETRIEVAL_DATE}.json"
+    normalized_path = FRED_INTERIM_ROOT / f"{series_id}_{FROZEN_FRED_VINTAGE}.csv"
+    manifest_path = FREEZE_MANIFEST_ROOT / f"{series_id}_{FROZEN_FRED_VINTAGE}.json"
     if not manifest_path.is_file():
         raise DataValidationError(f"Frozen manifest is missing: {manifest_path}")
     if not normalized_path.is_file():
@@ -140,12 +142,12 @@ def _verified_input(series_id: str) -> dict[str, str]:
 
 def _load_rate_levels() -> dict[str, pd.Series]:
     fedfunds = monthly_rate_from_freeze(
-        load_normalized_series(NORMALIZED_ROOT / f"FEDFUNDS_{RETRIEVAL_DATE}.csv")
+        load_normalized_series(FRED_INTERIM_ROOT / f"FEDFUNDS_{FROZEN_FRED_VINTAGE}.csv")
     )
     tb3ms = monthly_rate_from_freeze(
-        load_normalized_series(NORMALIZED_ROOT / f"TB3MS_{RETRIEVAL_DATE}.csv")
+        load_normalized_series(FRED_INTERIM_ROOT / f"TB3MS_{FROZEN_FRED_VINTAGE}.csv")
     )
-    dtb3_daily = load_normalized_series(NORMALIZED_ROOT / f"DTB3_{RETRIEVAL_DATE}.csv")
+    dtb3_daily = load_normalized_series(FRED_INTERIM_ROOT / f"DTB3_{FROZEN_FRED_VINTAGE}.csv")
     dtb3_monthly = monthly_rate_from_freeze(
         aggregate_daily_to_monthly(dtb3_daily, rule="available_observation_mean")
     )

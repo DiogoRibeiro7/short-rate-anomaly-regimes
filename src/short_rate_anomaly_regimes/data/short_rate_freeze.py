@@ -27,6 +27,29 @@ from short_rate_anomaly_regimes.exceptions import DataAccessError, DataValidatio
 
 FRED_CSV_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
 
+#: Directory holding the normalized FRED freezes every panel builder reads.
+FRED_INTERIM_ROOT = Path("data/interim/fred")
+
+#: The frozen FRED retrieval vintage. The baseline panel, the extension panels
+#: and the temporal evaluation must all read the same freeze, so the date lives
+#: here rather than being repeated in each script, where a bump would otherwise
+#: have to be applied in three places and could silently diverge.
+FROZEN_FRED_VINTAGE = "2026-08-01"
+
+
+def frozen_fred_path(series_id: str, vintage: str = FROZEN_FRED_VINTAGE) -> Path:
+    """Return the normalized freeze path for one FRED series.
+
+    Args:
+        series_id: FRED series identifier, such as ``FEDFUNDS``.
+        vintage: Retrieval vintage, defaulting to the frozen project vintage.
+
+    Returns:
+        The path to that series' normalized freeze.
+    """
+    return FRED_INTERIM_ROOT / f"{series_id}_{vintage}.csv"
+
+
 #: Metadata the project declares for each series. Provider metadata endpoints
 #: (``fred.stlouisfed.org/series/*`` and ``fred.stlouisfed.org/data/*.txt``)
 #: refuse automated requests and no FRED API key is configured, so these values
