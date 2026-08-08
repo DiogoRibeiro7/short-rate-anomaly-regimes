@@ -16,7 +16,11 @@ from short_rate_anomaly_regimes.data.baseline_panel import (
     validate_baseline_panel,
 )
 from short_rate_anomaly_regimes.data.french_freeze import load_normalized_french
-from short_rate_anomaly_regimes.data.short_rate_freeze import load_normalized_series
+from short_rate_anomaly_regimes.data.short_rate_freeze import (
+    FROZEN_FRED_VINTAGE,
+    frozen_fred_path,
+    load_normalized_series,
+)
 from short_rate_anomaly_regimes.exceptions import DataValidationError
 from short_rate_anomaly_regimes.portfolios.q_archive import FAMILY_MEMBERS, load_family_panel
 from short_rate_anomaly_regimes.rates.baseline_reconstruction import (
@@ -28,12 +32,10 @@ from short_rate_anomaly_regimes.rates.baseline_reconstruction import (
 WINDOW_START = "1972-01"
 WINDOW_END = "2013-12"
 
-FRED_DATE = "2026-08-01"
 FRENCH_VINTAGE = "publication_era_20170709"
 PORTFOLIO_VINTAGE = "global_q_2025_retrieved_20260802"
 TIMING_VARIANT: TimingVariant = "pre_window_lag"
 
-FRED_ROOT = Path("data/interim/fred")
 FRENCH_ROOT = Path("data/interim/kenneth_french")
 PORTFOLIO_ROOT = Path("data/interim/portfolios")
 
@@ -43,7 +45,8 @@ COLUMN_METADATA_CSV = Path("artifacts/provenance/baseline_panel_column_metadata.
 VALIDATION_JSON = Path("artifacts/data_quality/baseline_panel_validation.json")
 
 SOURCE_VINTAGE_ID = (
-    f"fred_{FRED_DATE}|french_{FRENCH_VINTAGE}|globalq_{PORTFOLIO_VINTAGE}|ar1_{TIMING_VARIANT}"
+    f"fred_{FROZEN_FRED_VINTAGE}|french_{FRENCH_VINTAGE}"
+    f"|globalq_{PORTFOLIO_VINTAGE}|ar1_{TIMING_VARIANT}"
 )
 REPLICATION_STATUS = "documented_reconstruction"
 
@@ -61,15 +64,11 @@ def main() -> None:
     risk_free = factors["RF"]
 
     levels = {
-        "fedfunds": monthly_rate_from_freeze(
-            load_normalized_series(FRED_ROOT / f"FEDFUNDS_{FRED_DATE}.csv")
-        ),
-        "tb3ms": monthly_rate_from_freeze(
-            load_normalized_series(FRED_ROOT / f"TB3MS_{FRED_DATE}.csv")
-        ),
+        "fedfunds": monthly_rate_from_freeze(load_normalized_series(frozen_fred_path("FEDFUNDS"))),
+        "tb3ms": monthly_rate_from_freeze(load_normalized_series(frozen_fred_path("TB3MS"))),
         "dtb3_monthly_mean": monthly_rate_from_freeze(
             aggregate_daily_to_monthly(
-                load_normalized_series(FRED_ROOT / f"DTB3_{FRED_DATE}.csv"),
+                load_normalized_series(frozen_fred_path("DTB3")),
                 rule="available_observation_mean",
             )
         ),
@@ -176,7 +175,7 @@ def main() -> None:
             name = column.split("__")[1]
             source, vintage, units, status = (
                 f"FRED {name.upper()}",
-                f"fred_current_retrieved_{FRED_DATE}",
+                f"fred_current_retrieved_{FROZEN_FRED_VINTAGE}",
                 "annualized_percentage_points",
                 "documented_reconstruction" if name != "dtb3_monthly_mean" else "sensitivity_only",
             )
@@ -184,7 +183,7 @@ def main() -> None:
             name = column.split("__")[1]
             source, vintage, units, status = (
                 f"AR(1) residual of FRED {name.upper()} under {TIMING_VARIANT}",
-                f"fred_current_retrieved_{FRED_DATE}",
+                f"fred_current_retrieved_{FROZEN_FRED_VINTAGE}",
                 "annualized_percentage_points",
                 "documented_reconstruction" if name != "dtb3_monthly_mean" else "sensitivity_only",
             )

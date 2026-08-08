@@ -78,6 +78,14 @@ REQUIRED_EMPIRICAL_REBUILD_INPUTS: tuple[str, ...] = (
     "scripts/analyse_regime_power.py",
     "scripts/build_manuscript_tables.py",
     "scripts/build_manuscript_figures.py",
+    "scripts/audit_rate_aggregation.py",
+    "scripts/audit_portfolio_source_compatibility.py",
+    "scripts/audit_published_targets.py",
+    "scripts/run_h1_materiality.py",
+    "scripts/run_h4c_precision.py",
+    "scripts/run_weak_factor_diagnostics.py",
+    "scripts/verify_title.py",
+    "scripts/verify_manuscript.py",
 )
 REBUILD_ENTRY_POINT_FILE = "Makefile"
 REBUILD_ENTRY_POINT_TARGET = "reproduce"
@@ -114,8 +122,17 @@ class ReleaseIssue:
 
 
 def normalise_repo_path(path: Path) -> str:
-    """Return a stable POSIX-style relative path."""
-    return path.as_posix().lstrip("./")
+    """Return a stable POSIX-style relative path.
+
+    Only a leading ``./`` is removed. ``str.lstrip`` takes a set of characters
+    rather than a prefix, so stripping ``"./"`` also ate the leading dot of every
+    dotfile: ``.zenodo.json`` was recorded as ``zenodo.json``, and a recipient
+    verifying the checksum manifest could not find the file it names.
+    """
+    posix = path.as_posix()
+    while posix.startswith("./"):
+        posix = posix[2:]
+    return posix
 
 
 def is_disallowed_release_path(path: str) -> bool:

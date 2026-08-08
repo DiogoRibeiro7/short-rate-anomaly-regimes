@@ -25,7 +25,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from short_rate_anomaly_regimes.data.short_rate_freeze import load_normalized_series
+from short_rate_anomaly_regimes.data.short_rate_freeze import (
+    frozen_fred_path,
+    load_normalized_series,
+)
 from short_rate_anomaly_regimes.models.article_second_pass import (
     ArticleSecondPassResult,
     estimate_article_second_pass,
@@ -49,9 +52,7 @@ REVISED_PARQUET = Path("data/processed/extension/revised_history_panel.parquet")
 #: the locked baseline's rate column. Every evaluation here draws its pre-window
 #: lag from this file, so each lag is the observed preceding month on the vintage
 #: that evaluation is actually estimated on.
-FRED_ROOT = Path("data/interim/fred")
-FRED_DATE = "2026-08-01"
-FEDFUNDS_CSV = FRED_ROOT / f"FEDFUNDS_{FRED_DATE}.csv"
+FEDFUNDS_CSV = frozen_fred_path("FEDFUNDS")
 
 EVALUATION_CSV = Path("artifacts/tables/extension/temporal_evaluation.csv")
 SPREAD_CSV = Path("artifacts/tables/extension/fitted_premium_spreads.csv")

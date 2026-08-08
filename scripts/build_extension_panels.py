@@ -26,7 +26,11 @@ import pandas as pd
 from short_rate_anomaly_regimes.data.aggregation_audit import aggregate_daily_to_monthly
 from short_rate_anomaly_regimes.data.comparator_freeze import load_normalized_comparator
 from short_rate_anomaly_regimes.data.french_freeze import load_normalized_french
-from short_rate_anomaly_regimes.data.short_rate_freeze import load_normalized_series
+from short_rate_anomaly_regimes.data.short_rate_freeze import (
+    FROZEN_FRED_VINTAGE,
+    frozen_fred_path,
+    load_normalized_series,
+)
 from short_rate_anomaly_regimes.exceptions import DataValidationError
 from short_rate_anomaly_regimes.portfolios.q_archive import FAMILY_MEMBERS, load_family_panel
 from short_rate_anomaly_regimes.rates.baseline_reconstruction import monthly_rate_from_freeze
@@ -38,13 +42,11 @@ EXTENSION_START = "2014-01"
 #: and factor data run further. See reports/baseline_input_readiness.md.
 EXTENSION_END = "2025-12"
 
-FRED_DATE = "2026-08-01"
 CURRENT_FRENCH_VINTAGE = "current_20260801"
 CURRENT_LIQUIDITY_VINTAGE = "current_20260802"
 PORTFOLIO_VINTAGE = "global_q_2025_retrieved_20260802"
 Q_VINTAGE = "global_q_2025_retrieved_20260802"
 
-FRED_ROOT = Path("data/interim/fred")
 FRENCH_ROOT = Path("data/interim/kenneth_french")
 COMPARATOR_ROOT = Path("data/interim/comparators")
 PORTFOLIO_ROOT = Path("data/interim/portfolios")
@@ -95,15 +97,11 @@ def _build(
     five = sources["five"]
 
     levels = {
-        "fedfunds": monthly_rate_from_freeze(
-            load_normalized_series(FRED_ROOT / f"FEDFUNDS_{FRED_DATE}.csv")
-        ),
-        "tb3ms": monthly_rate_from_freeze(
-            load_normalized_series(FRED_ROOT / f"TB3MS_{FRED_DATE}.csv")
-        ),
+        "fedfunds": monthly_rate_from_freeze(load_normalized_series(frozen_fred_path("FEDFUNDS"))),
+        "tb3ms": monthly_rate_from_freeze(load_normalized_series(frozen_fred_path("TB3MS"))),
         "dtb3_monthly_mean": monthly_rate_from_freeze(
             aggregate_daily_to_monthly(
-                load_normalized_series(FRED_ROOT / f"DTB3_{FRED_DATE}.csv"),
+                load_normalized_series(frozen_fred_path("DTB3")),
                 rule="available_observation_mean",
             )
         ),
@@ -235,7 +233,7 @@ def main() -> None:
                     "liquidity": CURRENT_LIQUIDITY_VINTAGE,
                     "q_factors": Q_VINTAGE,
                     "portfolios": PORTFOLIO_VINTAGE,
-                    "fred": FRED_DATE,
+                    "fred": FROZEN_FRED_VINTAGE,
                 },
                 "endpoint_note": (
                     "2025-12 is the binding common endpoint because the anomaly decile panels "

@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -472,3 +473,18 @@ def test_release_audit_command_writes_artifacts(tmp_path: Path) -> None:
     assert "Data Acquisition Guide" in data_guide.read_text(encoding="utf-8")
     assert "Adversarial Code Audit" in code_audit.read_text(encoding="utf-8")
     assert "Adversarial Econometric Audit" in econometric_audit.read_text(encoding="utf-8")
+
+
+def test_rebuild_whitelist_covers_every_script_make_reproduce_runs() -> None:
+    """The declared rebuild inputs must not fall behind the reproduce target.
+
+    The whitelist is a contract about what the archive has to carry. If a stage
+    gains a script and the list does not, the gate would certify a rebuild path
+    that a recipient cannot actually execute.
+    """
+    makefile = Path("Makefile").read_text(encoding="utf-8")
+    invoked = set(re.findall(r"python (scripts/[\w/]+\.py)", makefile))
+    declared = set(REQUIRED_EMPIRICAL_REBUILD_INPUTS)
+
+    assert invoked, "no scripts found in the Makefile"
+    assert invoked <= declared, f"not declared as rebuild inputs: {sorted(invoked - declared)}"
