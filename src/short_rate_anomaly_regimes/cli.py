@@ -327,7 +327,7 @@ def estimate_first_pass(
     """Run first-pass time-series regressions after required panels exist."""
     validated = load_baseline_config(config)
     required_paths = [
-        Path("data/processed/factors/short_rate_factors.parquet"),
+        Path("data/processed/factors/short_rate_innovations_baseline.parquet"),
         Path("data/raw/kenneth_french/rf.csv"),
     ]
     required_paths.extend(
@@ -379,7 +379,7 @@ def audit_replication(
     required_paths = [
         Path("artifacts/estimates/time_series"),
         Path("artifacts/estimates/cross_section"),
-        Path("data/processed/factors/short_rate_factors.parquet"),
+        Path("data/processed/factors/short_rate_innovations_baseline.parquet"),
     ]
     missing_paths = [str(path) for path in required_paths if not path.exists()]
     if missing_paths:

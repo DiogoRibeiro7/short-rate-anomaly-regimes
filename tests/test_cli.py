@@ -289,7 +289,9 @@ def test_estimate_first_pass_blocks_unfrozen_run_contract(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    factor_path = tmp_path / "data" / "processed" / "factors" / "short_rate_factors.parquet"
+    factor_path = (
+        tmp_path / "data" / "processed" / "factors" / "short_rate_innovations_baseline.parquet"
+    )
     rf_path = tmp_path / "data" / "raw" / "kenneth_french" / "rf.csv"
     portfolio_path = tmp_path / "data" / "processed" / "portfolios" / "test_set.parquet"
     for path in (factor_path, rf_path, portfolio_path):
@@ -347,7 +349,17 @@ def test_estimate_cross_section_blocks_unfrozen_run_contract(
     assert "cross-section run contract is not frozen" in str(result.exception)
 
 
-def test_audit_replication_writes_missing_input_audit(tmp_path: Path) -> None:
+def test_audit_replication_writes_missing_input_audit(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Exercise the blocked branch by making its inputs genuinely absent.
+
+    Run from the repository root this test passed only because the baseline
+    artifacts did not exist yet, so it stopped exercising the blocked path the
+    moment they did. Working from an empty tree makes the condition real.
+    """
+    monkeypatch.chdir(tmp_path)
     target_path = tmp_path / "targets.csv"
     audit_path = tmp_path / "audit.csv"
     json_path = tmp_path / "audit.json"

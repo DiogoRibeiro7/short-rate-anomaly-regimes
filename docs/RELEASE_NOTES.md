@@ -3,11 +3,11 @@
 ## Release Verdict
 
 - Source-code release: `permitted`
-- Empirical-results release: `blocked`
+- Empirical-results release: `permitted`
 - Source-only tag status: `source_only_tag_allowed`
-- Empirical-result tag status: `blocked`
+- Empirical-result tag status: `allowed`
 - Critical issues: `0`
-- Major issues: `1`
+- Major issues: `0`
 
 ## Exact Results
 
@@ -31,7 +31,7 @@
 
 ## Major Unresolved Issues
 
-- `empirical_artifacts_missing` at `data/processed/factors/short_rate_factors.parquet, data/processed/extension/monthly_panel.parquet`: The repository cannot reproduce manuscript tables or extension claims from a fresh checkout with the current public inputs.
+- None.
 
 ## Restricted Materials
 

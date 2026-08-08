@@ -42,7 +42,7 @@ CHECKSUM_EXCLUDED_FILES: frozenset[str] = DISALLOWED_RELEASE_FILES | frozenset(
 )
 
 REQUIRED_EMPIRICAL_RELEASE_INPUTS: tuple[str, ...] = (
-    "data/processed/factors/short_rate_factors.parquet",
+    "data/processed/factors/short_rate_innovations_baseline.parquet",
     "data/processed/extension/monthly_panel.parquet",
     "artifacts/estimates/time_series",
     "artifacts/estimates/cross_section",
@@ -295,7 +295,16 @@ def release_verdict(issues: list[ReleaseIssue]) -> dict[str, Any]:
         "empirical_release": "blocked" if critical or major else "permitted",
         "source_tag": "blocked" if critical else "source_only_tag_allowed",
         "empirical_result_tag": "blocked" if critical or major else "allowed",
-        "release_verdict": "do_not_release" if critical else "source_only_release_ready",
+        # The verdict must track both dimensions. Reporting
+        # ``source_only_release_ready`` while ``empirical_release`` is permitted
+        # would contradict the field beside it.
+        "release_verdict": (
+            "do_not_release"
+            if critical
+            else "source_only_release_ready"
+            if major
+            else "full_release_ready"
+        ),
     }
 
 

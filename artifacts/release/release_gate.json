@@ -1,19 +1,11 @@
 {
-  "issues": [
-    {
-      "failure_mechanism": "The repository cannot reproduce manuscript tables or extension claims from a fresh checkout with the current public inputs.",
-      "issue_id": "empirical_artifacts_missing",
-      "location": "data/processed/factors/short_rate_factors.parquet, data/processed/extension/monthly_panel.parquet",
-      "required_fix": "Freeze source definitions, register permitted data, generate the baseline and extension artifacts, and rerun release-audit.",
-      "severity": "major"
-    }
-  ],
+  "issues": [],
   "verdict": {
     "critical_issue_count": 0,
-    "empirical_release": "blocked",
-    "empirical_result_tag": "blocked",
-    "major_issue_count": 1,
-    "release_verdict": "source_only_release_ready",
+    "empirical_release": "permitted",
+    "empirical_result_tag": "allowed",
+    "major_issue_count": 0,
+    "release_verdict": "full_release_ready",
     "source_release": "permitted",
     "source_tag": "source_only_tag_allowed"
   }

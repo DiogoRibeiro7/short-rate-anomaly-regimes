@@ -5,6 +5,7 @@ from typer.testing import CliRunner
 
 from short_rate_anomaly_regimes.cli import app
 from short_rate_anomaly_regimes.reporting.release import (
+    ReleaseIssue,
     build_checksum_manifest,
     build_release_environment_manifest,
     build_release_issues,
@@ -203,7 +204,21 @@ def test_release_gate_flags_critical_and_major_issues(tmp_path: Path) -> None:
 
 
 def test_release_notes_and_adversarial_reports_include_required_verdicts() -> None:
-    issues = build_release_issues(paths=(Path("README.md"),))
+    """Render the reports from an explicit issue rather than repository state.
+
+    Building the issue list from the live tree made this test depend on an
+    artifact being absent, so it began failing the moment the repository could
+    actually produce that artifact. The renderers are what is under test here.
+    """
+    issues = [
+        ReleaseIssue(
+            issue_id="fixture_issue",
+            severity="major",
+            location="data/processed/factors/fixture.parquet",
+            failure_mechanism="Fixture failure mechanism for the renderers.",
+            required_fix="Fixture required fix.",
+        )
+    ]
 
     notes = render_release_notes(issues)
     code_audit = render_adversarial_code_audit(issues)
