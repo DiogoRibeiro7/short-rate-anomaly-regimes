@@ -15,7 +15,7 @@ authors:
     affiliation: School of Media Arts and Design, Polytechnic of Porto, Portugal
     email: dfr@esmad.ipp.pt
 year: 2026
-version: 0.1.0
+version: 1.0.0
 license: MIT
 repository-code: https://github.com/DiogoRibeiro7/short-rate-anomaly-regimes
 keywords:
