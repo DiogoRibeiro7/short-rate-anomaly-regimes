@@ -1,5 +1,6 @@
 import json
 import subprocess
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -547,3 +548,27 @@ def test_no_tracked_file_differs_from_its_stored_bytes_by_line_endings() -> None
             drifted.append(name)
 
     assert not drifted, f"line-ending drift against the stored bytes: {drifted}"
+
+
+def test_package_version_matches_every_declaration() -> None:
+    """The version must agree wherever it is declared.
+
+    A release bumps pyproject, the Zenodo record and the citation file. The
+    package's own ``__version__`` is easy to miss, and an importer reading a
+    stale value on a tagged release cannot tell which is authoritative. A
+    Zenodo deposit makes that disagreement permanent.
+    """
+    import short_rate_anomaly_regimes
+
+    pyproject = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+    declared = pyproject["project"]["version"]
+    zenodo = json.loads(Path(".zenodo.json").read_text(encoding="utf-8"))["version"]
+    citation = next(
+        line.split(":", 1)[1].strip()
+        for line in Path("CITATION.cff").read_text(encoding="utf-8").splitlines()
+        if line.startswith("version:")
+    )
+
+    assert short_rate_anomaly_regimes.__version__ == declared
+    assert zenodo == declared
+    assert citation == declared
