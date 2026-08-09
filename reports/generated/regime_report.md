@@ -48,7 +48,7 @@ Coverage note: the registered floors admit only two regimes to a standalone seco
 | conventional_pre_elb | 444 | 70 | 374 | 553.536 |
 | elb_qe | 84 | 70 | 14 | 11056.2 |
 
-Specification caveat: the chi-square statistic and the Shanken correction invert a residual covariance estimated from T months for N test assets; where T - N is small that inverse is unstable and the statistic should not be read as evidence. The equivalence gates do not invert it
+Specification caveat: neither the Shanken correction nor the chi-square statistic inverts the residual covariance; it enters only through B' Sigma B, reduced to K by K before any inverse, and through M Sigma M', read through a pseudo-inverse. A residual covariance estimated from T months for N test assets is therefore usable at any T, but as T - N falls its smaller eigenvalues are increasingly noise, and at T <= N some are exactly zero. The chi-square is the statistic to distrust first, because it is referred to chi2(N - K) however few directions its pseudo-inverse measures. The equivalence gates use neither the covariance nor its pseudo-inverse
 
 ## Global Innovation Sensitivity
 

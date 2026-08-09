@@ -11,6 +11,7 @@
     "source": "data/interim/fred/FEDFUNDS_2026-08-01.csv"
   },
   "classification": "post_publication_compatibility_unsupported",
+  "classification_role": "registered_confirmatory_point_estimate_rule",
   "frozen_ar_intercept": 0.04625557239964617,
   "frozen_ar_slope": 0.9905271145667265,
   "gates": {
@@ -27,10 +28,178 @@
   "replication_status": "documented_reconstruction",
   "rmse_relative_change_vs_locked_baseline": 0.910147644504307,
   "rmse_relative_change_vs_revised_history": 0.9102026136819019,
-  "standardized_rate_exposure_dispersion_share": {
-    "locked_baseline": 0.254,
-    "note": "the H4a dispersion gate floor is 0.10; the extension window clears it more comfortably than the baseline, so the temporal result is not attributable to a weakly identified factor",
-    "refitted_extension": 0.58
+  "sign_gate_vintage": {
+    "gates_agree": true,
+    "note": "the registered sign gate compares the refitted extension with the locked baseline and so is the one H2 gate that spans two vintages; the fitted-premium magnitude gate is vintage isolated against the revised history. The same-vintage sign comparison is reported here for audit and decides nothing. Where the two disagree the registered verdict still follows the locked-baseline column",
+    "registered_gate_compares_against": "locked_baseline",
+    "registered_gate_passes": false,
+    "same_vintage_gate_compares_against": "revised_history",
+    "same_vintage_gate_passes": false
   },
-  "vintage_isolation": "the temporal gates compare the refitted extension with the revised-history baseline, which shares its vintage, so revised historical data cannot enter the temporal verdict"
+  "standardized_rate_exposure_dispersion_share": {
+    "floor": 0.1,
+    "locked_baseline": 0.25397249405003436,
+    "note": "recomputed from each window's own first-pass betas and factor standard deviations. The H4a dispersion floor is 0.1; the extension window clears it, so the extension does not fail the registered H4a dispersion criterion. That criterion does not measure exposure reliability, so a higher share is not evidence that the temporal result is well identified",
+    "refitted_extension": 0.5799562777937327
+  },
+  "supplementary_inferential_classification": {
+    "comparison": "refitted_extension_2014_2025_minus_revised_history_1972_2013",
+    "draws": 10000,
+    "estimands": {
+      "temporal_fitted_premium_spread_change__book_to_market": {
+        "bound": 0.25,
+        "decision_category": "inconclusive",
+        "lower_90": -1.7171501723764662,
+        "lower_95": -1.8653476381225234,
+        "one_sided_bound": false,
+        "point_change": -0.9260761342025084,
+        "strict_95pct_interval_sensitivity_passes": false,
+        "tost_5pct_90pct_interval_passes": false,
+        "upper_90": -0.13572071770511776,
+        "upper_95": -0.03743119081395325
+      },
+      "temporal_fitted_premium_spread_change__earnings_to_price": {
+        "bound": 0.25,
+        "decision_category": "inconclusive",
+        "lower_90": -1.678861182965683,
+        "lower_95": -1.8434913695937916,
+        "one_sided_bound": false,
+        "point_change": -0.988142768014056,
+        "strict_95pct_interval_sensitivity_passes": false,
+        "tost_5pct_90pct_interval_passes": false,
+        "upper_90": -0.05607338818303236,
+        "upper_95": 0.045643692155539865
+      },
+      "temporal_fitted_premium_spread_change__equity_duration": {
+        "bound": 0.25,
+        "decision_category": "inconclusive",
+        "lower_90": 0.09799153232045282,
+        "lower_95": 0.02342237179421294,
+        "one_sided_bound": false,
+        "point_change": 0.9186857716184996,
+        "strict_95pct_interval_sensitivity_passes": false,
+        "tost_5pct_90pct_interval_passes": false,
+        "upper_90": 1.4638750725610847,
+        "upper_95": 1.5906122307319772
+      },
+      "temporal_fitted_premium_spread_change__inventory_growth": {
+        "bound": 0.25,
+        "decision_category": "inconclusive",
+        "lower_90": -0.4083349779294216,
+        "lower_95": -0.5122247054326399,
+        "one_sided_bound": false,
+        "point_change": 0.13577259306586992,
+        "strict_95pct_interval_sensitivity_passes": false,
+        "tost_5pct_90pct_interval_passes": false,
+        "upper_90": 0.3921298697083961,
+        "upper_95": 0.464653551281665
+      },
+      "temporal_fitted_premium_spread_change__investment_to_assets": {
+        "bound": 0.25,
+        "decision_category": "inconclusive",
+        "lower_90": -0.030158258751526182,
+        "lower_95": -0.08707825545041714,
+        "one_sided_bound": false,
+        "point_change": 0.30393384390975275,
+        "strict_95pct_interval_sensitivity_passes": false,
+        "tost_5pct_90pct_interval_passes": false,
+        "upper_90": 0.5189072196790093,
+        "upper_95": 0.585471463337521
+      },
+      "temporal_fitted_premium_spread_change__long_term_reversal": {
+        "bound": 0.25,
+        "decision_category": "inconclusive",
+        "lower_90": -0.065578048984904,
+        "lower_95": -0.20328926574546777,
+        "one_sided_bound": false,
+        "point_change": 0.952862028445373,
+        "strict_95pct_interval_sensitivity_passes": false,
+        "tost_5pct_90pct_interval_passes": false,
+        "upper_90": 1.8924038450694274,
+        "upper_95": 2.097591237959943
+      },
+      "temporal_fitted_premium_spread_change__ppe_investment": {
+        "bound": 0.25,
+        "decision_category": "inconclusive",
+        "lower_90": -0.05009048622037382,
+        "lower_95": -0.183888141833737,
+        "one_sided_bound": false,
+        "point_change": 0.8583497151097621,
+        "strict_95pct_interval_sensitivity_passes": false,
+        "tost_5pct_90pct_interval_passes": false,
+        "upper_90": 1.3496307755538939,
+        "upper_95": 1.4781742097107373
+      },
+      "temporal_rmse_relative_change": {
+        "bound": 0.1,
+        "decision_category": "difference_exceeds_bound",
+        "lower_90": 0.172668244152193,
+        "lower_95": 0.08593023555835162,
+        "one_sided_bound": true,
+        "point_change": 0.9102026136819019,
+        "strict_95pct_interval_sensitivity_passes": false,
+        "tost_5pct_90pct_interval_passes": false,
+        "upper_90": 1.8441955534869514,
+        "upper_95": 2.127822239327316
+      }
+    },
+    "estimands_that_are_inconclusive": [
+      "temporal_fitted_premium_spread_change__book_to_market",
+      "temporal_fitted_premium_spread_change__earnings_to_price",
+      "temporal_fitted_premium_spread_change__equity_duration",
+      "temporal_fitted_premium_spread_change__inventory_growth",
+      "temporal_fitted_premium_spread_change__investment_to_assets",
+      "temporal_fitted_premium_spread_change__long_term_reversal",
+      "temporal_fitted_premium_spread_change__ppe_investment"
+    ],
+    "estimands_with_a_demonstrated_exceedance": [
+      "temporal_rmse_relative_change"
+    ],
+    "note": "both windows are re-estimated inside every draw and the two independent draw sequences are paired index-wise, so the interval describes the temporal comparison rather than either window alone",
+    "recomputed_per_draw": [
+      "short_rate_innovation",
+      "first_pass_betas",
+      "second_pass_risk_prices",
+      "fitted_premia",
+      "pricing_errors",
+      "fit_metrics"
+    ],
+    "resampled_variables": [
+      "market_excess_return",
+      "portfolio_excess_returns",
+      "short_rate_level"
+    ],
+    "role": "supplementary interval evidence; the registered point-estimate rule above remains the confirmatory classification",
+    "rule": "tost_5pct_90pct_interval",
+    "sensitivity_rule": "strict_95pct_interval_sensitivity",
+    "status": "post_publication_compatibility_unsupported_under_the_bootstrap_interval_standard",
+    "status_basis": "at least one estimand has its whole 90 percent interval beyond its bound, which is what a demonstrated temporal change asserts",
+    "windows": {
+      "refitted_extension_2014_2025": {
+        "block_length": 15,
+        "block_length_failure_reasons": [],
+        "block_length_selected_by": "politis_white",
+        "months": 144,
+        "raw_politis_white_lengths": [
+          3.126041370743316,
+          14.062909866190648
+        ],
+        "seed": 20260728,
+        "successful_draws": 10000
+      },
+      "revised_history_1972_2013": {
+        "block_length": 6,
+        "block_length_failure_reasons": [],
+        "block_length_selected_by": "politis_white",
+        "months": 504,
+        "raw_politis_white_lengths": [
+          2.3753216010674385,
+          5.318276054001737
+        ],
+        "seed": 20260727,
+        "successful_draws": 10000
+      }
+    }
+  },
+  "vintage_isolation": "the temporal gates compare the refitted extension with the revised-history baseline, so revised historical values do enter the comparison, as the quantity the extension is measured against. What the shared vintage achieves is holding the revision contribution common to both sides, so it differences out of the temporal change; the publication-era against current-vintage effect is reported separately as the locked-against-revised comparison"
 }

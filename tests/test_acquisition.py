@@ -12,7 +12,12 @@ from short_rate_anomaly_regimes.data.acquisition import (
     download_kenneth_french_dataset,
     register_manual_source,
 )
-from short_rate_anomaly_regimes.exceptions import DataAccessError, DataValidationError
+from short_rate_anomaly_regimes.data.vintage import VintageMode
+from short_rate_anomaly_regimes.exceptions import (
+    DataAccessError,
+    DataValidationError,
+    FrozenVintageError,
+)
 
 
 class FakeResponse:
@@ -71,6 +76,7 @@ def test_download_fred_series_writes_raw_interim_and_provenance(tmp_path: Path) 
         interim_path=interim_path,
         provenance_path=provenance_path,
         session=session,
+        mode=VintageMode.UPDATE,
     )
 
     payload = json.loads(provenance_path.read_text(encoding="utf-8"))
@@ -91,6 +97,7 @@ def test_download_fred_series_uses_default_interim_and_provenance_paths(
         series_id="FEDFUNDS",
         output_path=raw_path,
         session=FakeSession(FakeResponse()),
+        mode=VintageMode.UPDATE,
     )
 
     assert Path("data/interim/fred/fedfunds.csv").is_file()
@@ -98,7 +105,18 @@ def test_download_fred_series_uses_default_interim_and_provenance_paths(
 
 
 def test_download_refuses_to_overwrite_nonidentical_raw_file(tmp_path: Path) -> None:
+    """A verified download must not clobber a local raw file holding other bytes."""
     raw_path = tmp_path / "raw.csv"
+    provenance_path = tmp_path / "provenance.json"
+    payload = b"date,value\n2020-01-31,1\n"
+    download_fred_series(
+        series_id="FEDFUNDS",
+        output_path=raw_path,
+        interim_path=tmp_path / "interim.csv",
+        provenance_path=provenance_path,
+        session=FakeSession(FakeResponse(content=payload)),
+        mode=VintageMode.UPDATE,
+    )
     raw_path.write_bytes(b"existing")
 
     with pytest.raises(DataAccessError, match="Refusing to overwrite"):
@@ -106,25 +124,65 @@ def test_download_refuses_to_overwrite_nonidentical_raw_file(tmp_path: Path) -> 
             series_id="FEDFUNDS",
             output_path=raw_path,
             interim_path=tmp_path / "interim.csv",
-            provenance_path=tmp_path / "provenance.json",
-            session=FakeSession(FakeResponse(content=b"date,value\n2020-01-31,1\n")),
+            provenance_path=provenance_path,
+            session=FakeSession(FakeResponse(content=payload)),
         )
 
 
 def test_download_allows_identical_raw_file(tmp_path: Path) -> None:
     raw_payload = b"date,value\n2020-01-31,1\n"
     raw_path = tmp_path / "raw.csv"
-    raw_path.write_bytes(raw_payload)
+    provenance_path = tmp_path / "provenance.json"
+    download_fred_series(
+        series_id="FEDFUNDS",
+        output_path=raw_path,
+        interim_path=tmp_path / "interim.csv",
+        provenance_path=provenance_path,
+        session=FakeSession(FakeResponse(content=raw_payload)),
+        mode=VintageMode.UPDATE,
+    )
+    recorded = json.loads(provenance_path.read_text(encoding="utf-8"))["sha256"]
 
     record = download_fred_series(
         series_id="FEDFUNDS",
         output_path=raw_path,
         interim_path=tmp_path / "interim.csv",
-        provenance_path=tmp_path / "provenance.json",
+        provenance_path=provenance_path,
         session=FakeSession(FakeResponse(content=raw_payload)),
     )
 
-    assert len(record.sha256) == 64
+    assert record.sha256 == recorded
+    assert json.loads(provenance_path.read_text(encoding="utf-8"))["sha256"] == recorded
+
+
+def test_registry_download_aborts_when_the_provider_revised_the_file(tmp_path: Path) -> None:
+    """The registry-driven path verifies against the recorded hash like every other."""
+    raw_path = tmp_path / "raw.csv"
+    provenance_path = tmp_path / "provenance.json"
+    download_fred_series(
+        series_id="FEDFUNDS",
+        output_path=raw_path,
+        interim_path=tmp_path / "interim.csv",
+        provenance_path=provenance_path,
+        session=FakeSession(FakeResponse(content=b"date,value\n2020-01-31,1\n")),
+        mode=VintageMode.UPDATE,
+    )
+    recorded = provenance_path.read_bytes()
+    raw_path.unlink()
+
+    with pytest.raises(FrozenVintageError) as raised:
+        download_fred_series(
+            series_id="FEDFUNDS",
+            output_path=raw_path,
+            interim_path=tmp_path / "interim.csv",
+            provenance_path=provenance_path,
+            session=FakeSession(FakeResponse(content=b"date,value\n2020-01-31,2\n")),
+        )
+
+    assert "fred_fedfunds" in str(raised.value)
+    assert "--update-vintage" in str(raised.value)
+    assert provenance_path.read_bytes() == recorded
+    assert not raw_path.exists()
 
 
 def test_download_rejects_bad_http_status_and_content_type(tmp_path: Path) -> None:
@@ -156,6 +214,7 @@ def test_download_rejects_empty_payload_and_unsupported_parser(tmp_path: Path) -
             series_id="FEDFUNDS",
             output_path=tmp_path / "raw.csv",
             session=FakeSession(FakeResponse(content=b"")),
+            mode=VintageMode.UPDATE,
         )
 
     with pytest.raises(DataValidationError, match="Unsupported parser"):
@@ -170,6 +229,7 @@ def test_download_rejects_empty_payload_and_unsupported_parser(tmp_path: Path) -
             parser="unknown",
             expected_content_types=("text/csv",),
             session=FakeSession(FakeResponse()),
+            mode=VintageMode.UPDATE,
         )
 
 
@@ -179,6 +239,7 @@ def test_download_rejects_empty_fred_csv(tmp_path: Path) -> None:
             series_id="FEDFUNDS",
             output_path=tmp_path / "raw.csv",
             session=FakeSession(FakeResponse(content=b"date,value\n")),
+            mode=VintageMode.UPDATE,
         )
 
 
@@ -198,6 +259,7 @@ def test_download_kenneth_french_dataset_validates_zip_structure(tmp_path: Path)
                 headers={"Content-Type": "application/zip"},
             )
         ),
+        mode=VintageMode.UPDATE,
     )
 
     assert raw_path.is_file()
@@ -229,6 +291,7 @@ def test_download_kenneth_french_dataset_rejects_zip_without_data_member(
                     headers={"Content-Type": "application/zip"},
                 )
             ),
+            mode=VintageMode.UPDATE,
         )
 
 

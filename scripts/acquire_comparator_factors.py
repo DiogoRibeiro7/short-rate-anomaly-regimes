@@ -1,4 +1,10 @@
-"""Acquire the q-factor and Pastor-Stambaugh liquidity comparator files.
+"""Acquire and verify the q-factor and Pastor-Stambaugh liquidity comparator files.
+
+By default this is a verification run: each file is downloaded, hashed, and
+compared against the ``raw_sha256`` recorded in
+``artifacts/provenance/comparators``. A mismatch aborts the run and leaves the
+recorded hash untouched. Passing ``--update-vintage`` is the only way to record a
+different vintage, and it rewrites those manifests.
 
 The script also resolves two definitional ambiguities the article leaves open by
 comparing every admissible candidate with the article's Table 1 Panel A row for
@@ -8,6 +14,7 @@ that factor. The comparison identifies inputs; it is not a replication result.
 from __future__ import annotations
 
 import csv
+from collections.abc import Sequence
 from dataclasses import asdict
 from pathlib import Path
 
@@ -16,6 +23,11 @@ import pandas as pd
 from short_rate_anomaly_regimes.data.comparator_freeze import (
     freeze_comparator_file,
     load_normalized_comparator,
+)
+from short_rate_anomaly_regimes.data.vintage import (
+    VintageMode,
+    announce_mode,
+    parse_vintage_mode,
 )
 from short_rate_anomaly_regimes.exceptions import DataValidationError
 
@@ -153,8 +165,10 @@ def _compare(label: str, series: pd.Series, source: str) -> dict[str, object]:
     return row
 
 
-def main() -> None:
-    """Freeze both comparator sources and audit them against the article."""
+def main(argv: Sequence[str] | None = None) -> None:
+    """Verify both comparator sources and audit them against the article."""
+    mode = parse_vintage_mode(argv, description=__doc__)
+    print(announce_mode(mode))
     records = []
     for specification in SPECIFICATIONS:
         record = freeze_comparator_file(
@@ -172,6 +186,7 @@ def main() -> None:
             raw_root=RAW_ROOT,
             normalized_root=NORMALIZED_ROOT,
             manifest_root=MANIFEST_ROOT,
+            mode=mode,
         )
         records.append(record)
         print(
@@ -181,23 +196,29 @@ def main() -> None:
             f"sha={record.raw_sha256[:12]}"
         )
 
-    rows = []
-    for record in records:
-        row = {
-            key: value
-            for key, value in asdict(record).items()
-            if not isinstance(value, dict | tuple | list)
-        }
-        row["columns"] = ";".join(record.columns)
-        row["source_metadata_lines"] = " | ".join(record.source_metadata_lines)
-        row["value_minimum"] = record.value_range["minimum"]
-        row["value_maximum"] = record.value_range["maximum"]
-        rows.append(row)
-    SUMMARY_CSV.parent.mkdir(parents=True, exist_ok=True)
-    with SUMMARY_CSV.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()), lineterminator="\n")
-        writer.writeheader()
-        writer.writerows(rows)
+    if mode is VintageMode.UPDATE:
+        rows = []
+        for record in records:
+            row = {
+                key: value
+                for key, value in asdict(record).items()
+                if not isinstance(value, dict | tuple | list)
+            }
+            row["columns"] = ";".join(record.columns)
+            row["source_metadata_lines"] = " | ".join(record.source_metadata_lines)
+            row["value_minimum"] = record.value_range["minimum"]
+            row["value_maximum"] = record.value_range["maximum"]
+            rows.append(row)
+        SUMMARY_CSV.parent.mkdir(parents=True, exist_ok=True)
+        with SUMMARY_CSV.open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()), lineterminator="\n")
+            writer.writeheader()
+            writer.writerows(rows)
+    else:
+        print(
+            f"Verified {len(records)} comparator files against the frozen vintage; "
+            f"{MANIFEST_ROOT.as_posix()} and {SUMMARY_CSV.as_posix()} were not rewritten"
+        )
 
     # Resolve which liquidity column and scale the article's LIQ refers to.
     liquidity = load_normalized_comparator(
@@ -265,7 +286,12 @@ def main() -> None:
             ]
         ].to_string(index=False)
     )
-    print(f"\nWrote {SUMMARY_CSV}, {COMPATIBILITY_CSV}, and {LIQUIDITY_SELECTION_CSV}")
+    written = (
+        f"{SUMMARY_CSV}, {COMPATIBILITY_CSV}, and {LIQUIDITY_SELECTION_CSV}"
+        if mode is VintageMode.UPDATE
+        else f"{COMPATIBILITY_CSV} and {LIQUIDITY_SELECTION_CSV}"
+    )
+    print(f"\nWrote {written}")
 
 
 if __name__ == "__main__":

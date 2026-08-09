@@ -38,7 +38,14 @@ from short_rate_anomaly_regimes.data.short_rate_freeze import (
     freeze_fred_series,
     load_normalized_series,
 )
-from short_rate_anomaly_regimes.exceptions import DataAccessError, DataValidationError
+from short_rate_anomaly_regimes.data.vintage import (
+    VintageMode,
+)
+from short_rate_anomaly_regimes.exceptions import (
+    DataAccessError,
+    DataValidationError,
+    FrozenVintageError,
+)
 from short_rate_anomaly_regimes.portfolios import q_archive
 from short_rate_anomaly_regimes.portfolios.q_archive import (
     freeze_family_panel,
@@ -101,17 +108,29 @@ Q_MEMBER_TEXT = (
 
 
 def _zip_bytes(members: dict[str, str]) -> bytes:
+    """Build a byte-identical ZIP for the same members on every call.
+
+    ``ZipFile.writestr`` stamps the local clock into each member by default, so
+    two calls a second apart produce different bytes. These tests compare frozen
+    checksums, and a fixture whose bytes depend on when it was built cannot
+    stand in for a frozen vintage.
+    """
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w") as archive:
         for name, text in members.items():
-            archive.writestr(name, text)
+            archive.writestr(zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0)), text)
     return buffer.getvalue()
 
 
 class TestFredFreeze:
     """FRED acquisition must be immutable and fully described."""
 
-    def _freeze(self, tmp_path: Path, payload: bytes = FRED_PAYLOAD) -> SeriesFreezeRecord:
+    def _freeze(
+        self,
+        tmp_path: Path,
+        payload: bytes = FRED_PAYLOAD,
+        mode: VintageMode = VintageMode.UPDATE,
+    ) -> SeriesFreezeRecord:
         session = FakeSession(
             FakeResponse(payload, headers={"Last-Modified": "Sat, 01 Aug 2026 00:00:00 GMT"})
         )
@@ -122,6 +141,7 @@ class TestFredFreeze:
             normalized_root=tmp_path / "interim",
             manifest_root=tmp_path / "manifest",
             session=session,
+            mode=mode,
         )
 
     def test_freeze_records_every_required_field(self, tmp_path: Path) -> None:
@@ -159,10 +179,78 @@ class TestFredFreeze:
         second = self._freeze(tmp_path)
         assert first.raw_sha256 == second.raw_sha256
 
-    def test_overwriting_with_different_bytes_is_refused(self, tmp_path: Path) -> None:
+    def test_a_revised_series_aborts_the_verification_run(self, tmp_path: Path) -> None:
+        """A FRED revision must stop the rebuild, not silently redefine the vintage.
+
+        This is the fresh-clone case the reviewer named: the provenance manifest
+        travels in the archive but ``data/raw`` does not, so the download is the
+        only evidence available and it must be checked against the recorded hash.
+        """
+        frozen = self._freeze(tmp_path)
+        manifest = tmp_path / "manifest" / "FEDFUNDS_2026-08-01.json"
+        before = manifest.read_bytes()
+        raw = tmp_path / "raw" / "FEDFUNDS" / "FEDFUNDS_2026-08-01.csv"
+        raw.unlink()
+        revised = FRED_PAYLOAD + b"1972-09-01,4.87\n"
+
+        with pytest.raises(FrozenVintageError) as raised:
+            self._freeze(tmp_path, payload=revised, mode=VintageMode.VERIFY)
+
+        message = str(raised.value)
+        assert "FRED series FEDFUNDS at vintage 2026-08-01" in message
+        assert frozen.raw_sha256 in message
+        assert hashlib.sha256(revised).hexdigest() in message
+        assert "make update-vintage-short-rates" in message
+        # The committed manifest is untouched and no raw file was written.
+        assert manifest.read_bytes() == before
+        assert not raw.exists()
+
+    def test_an_unrevised_series_verifies_without_rewriting_the_manifest(
+        self, tmp_path: Path
+    ) -> None:
+        """The match path: identical bytes verify, and the shipped manifest is left alone."""
         self._freeze(tmp_path)
-        with pytest.raises(DataAccessError, match="Refusing to overwrite"):
-            self._freeze(tmp_path, payload=FRED_PAYLOAD + b"1972-09-01,4.87\n")
+        manifest = tmp_path / "manifest" / "FEDFUNDS_2026-08-01.json"
+        raw = tmp_path / "raw" / "FEDFUNDS" / "FEDFUNDS_2026-08-01.csv"
+        before = manifest.read_bytes()
+        raw.unlink()
+
+        record = self._freeze(tmp_path, mode=VintageMode.VERIFY)
+
+        assert record.raw_sha256 == hashlib.sha256(FRED_PAYLOAD).hexdigest()
+        assert raw.read_bytes() == FRED_PAYLOAD
+        assert manifest.read_bytes() == before
+        assert Path(record.normalized_path).is_file()
+
+    def test_a_manifest_without_a_recorded_hash_cannot_be_created_by_verifying(
+        self, tmp_path: Path
+    ) -> None:
+        """A verification run may not establish a vintage it has nothing to check."""
+        with pytest.raises(FrozenVintageError) as raised:
+            self._freeze(tmp_path, mode=VintageMode.VERIFY)
+
+        message = str(raised.value)
+        assert "No frozen-vintage hash is recorded" in message
+        assert "make update-vintage-short-rates" in message
+        assert not (tmp_path / "manifest").exists()
+        assert not (tmp_path / "raw").exists()
+
+    def test_a_matching_local_raw_file_makes_the_run_offline(self, tmp_path: Path) -> None:
+        """Once the frozen bytes are on disk the provider is never contacted."""
+        self._freeze(tmp_path)
+        session = FakeSession(FakeResponse(b"this payload must never be requested"))
+
+        record = freeze_fred_series(
+            series_id="FEDFUNDS",
+            retrieval_date="2026-08-01",
+            raw_root=tmp_path / "raw",
+            normalized_root=tmp_path / "interim",
+            manifest_root=tmp_path / "manifest",
+            session=session,
+        )
+
+        assert session.requested == []
+        assert record.raw_sha256 == hashlib.sha256(FRED_PAYLOAD).hexdigest()
 
     def test_non_200_status_is_rejected(self, tmp_path: Path) -> None:
         session = FakeSession(FakeResponse(b"", status_code=503))
@@ -174,6 +262,7 @@ class TestFredFreeze:
                 normalized_root=tmp_path / "interim",
                 manifest_root=tmp_path / "manifest",
                 session=session,
+                mode=VintageMode.UPDATE,
             )
 
     def test_empty_payload_is_rejected(self, tmp_path: Path) -> None:
@@ -186,6 +275,7 @@ class TestFredFreeze:
                 normalized_root=tmp_path / "interim",
                 manifest_root=tmp_path / "manifest",
                 session=session,
+                mode=VintageMode.UPDATE,
             )
 
     def test_unregistered_series_is_rejected(self, tmp_path: Path) -> None:
@@ -197,6 +287,7 @@ class TestFredFreeze:
                 normalized_root=tmp_path / "interim",
                 manifest_root=tmp_path / "manifest",
                 session=FakeSession(FakeResponse(FRED_PAYLOAD)),
+                mode=VintageMode.UPDATE,
             )
 
     def test_wrong_column_count_is_rejected(self, tmp_path: Path) -> None:
@@ -209,6 +300,7 @@ class TestFredFreeze:
                 normalized_root=tmp_path / "interim",
                 manifest_root=tmp_path / "manifest",
                 session=session,
+                mode=VintageMode.UPDATE,
             )
 
     def test_payload_for_another_series_is_rejected(self, tmp_path: Path) -> None:
@@ -221,6 +313,7 @@ class TestFredFreeze:
                 normalized_root=tmp_path / "interim",
                 manifest_root=tmp_path / "manifest",
                 session=session,
+                mode=VintageMode.UPDATE,
             )
         assert not (tmp_path / "raw").exists()
 
@@ -240,6 +333,7 @@ class TestFredFreeze:
                 normalized_root=tmp_path / "interim",
                 manifest_root=tmp_path / "manifest",
                 session=session,
+                mode=VintageMode.UPDATE,
             )
         assert not (tmp_path / "raw").exists()
 
@@ -264,6 +358,7 @@ class TestFredFreeze:
             normalized_root=tmp_path / "interim",
             manifest_root=tmp_path / "manifest",
             session=session,
+            mode=VintageMode.UPDATE,
         )
         assert record.missing_value_count == 1
         assert record.observation_count == 3
@@ -284,6 +379,7 @@ class TestFrenchFreeze:
             normalized_root=tmp_path / "interim",
             manifest_root=tmp_path / "manifest",
             session=session,
+            mode=VintageMode.UPDATE,
         )
 
     def test_monthly_block_is_parsed_and_annual_block_is_ignored(self) -> None:
@@ -328,6 +424,7 @@ class TestFrenchFreeze:
                 normalized_root=tmp_path / "interim",
                 manifest_root=tmp_path / "manifest",
                 session=session,
+                mode=VintageMode.UPDATE,
             )
 
     def test_empty_archive_is_rejected(self, tmp_path: Path) -> None:
@@ -342,6 +439,7 @@ class TestFrenchFreeze:
                 normalized_root=tmp_path / "interim",
                 manifest_root=tmp_path / "manifest",
                 session=session,
+                mode=VintageMode.UPDATE,
             )
 
     def test_non_200_status_is_rejected(self, tmp_path: Path) -> None:
@@ -356,6 +454,7 @@ class TestFrenchFreeze:
                 normalized_root=tmp_path / "interim",
                 manifest_root=tmp_path / "manifest",
                 session=session,
+                mode=VintageMode.UPDATE,
             )
 
     def test_identical_vintages_compare_as_identical(self, tmp_path: Path) -> None:
@@ -503,6 +602,7 @@ class TestFrenchFreeze:
                 normalized_root=tmp_path / "interim",
                 manifest_root=tmp_path / "manifest",
                 session=FakeSession(FakeResponse(_zip_bytes({}))),
+                mode=VintageMode.UPDATE,
             )
         assert not raw_path.exists()
         assert self._freeze(tmp_path, "publication_era").monthly_observations == 4
@@ -536,6 +636,7 @@ class TestQArchive:
             raw_root=tmp_path / "raw",
             manifest_root=tmp_path / "manifest",
             session=session,
+            mode=VintageMode.UPDATE,
         )
         assert record.member_count == 1
         assert record.provider.startswith("Hou, Xue, and Zhang")
@@ -603,6 +704,7 @@ class TestQArchive:
                 raw_root=tmp_path / "raw",
                 manifest_root=tmp_path / "manifest",
                 session=session,
+                mode=VintageMode.UPDATE,
             )
 
     def test_non_200_status_is_rejected(self, tmp_path: Path) -> None:
@@ -614,6 +716,7 @@ class TestQArchive:
                 raw_root=tmp_path / "raw",
                 manifest_root=tmp_path / "manifest",
                 session=session,
+                mode=VintageMode.UPDATE,
             )
 
     def test_empty_archive_is_rejected_and_leaves_no_freeze(self, tmp_path: Path) -> None:
@@ -624,6 +727,7 @@ class TestQArchive:
                 raw_root=tmp_path / "raw",
                 manifest_root=tmp_path / "manifest",
                 session=FakeSession(FakeResponse(_zip_bytes({}))),
+                mode=VintageMode.UPDATE,
             )
         assert not (tmp_path / "raw").exists()
         assert not (tmp_path / "manifest").exists()
@@ -638,6 +742,7 @@ class TestQArchive:
                 session=FakeSession(
                     FakeResponse(_zip_bytes({"vvg_monthly_2025/portf_bm_monthly_2025.csv": ""}))
                 ),
+                mode=VintageMode.UPDATE,
             )
         assert not (tmp_path / "raw").exists()
         assert not (tmp_path / "manifest").exists()
@@ -651,6 +756,7 @@ class TestQArchive:
                 raw_root=tmp_path / "raw",
                 manifest_root=tmp_path / "manifest",
                 session=FakeSession(FakeResponse(_zip_bytes({}))),
+                mode=VintageMode.UPDATE,
             )
         record, _ = freeze_q_archive(
             archive="vvg_monthly_2025",
@@ -658,21 +764,24 @@ class TestQArchive:
             raw_root=tmp_path / "raw",
             manifest_root=tmp_path / "manifest",
             session=FakeSession(FakeResponse(self._payload())),
+            mode=VintageMode.UPDATE,
         )
         assert raw_path.read_bytes() == self._payload()
         assert record.raw_sha256 == hashlib.sha256(self._payload()).hexdigest()
         assert record.member_count == 1
 
-    def test_overwriting_with_different_bytes_is_refused(self, tmp_path: Path) -> None:
+    def test_a_republished_archive_aborts_the_verification_run(self, tmp_path: Path) -> None:
         freeze_q_archive(
             archive="vvg_monthly_2025",
             vintage_label="test",
             raw_root=tmp_path / "raw",
             manifest_root=tmp_path / "manifest",
             session=FakeSession(FakeResponse(self._payload())),
+            mode=VintageMode.UPDATE,
         )
+        (tmp_path / "raw" / "vvg_monthly_2025_test.zip").unlink()
         other = _zip_bytes({"vvg_monthly_2025/portf_bm_monthly_2025.csv": Q_MEMBER_TEXT + "\n"})
-        with pytest.raises(DataAccessError, match="Refusing to overwrite"):
+        with pytest.raises(FrozenVintageError) as raised:
             freeze_q_archive(
                 archive="vvg_monthly_2025",
                 vintage_label="test",
@@ -680,6 +789,10 @@ class TestQArchive:
                 manifest_root=tmp_path / "manifest",
                 session=FakeSession(FakeResponse(other)),
             )
+        message = str(raised.value)
+        assert "q-factor testing-portfolio archive vvg_monthly_2025 at vintage test" in message
+        assert hashlib.sha256(other).hexdigest() in message
+        assert "make update-vintage-portfolios" in message
 
 
 class TestEdgeCases:
@@ -697,10 +810,11 @@ class TestEdgeCases:
                 normalized_root=tmp_path / "interim",
                 manifest_root=tmp_path / "manifest",
                 session=FakeSession(FakeResponse(payload)),
+                mode=VintageMode.UPDATE,
             )
         assert record.raw_sha256 == hashlib.sha256(payload).hexdigest()
 
-    def test_different_french_bytes_are_refused(self, tmp_path: Path) -> None:
+    def test_different_french_bytes_abort_the_verification_run(self, tmp_path: Path) -> None:
         freeze_french_archive(
             dataset="F-F_Research_Data_Factors",
             url="https://example.invalid/x.zip",
@@ -710,8 +824,11 @@ class TestEdgeCases:
             normalized_root=tmp_path / "interim",
             manifest_root=tmp_path / "manifest",
             session=FakeSession(FakeResponse(_zip_bytes({"f.CSV": FRENCH_TEXT}))),
+            mode=VintageMode.UPDATE,
         )
-        with pytest.raises(DataAccessError, match="Refusing to overwrite"):
+        frozen_raw = tmp_path / "raw" / "F-F_Research_Data_Factors"
+        (frozen_raw / "F-F_Research_Data_Factors_v.zip").unlink()
+        with pytest.raises(FrozenVintageError, match="make update-vintage-french"):
             freeze_french_archive(
                 dataset="F-F_Research_Data_Factors",
                 url="https://example.invalid/x.zip",
@@ -734,6 +851,7 @@ class TestEdgeCases:
                 normalized_root=tmp_path / "interim",
                 manifest_root=tmp_path / "manifest",
                 session=FakeSession(FakeResponse(b"")),
+                mode=VintageMode.UPDATE,
             )
 
     def test_empty_q_payload_is_rejected(self, tmp_path: Path) -> None:
@@ -744,6 +862,7 @@ class TestEdgeCases:
                 raw_root=tmp_path / "raw",
                 manifest_root=tmp_path / "manifest",
                 session=FakeSession(FakeResponse(b"")),
+                mode=VintageMode.UPDATE,
             )
 
 
@@ -807,7 +926,12 @@ class TestComparatorFreeze:
     """Comparator factors must be frozen with the same discipline as every input."""
 
     def _freeze(
-        self, tmp_path: Path, dataset: str, payload: bytes, parser: str
+        self,
+        tmp_path: Path,
+        dataset: str,
+        payload: bytes,
+        parser: str,
+        mode: VintageMode = VintageMode.UPDATE,
     ) -> ComparatorFreezeRecord:
         session = FakeSession(FakeResponse(payload, headers={"ETag": '"z"'}))
         return freeze_comparator_file(
@@ -826,6 +950,7 @@ class TestComparatorFreeze:
             normalized_root=tmp_path / "interim",
             manifest_root=tmp_path / "manifest",
             session=session,
+            mode=mode,
         )
 
     def test_q_factor_file_is_parsed_into_a_month_panel(self) -> None:
@@ -905,21 +1030,27 @@ class TestComparatorFreeze:
                 normalized_root=tmp_path / "interim",
                 manifest_root=tmp_path / "manifest",
                 session=session,
+                mode=VintageMode.UPDATE,
             )
 
     def test_empty_payload_is_rejected(self, tmp_path: Path) -> None:
         with pytest.raises(DataAccessError, match="Empty payload"):
             self._freeze(tmp_path, "q_factors", b"", "q_factor_csv")
 
-    def test_overwriting_with_different_bytes_is_refused(self, tmp_path: Path) -> None:
+    def test_an_extended_comparator_file_aborts_the_verification_run(self, tmp_path: Path) -> None:
         self._freeze(tmp_path, "q_factors", Q_FACTOR_CSV, "q_factor_csv")
-        with pytest.raises(DataAccessError, match="Refusing to overwrite"):
+        (tmp_path / "raw" / "q_factors" / "q_factors_test_vintage.csv").unlink()
+        with pytest.raises(FrozenVintageError) as raised:
             self._freeze(
                 tmp_path,
                 "q_factors",
                 Q_FACTOR_CSV + b"1972,4,0.31,1.00,0.10,0.10,0.10,0.10\n",
                 "q_factor_csv",
+                mode=VintageMode.VERIFY,
             )
+        message = str(raised.value)
+        assert "comparator file q_factors at vintage test_vintage" in message
+        assert "make update-vintage-comparators" in message
 
     def test_duplicate_months_are_rejected(self, tmp_path: Path) -> None:
         payload = b"year,month,R_ME\n1972,1,0.5\n1972,1,0.6\n"

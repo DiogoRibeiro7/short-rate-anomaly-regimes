@@ -522,6 +522,11 @@ def render_temporal_evidence_report(
 ) -> str:
     """Render the temporal-extension report from the frozen H2 artifacts.
 
+    Two classifications are rendered and they are kept apart. The verdict at the
+    top is the registered point-estimate rule; the supplementary section carries
+    the interval classification, which distinguishes a demonstrated change from
+    evidence too imprecise to classify and never replaces the verdict.
+
     Args:
         freeze: Frozen vintage metadata for the post-2013 extension.
         stability_path: Registered H2 temporal-stability artifact.
@@ -536,6 +541,9 @@ def render_temporal_evidence_report(
     gates = artifact_field(stability, "gates")
     lambda_rate = artifact_field(stability, "lambda_rate")
     dispersion = artifact_field(stability, "standardized_rate_exposure_dispersion_share")
+    sign_gate = artifact_field(stability, "sign_gate_vintage")
+    inferential = artifact_field(stability, "supplementary_inferential_classification")
+    estimands = artifact_field(inferential, "estimands")
     lines = [
         "# Temporal Extension Report",
         "",
@@ -551,10 +559,51 @@ def render_temporal_evidence_report(
         "",
         "## Registered Compatibility Gates",
         "",
+        "These are the frozen point-estimate gates of the H2 registry row, and they decide "
+        "the verdict above.",
+        "",
         *markdown_table(
             ["Gate", "Passed"],
             [[gate, gates[gate]] for gate in sorted(gates)],
         ),
+        "",
+        "- Registered sign gate compares against: "
+        f"{format_code(sign_gate['registered_gate_compares_against'])}, passed "
+        f"{format_code(sign_gate['registered_gate_passes'])}",
+        "- Same-vintage sign comparison against: "
+        f"{format_code(sign_gate['same_vintage_gate_compares_against'])}, passed "
+        f"{format_code(sign_gate['same_vintage_gate_passes'])}",
+        f"- The two sign comparisons agree: {format_code(sign_gate['gates_agree'])}",
+        "",
+        f"Sign-gate vintage note: {sign_gate['note']}",
+        "",
+        "## Supplementary Inferential Classification",
+        "",
+        f"Status: {format_code(artifact_field(inferential, 'status'))}",
+        f"Role: {artifact_field(inferential, 'role')}",
+        f"Rule: {format_code(artifact_field(inferential, 'rule'))}, sensitivity rule "
+        f"{format_code(artifact_field(inferential, 'sensitivity_rule'))}",
+        f"Comparison: {format_code(artifact_field(inferential, 'comparison'))}",
+        f"Draws: {format_code(artifact_field(inferential, 'draws'))}",
+        "",
+        *markdown_table(
+            ["Estimand", "Point Change", "Lower 90", "Upper 90", "Bound", "Decision"],
+            [
+                [
+                    name,
+                    estimands[name]["point_change"],
+                    estimands[name]["lower_90"],
+                    estimands[name]["upper_90"],
+                    estimands[name]["bound"],
+                    estimands[name]["decision_category"],
+                ]
+                for name in sorted(estimands)
+            ],
+        ),
+        "",
+        f"Status basis: {artifact_field(inferential, 'status_basis')}",
+        "",
+        f"Interval note: {artifact_field(inferential, 'note')}",
         "",
         "## Rate Risk Price By Evaluation Window",
         "",
@@ -572,7 +621,8 @@ def render_temporal_evidence_report(
         f"{format_code(artifact_field(stability, 'frozen_ar_slope'))}",
         "- Standardized rate-exposure dispersion share: locked baseline "
         f"{format_code(dispersion['locked_baseline'])}, refitted extension "
-        f"{format_code(dispersion['refitted_extension'])}",
+        f"{format_code(dispersion['refitted_extension'])}, against a floor of "
+        f"{format_code(dispersion['floor'])}",
         "",
         f"Dispersion note: {dispersion['note']}",
         "",

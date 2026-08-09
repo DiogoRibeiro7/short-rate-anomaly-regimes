@@ -164,6 +164,20 @@ def estimate_article_second_pass(
 
     ``chi2 = alpha_hat' var(alpha_hat)^+ alpha_hat  ~  chi2(N - K)``
 
+    ``Sigma`` is never inverted. The only genuine inverse taken here is that of
+    the ``K x K`` gram matrix ``B'B``; ``Sigma`` enters through the quadratic
+    forms above, and ``var(alpha_hat)`` is read through a pseudo-inverse that is
+    required whatever the rank of ``Sigma``, because ``M`` has rank ``N - K``. A
+    rank-deficient ``Sigma``, which is what a window with ``T <= N`` produces, is
+    therefore admitted, and is reported on ``diagnostics`` as
+    ``residual_covariance_rank`` and ``residual_covariance_rank_deficient``. Two
+    consequences belong to the caller, not to this function. The chi-square
+    statistic is referred to ``chi2(N - K)`` whatever the rank of
+    ``var(alpha_hat)``, so on a rank-deficient system its nominal degrees of
+    freedom overstate the number of directions the statistic actually measures.
+    The Shanken standard errors remain finite but are estimated from a residual
+    covariance that is singular in ``N - rank`` directions.
+
     Args:
         mean_excess_returns: Average excess return per test asset.
         betas: First-pass factor loadings, assets by factors, no intercept column.
@@ -193,11 +207,21 @@ def estimate_article_second_pass(
         raise ValueError("The cross-section needs more assets than priced factors")
     if n_months <= 0:
         raise ValueError("n_months must be positive")
+    if n_months <= n_factors:
+        # Fewer months than priced factors is degenerate rather than merely
+        # imprecise: the first pass that produced these betas cannot have left
+        # any residual variation to measure.
+        raise ValueError(
+            "n_months must exceed the number of priced factors; "
+            f"got {n_months} months and {n_factors} factors"
+        )
 
     returns = mean_excess_returns.to_numpy(dtype=float)
     beta_matrix = betas.to_numpy(dtype=float)
     residual_matrix = residual_covariance.to_numpy(dtype=float)
     factor_matrix = factor_covariance.to_numpy(dtype=float)
+    if not np.isfinite(residual_matrix).all():
+        raise ValueError("The residual covariance has non-finite entries")
 
     gram = beta_matrix.T @ beta_matrix
     if np.linalg.matrix_rank(beta_matrix) < n_factors:
@@ -217,6 +241,8 @@ def estimate_article_second_pass(
 
     ordinary_price_covariance = (bread @ residual_matrix @ bread.T) / n_months
     ordinary_standard_errors = np.sqrt(np.diag(ordinary_price_covariance))
+
+    residual_rank = int(np.linalg.matrix_rank(residual_matrix))
 
     annihilator = np.eye(n_assets) - beta_matrix @ gram_inverse @ beta_matrix.T
     error_covariance = (
@@ -259,30 +285,79 @@ def estimate_article_second_pass(
             "mean_pricing_error": float(np.mean(errors)),
             "beta_matrix_condition_number": float(np.linalg.cond(beta_matrix)),
             "residual_covariance_condition_number": float(np.linalg.cond(residual_matrix)),
+            # A rank below ``n_assets`` is admitted but never silent. It is the
+            # expected state whenever the residual covariance was estimated from
+            # no more months than there are test assets.
+            "residual_covariance_rank": float(residual_rank),
+            "residual_covariance_rank_deficient": float(residual_rank < n_assets),
+            "months_minus_assets": float(n_months - n_assets),
         },
     )
 
 
-def residual_covariance_from_first_pass(residuals: pd.DataFrame) -> pd.DataFrame:
+def residual_covariance_from_first_pass(
+    residuals: pd.DataFrame,
+    *,
+    minimum_months: int = 2,
+) -> pd.DataFrame:
     """Build the first-pass residual covariance used by the Shanken formulas.
+
+    A sample covariance built from ``T`` months of ``N`` test assets exists for
+    any ``T >= 2``. When ``T <= N`` it is rank deficient, not undefined, and this
+    constructor permits it, because nothing in
+    :func:`estimate_article_second_pass` inverts it. It enters that estimator
+    only through the quadratic forms ``B' Sigma B``, which is reduced to ``K x K``
+    before the sole genuine inverse is taken, and ``M Sigma M'``, which is read
+    through a pseudo-inverse that is required in any case: the annihilator ``M``
+    has rank ``N - K``, so the pricing-error covariance is singular even when
+    ``Sigma`` has full rank. The rank of ``Sigma`` is recorded on the result's
+    diagnostics, so a rank-deficient covariance is visible to a reader rather
+    than silent.
+
+    This function previously refused ``T <= N``. That restriction was an
+    implementation choice justified by a false statement, that the covariance
+    "does not exist" below ``T = N + 1``; correction 11 in
+    ``reports/design_correction_changelog.md`` retracts it. What is still refused
+    is input that is degenerate rather than merely rank deficient: missing
+    values, fewer months than ``minimum_months``, and test assets with no
+    residual variation, each of which makes the quadratic forms themselves
+    meaningless.
 
     Args:
         residuals: First-pass residuals, months by test assets.
+        minimum_months: Fewest months a caller will accept. The default of two
+            is the fewest a sample covariance is defined on. A caller that knows
+            how many factors are priced should pass a value above that count,
+            because a window no longer than the first-pass design leaves no
+            residual variation to measure.
 
     Returns:
-        The asset-by-asset residual covariance.
+        The asset-by-asset residual covariance, possibly rank deficient.
 
     Raises:
-        ValueError: If the residual panel has missing values or too few months.
+        ValueError: If the residual panel has missing values, has fewer months
+            than ``minimum_months``, or holds an asset with zero residual
+            variance.
     """
+    if minimum_months < 2:
+        raise ValueError("minimum_months must be at least two for a covariance to be defined")
     if residuals.isna().to_numpy().any():
         raise ValueError("First-pass residuals must be complete before forming a covariance")
-    if len(residuals) <= residuals.shape[1]:
-        # A covariance estimated from fewer months than assets is singular. The
-        # article's 70-portfolio system has 504 months, so this is a guard
-        # against a mis-specified call rather than an expected condition.
+    if len(residuals) < minimum_months:
         raise ValueError(
-            "Residual covariance needs more months than assets; "
-            f"got {len(residuals)} months and {residuals.shape[1]} assets"
+            "Residual covariance needs at least the requested months; "
+            f"got {len(residuals)} months and require {minimum_months}"
         )
-    return residuals.cov()
+    covariance = residuals.cov()
+    variances = np.diag(covariance.to_numpy(dtype=float))
+    zero_variance = [
+        str(asset)
+        for asset, value in zip(covariance.index, variances, strict=True)
+        if not value > 0.0
+    ]
+    if zero_variance:
+        raise ValueError(
+            "First-pass residuals have zero variance for "
+            f"{len(zero_variance)} test assets, beginning with {zero_variance[0]}"
+        )
+    return covariance

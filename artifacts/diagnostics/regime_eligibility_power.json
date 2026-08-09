@@ -5,9 +5,26 @@
       "market_excess_return": 0.6308796296296296,
       "short_rate_innovation__fedfunds": -1.107481733206329e-15
     },
-    "first_pass_beta_noise_share_at_calibration_length": {
-      "market_excess_return": 0.02891864683882076,
-      "short_rate_innovation__fedfunds": 0.6669468434068522
+    "first_pass_beta_reliability_at_calibration_length": {
+      "description": "Decomposition of the observed cross-sectional variance of the calibration first-pass loadings into genuine exposure dispersion and first-pass estimation error, per factor. The error term is [Sigma_f^-1]_kk / (T (N - 1)) * tr(M_N Sigma_eps) with M_N = I - 11'/N, which uses the full residual covariance and so credits the common component of the estimation error to the cross-sectional mean rather than to the spread. reliability_ratio is signal over observed; noise_share_of_cross_sectional_variance is its complement. mean_individual_beta_sampling_variance is the sampling variance of a single portfolio's loading, in squared loading units, and is not a share of anything.",
+      "per_factor": {
+        "market_excess_return": {
+          "mean_individual_beta_sampling_variance": 0.00037254417532036634,
+          "noise_cross_sectional_variance": 0.0003431821727540588,
+          "noise_share_of_cross_sectional_variance": 0.026639428858925056,
+          "observed_cross_sectional_variance": 0.012882489882626814,
+          "reliability_ratio": 0.973360571141075,
+          "signal_cross_sectional_variance": 0.012539307709872756
+        },
+        "short_rate_innovation__fedfunds": {
+          "mean_individual_beta_sampling_variance": 0.02827707690534704,
+          "noise_cross_sectional_variance": 0.02604842414504421,
+          "noise_share_of_cross_sectional_variance": 0.6143815471950337,
+          "observed_cross_sectional_variance": 0.042397797043170656,
+          "reliability_ratio": 0.3856184528049663,
+          "signal_cross_sectional_variance": 0.016349372898126446
+        }
+      }
     },
     "fitted_premium_spreads": {
       "book_to_market": 0.2948091835679978,
@@ -79,8 +96,8 @@
       },
       "description": "Mean estimated lambda_rate on the joint system, divided by the true value, reaches the level and stays there. A ratio of 0.90 is the same statement as an absolute bias of at most 10 percent of the truth."
     },
-    "feasible_shanken_covariance_estimable": {
-      "description": "The design's own residual-covariance constructor accepts the window, which requires more months than test assets.",
+    "feasible_shanken_covariance_full_rank": {
+      "description": "The simulated sample residual covariance is of full rank, which requires more months than test assets. Below this the covariance still exists and the estimator still runs: it is rank deficient, and no step of the second pass inverts it. This sweep declines to report a feasible interval there, which is a reporting choice and not a statement that the covariance, the Shanken standard errors, or the chi-square cannot be computed.",
       "family_10_decile": 11,
       "joint_70_portfolio": 72,
       "joint_exact_minimum_months": 71

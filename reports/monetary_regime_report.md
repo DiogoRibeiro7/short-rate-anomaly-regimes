@@ -177,18 +177,23 @@ certified as exceeding the registered bound at this sample size.**
 
 ## 6. Two caveats that the point estimates alone would hide
 
-**The specification test is not usable in the ELB regime.** The chi-square
-statistic and the Shanken correction both invert a residual covariance estimated
-from `T` months for `N = 70` test assets. In `conventional_pre_elb`, `T - N` is
-374 and the covariance has condition number 5.5e2. In `elb_qe`, `T - N` is 14
-and the condition number is 1.1e4. The reported ELB chi-square p-value of 2e-59
-is an artifact of that near-indeterminacy and is reported in
-`regime_second_pass.csv` without being used for any claim. The equivalence gates
-do not invert this matrix, so the H3 classification is unaffected.
+**The specification test is not usable in the ELB regime.** Neither the
+chi-square statistic nor the Shanken correction inverts the residual covariance:
+it enters the second pass only through `B' Sigma B`, reduced to `K x K` before
+any inverse, and through `M Sigma M'`, read through a pseudo-inverse. An earlier
+version of this section said both invert it, which was wrong and is retracted by
+correction 11 in `reports/design_correction_changelog.md`. What a small `T - N`
+costs is information, not existence. In `conventional_pre_elb`, `T - N` is 374
+and the covariance has condition number 5.5e2. In `elb_qe`, `T - N` is 14 and the
+condition number is 1.1e4, so its smaller eigenvalues are largely noise. The
+reported ELB chi-square p-value of 2e-59 is an artifact of that
+near-indeterminacy and is reported in `regime_second_pass.csv` without being used
+for any claim. The equivalence gates use neither the covariance nor its
+pseudo-inverse, so the H3 classification is unaffected.
 
 This is a gap in the frozen eligibility floors worth recording: they constrain
 months and test-asset count separately but never their difference, so a regime
-can clear both while leaving the residual covariance nearly indeterminate. The
+can clear both while leaving the residual covariance barely determined. The
 floors are not changed here.
 
 **The result does not rest on how the innovation was defined.** The inference
@@ -299,10 +304,14 @@ criterion, RMSE about the true value, is not met until 180 months. Quoting the
 The headline is that **36 and 72 are not too strict; on this evidence both are,
 if anything, too lax.** Three things follow, none of which relaxes a threshold.
 
-First, the dominant mechanism is errors-in-variables attenuation, and it does
-not go away with sample size. Even at 648 months, 66.7 percent of the
-cross-sectional dispersion of `beta_rate` is first-pass sampling noise, against
-2.9 percent for `beta_market`. The sampling standard deviation of `lambda_rate`
+First, the dominant mechanism is errors-in-variables attenuation. It is a `1/T`
+quantity — the analytical expression for the estimation-error contribution
+carries an explicit `1/T` and vanishes asymptotically under the stationary
+process simulated here — but it remains economically large at every sample length
+considered here. At 648 months, the full length of the panel, the reliability
+ratio of `beta_rate` is 0.386: 61.4 percent of the observed cross-sectional
+dispersion of `beta_rate` is still first-pass sampling noise, against 2.7 percent
+for `beta_market`. The sampling standard deviation of `lambda_rate`
 is essentially flat, 0.1499 at 12 months and 0.1167 at 648: a longer window
 moves the estimate rather than tightening it. At 36 months the estimator returns
 11 percent of the true risk price and gets the sign wrong 35 percent of the

@@ -23,6 +23,7 @@ from short_rate_anomaly_regimes.data.acquisition import (
     register_manual_source,
 )
 from short_rate_anomaly_regimes.data.catalog import build_catalog, load_registry
+from short_rate_anomaly_regimes.data.vintage import VintageMode
 from short_rate_anomaly_regimes.environment import write_environment_manifest
 from short_rate_anomaly_regimes.exceptions import ReplicationBlockError
 from short_rate_anomaly_regimes.extensions.temporal import (
@@ -112,6 +113,19 @@ OptionalSourceIdOption = Annotated[str | None, typer.Option("--source-id")]
 RequiredSourceIdOption = Annotated[str, typer.Option("--source-id")]
 ExpectedColumnsOption = Annotated[list[str] | None, typer.Option("--expected-column")]
 ManualSourcePathOption = Annotated[Path, typer.Option("--file", exists=True, dir_okay=False)]
+#: The only switch that may overwrite a recorded expected hash. `make reproduce`
+#: never passes it; `make update-vintage` is where it lives.
+UpdateVintageOption = Annotated[
+    bool,
+    typer.Option(
+        "--update-vintage",
+        help=(
+            "Replace the frozen vintage with whatever the providers serve now and overwrite the "
+            "recorded expected hashes. Without it, a live run verifies each download against the "
+            "recorded hash and aborts on a mismatch."
+        ),
+    ),
+]
 
 
 @app.command("validate-config")
@@ -139,8 +153,16 @@ def acquire_data(
     registry: RegistryPathOption,
     source_id: OptionalSourceIdOption = None,
     live: bool = False,
+    update_vintage: UpdateVintageOption = False,
 ) -> None:
-    """Acquire public data sources when exact source definitions are frozen."""
+    """Acquire public data sources and verify them against the frozen vintage.
+
+    A live run downloads each source, hashes it, and compares the digest with the
+    hash recorded in its shipped provenance manifest; it aborts on a mismatch and
+    never rewrites a recorded hash. ``--update-vintage`` is the only way to record
+    a different vintage, and it changes the inputs of every downstream result.
+    """
+    mode = VintageMode.UPDATE if update_vintage else VintageMode.VERIFY
     validated = load_registry(registry)
     selected_sources = [
         source for source in validated.sources if source_id is None or source.id == source_id
@@ -157,7 +179,7 @@ def acquire_data(
     if not live:
         console.print(
             f"Validated acquisition plan for {len(public_sources)} public sources; "
-            "use --live to download exact frozen sources"
+            "use --live to download and verify them against the frozen vintage"
         )
         if blocked_sources:
             console.print(f"Blocked pending exact definitions: {', '.join(blocked_sources)}")
@@ -176,6 +198,7 @@ def acquire_data(
             download_fred_series(
                 series_id=source.series_candidates[0],
                 output_path=Path(source.raw_path or ""),
+                mode=mode,
             )
             acquired += 1
         elif source.provider == "Kenneth French Data Library":
@@ -187,13 +210,17 @@ def acquire_data(
             download_kenneth_french_dataset(
                 dataset_name=dataset_name,
                 output_path=Path(source.raw_path or ""),
+                mode=mode,
             )
             acquired += 1
         else:
             raise ReplicationBlockError(
                 f"No source-specific downloader is registered for {source.id}"
             )
-    console.print(f"Acquired {acquired} sources")
+    if mode is VintageMode.UPDATE:
+        console.print(f"Recorded a new frozen vintage for {acquired} sources")
+    else:
+        console.print(f"Acquired {acquired} sources verified against the frozen vintage")
 
 
 @app.command("register-manual-source")

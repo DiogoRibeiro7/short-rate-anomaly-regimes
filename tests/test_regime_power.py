@@ -33,7 +33,8 @@ from scripts.analyse_regime_power import (
     available_families,
     calibrate_power_dgp,
     covariance_factor,
-    first_pass_beta_noise_shares,
+    cross_sectional_residual_dispersion,
+    first_pass_beta_reliability,
     first_window_meeting,
     portfolio_column,
     simulate_panel,
@@ -59,14 +60,17 @@ def _make_panel(
     seed: int,
     residual_sd: float,
     rate_beta_span: float = 0.5,
+    residual_correlation: float = 0.0,
 ) -> tuple[pd.DataFrame, pd.DataFrame, FloatArray]:
     """Build a synthetic ten-decile panel with known betas and risk prices.
 
     Args:
         months: Number of monthly observations.
         seed: Random seed.
-        residual_sd: Standard deviation of the independent asset disturbances.
+        residual_sd: Standard deviation of the asset disturbances.
         rate_beta_span: Half-width of the true rate loadings across deciles.
+        residual_correlation: Equicorrelation imposed on the disturbances across
+            assets. Zero leaves the independent draw untouched.
 
     Returns:
         The excess-return panel, the factor panel, and the true beta matrix.
@@ -83,11 +87,17 @@ def _make_panel(
     rate_betas = np.linspace(-rate_beta_span, rate_beta_span, len(DECILE_LABELS))
     betas = np.column_stack([MARKET_BETAS, rate_betas])
     intercepts = betas @ (TRUE_LAMBDA - factors.to_numpy(dtype=float).mean(axis=0))
-    disturbances = (
-        np.zeros((months, len(DECILE_LABELS)))
-        if residual_sd == 0.0
-        else rng.normal(0.0, residual_sd, (months, len(DECILE_LABELS)))
-    )
+    disturbances: FloatArray
+    if residual_sd == 0.0:
+        disturbances = np.zeros((months, len(DECILE_LABELS)))
+    elif residual_correlation == 0.0:
+        disturbances = rng.normal(0.0, residual_sd, (months, len(DECILE_LABELS)))
+    else:
+        correlation = np.full((len(DECILE_LABELS), len(DECILE_LABELS)), residual_correlation)
+        np.fill_diagonal(correlation, 1.0)
+        disturbances = residual_sd * (
+            rng.standard_normal((months, len(DECILE_LABELS))) @ np.linalg.cholesky(correlation).T
+        )
     returns = pd.DataFrame(
         intercepts + factors.to_numpy(dtype=float) @ betas.T + disturbances,
         index=index,
@@ -100,6 +110,20 @@ def _make_panel(
 def noisy_dgp() -> PowerDgp:
     """Calibrate a moderately noisy ten-decile system once for the sweep tests."""
     returns, factors, _ = _make_panel(months=480, seed=11, residual_sd=1.5)
+    return calibrate_power_dgp(returns, factors, portfolio_set="test_system")
+
+
+@pytest.fixture(scope="module")
+def correlated_dgp() -> PowerDgp:
+    """Calibrate a system whose first-pass residuals share a large common component.
+
+    The reliability decomposition only differs from the naive diagonal-only
+    calculation when residuals are cross-sectionally correlated, so the tests that
+    pin the corrected formula need a system where they are.
+    """
+    returns, factors, _ = _make_panel(
+        months=600, seed=71, residual_sd=1.5, residual_correlation=0.5
+    )
     return calibrate_power_dgp(returns, factors, portfolio_set="test_system")
 
 
@@ -245,16 +269,24 @@ def test_simulated_windows_are_reproducible(noisy_dgp: PowerDgp) -> None:
 def test_feasible_shanken_covariance_tracks_the_month_to_asset_ratio(
     noisy_dgp: PowerDgp,
 ) -> None:
-    """The design's residual-covariance constructor must gate the feasible interval."""
-    blocked = simulate_window(noisy_dgp, window_months=len(DECILE_LABELS), replications=5, seed=7)
-    allowed = simulate_window(
+    """Full rank of the sample residual covariance must gate the feasible interval.
+
+    The gate is a reporting choice, not a limit of the estimator: a window with
+    no more months than assets yields a rank-deficient covariance that the second
+    pass accepts. This sweep reports the feasible interval only above that point.
+    """
+    withheld = simulate_window(noisy_dgp, window_months=len(DECILE_LABELS), replications=5, seed=7)
+    reported = simulate_window(
         noisy_dgp, window_months=len(DECILE_LABELS) + 2, replications=5, seed=7
     )
 
-    assert blocked.joint_feasible_estimable is False
-    assert bool(np.all(np.isnan(blocked.joint_feasible_standard_errors)))
-    assert allowed.joint_feasible_estimable is True
-    assert bool(np.all(np.isfinite(allowed.joint_feasible_standard_errors)))
+    assert withheld.joint_feasible_full_rank is False
+    assert bool(np.all(np.isnan(withheld.joint_feasible_standard_errors)))
+    # The oracle interval, which does not depend on the sample covariance, is
+    # still produced at the withheld length, so nothing failed to estimate.
+    assert bool(np.all(np.isfinite(withheld.joint_oracle_standard_errors)))
+    assert reported.joint_feasible_full_rank is True
+    assert bool(np.all(np.isfinite(reported.joint_feasible_standard_errors)))
 
 
 def test_simulated_mean_returns_track_the_calibrated_pricing_relation(
@@ -276,14 +308,142 @@ def test_simulated_mean_returns_track_the_calibrated_pricing_relation(
     np.testing.assert_allclose(returns.mean(axis=0), implied, atol=0.05)
 
 
-def test_first_pass_noise_share_rises_as_the_window_shortens(noisy_dgp: PowerDgp) -> None:
-    """The share of beta dispersion that is estimation error must scale like 1/T."""
-    long_share = first_pass_beta_noise_shares(noisy_dgp, window_months=480)
-    short_share = first_pass_beta_noise_shares(noisy_dgp, window_months=48)
-    assert float(short_share[RATE_FACTOR]) > float(long_share[RATE_FACTOR])
-    assert float(short_share[RATE_FACTOR]) == pytest.approx(
-        10.0 * float(long_share[RATE_FACTOR]), rel=1e-9
+def test_cross_sectional_residual_dispersion_is_the_centred_trace() -> None:
+    """``tr(M_N Sigma) / (N - 1)`` must equal mean diagonal minus mean off-diagonal."""
+    rng = np.random.default_rng(4242)
+    factor = rng.standard_normal((8, 8))
+    covariance = factor @ factor.T
+
+    n_assets = covariance.shape[0]
+    centring = np.eye(n_assets) - np.ones((n_assets, n_assets)) / n_assets
+    expected = float(np.trace(centring @ covariance)) / (n_assets - 1)
+
+    assert cross_sectional_residual_dispersion(covariance) == pytest.approx(expected, rel=1e-12)
+
+    # An equicorrelated system is the closed form the docstring quotes: with unit
+    # variances and correlation rho the centred dispersion is exactly ``1 - rho``.
+    rho = 0.4
+    equicorrelated = np.full((6, 6), rho)
+    np.fill_diagonal(equicorrelated, 1.0)
+    assert cross_sectional_residual_dispersion(equicorrelated) == pytest.approx(
+        1.0 - rho, rel=1e-12
     )
+
+
+def test_cross_sectional_residual_dispersion_rejects_degenerate_input() -> None:
+    """A dispersion across fewer than two assets, or a non-square matrix, is refused."""
+    with pytest.raises(ValueError, match="square matrix"):
+        cross_sectional_residual_dispersion(np.ones((3, 4)))
+    with pytest.raises(ValueError, match="at least two assets"):
+        cross_sectional_residual_dispersion(np.ones((1, 1)))
+
+
+def test_beta_noise_variance_matches_an_independent_monte_carlo(
+    correlated_dgp: PowerDgp,
+) -> None:
+    """The corrected formula must reproduce a simulated cross-sectional error variance.
+
+    The analytic claim is that the estimation-error contribution to the
+    cross-sectional variance of factor ``k``'s estimated loadings is
+    ``[Sigma_f^-1]_kk / (T (N - 1)) * tr(M_N Sigma_eps)``. This test never uses
+    that expression to build its own benchmark: it draws windows from the
+    calibrated process, runs the first pass, and measures the cross-sectional
+    variance of ``beta_hat - beta`` directly.
+    """
+    window = 480
+    replications = 3_000
+    rate_position = correlated_dgp.factors.index(RATE_FACTOR)
+    true_betas = correlated_dgp.betas.to_numpy(dtype=float)
+    factor_factor = covariance_factor(correlated_dgp.factor_covariance.to_numpy(dtype=float))
+    residual_factor = covariance_factor(correlated_dgp.residual_covariance.to_numpy(dtype=float))
+
+    rng = np.random.default_rng(8_675_309)
+    realised = np.empty(replications)
+    for replication in range(replications):
+        factors, returns = simulate_panel(
+            correlated_dgp,
+            window_months=window,
+            rng=rng,
+            factor_factor=factor_factor,
+            residual_factor=residual_factor,
+        )
+        design = np.column_stack([np.ones(window), factors])
+        coefficients = np.linalg.lstsq(design, returns, rcond=None)[0]
+        errors = coefficients[1:, :].T - true_betas
+        realised[replication] = float(np.var(errors[:, rate_position], ddof=1))
+    monte_carlo = float(np.mean(realised))
+
+    decomposition = first_pass_beta_reliability(correlated_dgp, window_months=window)
+    analytic = float(decomposition["noise_cross_sectional_variance"][RATE_FACTOR])
+    diagonal_only = float(decomposition["mean_individual_beta_sampling_variance"][RATE_FACTOR])
+
+    # The remaining gap is the O(1/T) difference between conditioning on the
+    # population factor covariance and on the drawn one, plus Monte Carlo error.
+    assert analytic == pytest.approx(monte_carlo, rel=0.05)
+
+    # The superseded diagonal-only quantity is not merely less precise; with
+    # positively correlated residuals it is biased upward by a wide margin, and
+    # the Monte Carlo rules it out.
+    assert diagonal_only > 1.5 * monte_carlo
+
+
+def test_reliability_and_noise_share_are_exact_complements(correlated_dgp: PowerDgp) -> None:
+    """The two reported shares must sum to one and split the observed variance."""
+    decomposition = first_pass_beta_reliability(correlated_dgp, window_months=240)
+
+    total = (
+        decomposition["reliability_ratio"]
+        + decomposition["noise_share_of_cross_sectional_variance"]
+    )
+    np.testing.assert_allclose(total.to_numpy(dtype=float), 1.0, atol=1e-12)
+    np.testing.assert_allclose(
+        (
+            decomposition["signal_cross_sectional_variance"]
+            + decomposition["noise_cross_sectional_variance"]
+        ).to_numpy(dtype=float),
+        decomposition["observed_cross_sectional_variance"].to_numpy(dtype=float),
+        atol=1e-12,
+    )
+    assert list(decomposition.index) == list(correlated_dgp.factors)
+
+
+def test_diagonal_only_calculation_overstates_the_noise_when_residuals_correlate(
+    correlated_dgp: PowerDgp,
+) -> None:
+    """Positive average residual correlation must make the naive figure the larger one."""
+    residual_covariance = correlated_dgp.residual_covariance.to_numpy(dtype=float)
+    n_assets = residual_covariance.shape[0]
+    mean_off_diagonal = float(
+        (residual_covariance.sum() - np.trace(residual_covariance)) / (n_assets * (n_assets - 1))
+    )
+    assert mean_off_diagonal > 0.0
+
+    decomposition = first_pass_beta_reliability(correlated_dgp, window_months=120)
+    individual = decomposition["mean_individual_beta_sampling_variance"]
+    cross_sectional = decomposition["noise_cross_sectional_variance"]
+    for factor in correlated_dgp.factors:
+        assert float(individual[factor]) > float(cross_sectional[factor])
+
+
+def test_first_pass_beta_noise_falls_like_one_over_the_window(noisy_dgp: PowerDgp) -> None:
+    """The estimation-error share of beta dispersion must scale like 1/T."""
+    long_window = first_pass_beta_reliability(noisy_dgp, window_months=480)
+    short_window = first_pass_beta_reliability(noisy_dgp, window_months=48)
+
+    column = "noise_share_of_cross_sectional_variance"
+    long_share = float(long_window[column][RATE_FACTOR])
+    short_share = float(short_window[column][RATE_FACTOR])
+    assert short_share > long_share
+    assert short_share == pytest.approx(10.0 * long_share, rel=1e-9)
+    assert float(short_window["reliability_ratio"][RATE_FACTOR]) < float(
+        long_window["reliability_ratio"][RATE_FACTOR]
+    )
+
+
+def test_first_pass_beta_reliability_rejects_a_non_positive_window(noisy_dgp: PowerDgp) -> None:
+    """A window of zero months has no sampling variance to report."""
+    with pytest.raises(ValueError, match="window_months must be positive"):
+        first_pass_beta_reliability(noisy_dgp, window_months=0)
 
 
 def test_summarise_estimates_reports_bias_dispersion_and_coverage() -> None:

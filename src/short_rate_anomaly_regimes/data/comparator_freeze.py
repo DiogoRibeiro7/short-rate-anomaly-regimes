@@ -26,9 +26,13 @@ from short_rate_anomaly_regimes.data.acquisition import (
     _session_with_retries,
     canonical_monthly_bytes,
     load_normalized_month_panel,
-    write_raw_once,
+    raw_writer,
 )
+from short_rate_anomaly_regimes.data.vintage import VintageMode, acquire_frozen_payload
 from short_rate_anomaly_regimes.exceptions import DataAccessError, DataValidationError
+
+#: The only command permitted to overwrite the recorded comparator hashes.
+COMPARATOR_UPDATE_COMMAND = "make update-vintage-comparators"
 
 #: The q-factor host refuses the default requests user agent.
 COMPARATOR_USER_AGENT = (
@@ -175,8 +179,16 @@ def freeze_comparator_file(
     session: HTTPSession | None = None,
     timeout: float = 120.0,
     retries: int = 3,
+    mode: VintageMode = VintageMode.VERIFY,
 ) -> ComparatorFreezeRecord:
-    """Download one comparator-factor file and freeze it with complete metadata.
+    """Download one comparator-factor file, verify it, and freeze it with metadata.
+
+    The q-factor library republishes its monthly file each year and the Wharton
+    liquidity file is extended in place, so neither URL is a stable vintage. In
+    the default verification mode the download is compared against the
+    ``raw_sha256`` recorded in the shipped manifest and the call aborts on a
+    mismatch without writing anything. When the immutable raw file is already
+    present and already matches, no request is made at all.
 
     Args:
         dataset: Short identifier for the factor family.
@@ -196,6 +208,8 @@ def freeze_comparator_file(
         session: Optional HTTP session for testing.
         timeout: Request timeout in seconds.
         retries: Retry budget for transient failures.
+        mode: Verification, or update when the caller was given the explicit
+            update-vintage flag. Only an update run writes the manifest.
 
     Returns:
         The complete freeze record.
@@ -203,15 +217,34 @@ def freeze_comparator_file(
     Raises:
         DataAccessError: On a non-200 response, an empty payload, or an attempt to
             overwrite an existing raw file with different bytes.
+        FrozenVintageError: When the download does not match the recorded expected
+            hash, or when no expected hash is recorded and the run is verifying.
         DataValidationError: When the parser is unknown or the payload is malformed.
     """
-    client = session or _comparator_session(retries)
-    response = client.get(url, timeout=timeout)
-    if response.status_code != 200:
-        raise DataAccessError(f"Unexpected HTTP status {response.status_code} for {url}")
-    payload = response.content
-    if not payload:
-        raise DataAccessError(f"Empty payload for {url}")
+    suffix = Path(file_name).suffix or ".txt"
+    raw_path = raw_root / dataset / f"{dataset}_{vintage_label}{suffix}"
+    manifest_path = manifest_root / f"{dataset}_{vintage_label}.json"
+
+    def fetch() -> tuple[bytes, dict[str, str]]:
+        client = session or _comparator_session(retries)
+        response = client.get(url, timeout=timeout)
+        if response.status_code != 200:
+            raise DataAccessError(f"Unexpected HTTP status {response.status_code} for {url}")
+        payload = response.content
+        if not payload:
+            raise DataAccessError(f"Empty payload for {url}")
+        return payload, dict(response.headers)
+
+    verified = acquire_frozen_payload(
+        source_label=f"comparator file {dataset} at vintage {vintage_label}",
+        url=url,
+        manifest_path=manifest_path,
+        raw_path=raw_path,
+        mode=mode,
+        update_command=COMPARATOR_UPDATE_COMMAND,
+        fetch=fetch,
+    )
+    payload = verified.payload
 
     if parser == "q_factor_csv":
         frame, commentary = parse_q_factor_csv(payload)
@@ -224,9 +257,7 @@ def freeze_comparator_file(
     # malformed HTTP 200 cannot permanently occupy the immutable path.
     normalized_bytes = canonical_monthly_bytes(frame)
 
-    suffix = Path(file_name).suffix or ".txt"
-    raw_path = raw_root / dataset / f"{dataset}_{vintage_label}{suffix}"
-    raw_sha = write_raw_once(raw_path, payload)
+    raw_sha = raw_writer(mode)(raw_path, payload)
 
     normalized_path = normalized_root / f"{dataset}_{vintage_label}.csv"
     normalized_path.parent.mkdir(parents=True, exist_ok=True)
@@ -255,17 +286,18 @@ def freeze_comparator_file(
         missing_value_count=int(frame.isna().to_numpy().sum()),
         redistribution_status=redistribution_status,
         source_metadata_lines=commentary,
-        http_last_modified=response.headers.get("Last-Modified"),
-        http_etag=response.headers.get("ETag"),
+        http_last_modified=verified.headers.get("Last-Modified"),
+        http_etag=verified.headers.get("ETag"),
         value_range={
             "minimum": float(np.nanmin(values)),
             "maximum": float(np.nanmax(values)),
         },
     )
-    manifest_root.mkdir(parents=True, exist_ok=True)
-    (manifest_root / f"{dataset}_{vintage_label}.json").write_text(
-        json.dumps(asdict(record), indent=2, sort_keys=True), encoding="utf-8", newline="\n"
-    )
+    if mode.writes_provenance:
+        manifest_root.mkdir(parents=True, exist_ok=True)
+        manifest_path.write_text(
+            json.dumps(asdict(record), indent=2, sort_keys=True), encoding="utf-8", newline="\n"
+        )
     return record
 
 

@@ -1,0 +1,24 @@
+{
+  "chi_square_caveat": "the chi-square statistic is referred to chi2(N - K) while its pseudo-inverse measures at most the rank of the residual covariance, which is below N - K here; its nominal degrees of freedom therefore overstate the directions actually tested and the p-value should not be read",
+  "enters_any_holm_family": false,
+  "enters_h3_verdict": false,
+  "enters_registered_classification": false,
+  "enters_the_equivalence_gates": false,
+  "frozen_floor_changed": false,
+  "frozen_minimum_months_for_standalone_second_pass": 72,
+  "hypothesis_membership": "none",
+  "label": "sensitivity",
+  "months_by_regime": {
+    "normalisation": 51
+  },
+  "regimes": [
+    "normalisation"
+  ],
+  "replication_status": "documented_reconstruction",
+  "residual_covariance_rank_by_regime": {
+    "normalisation": 48
+  },
+  "status": "outside_the_confirmatory_family",
+  "why_it_is_not_confirmatory": "the 72-month standalone floor is frozen and unchanged. These regimes carry a short-sample flag, their residual covariance is rank deficient, and the simulated precision at these lengths is reported in reports/regime_eligibility_power_analysis.md. The estimate is shown so that the restriction is visible rather than asserted, not so that it can be read as evidence",
+  "why_it_is_now_computable": "the residual covariance of a regime with fewer months than test assets is rank deficient, not undefined, and no step of the second pass inverts it; the design's constructor previously refused it on the false justification given in correction 9 of reports/design_correction_changelog.md, which correction 11 retracts"
+}

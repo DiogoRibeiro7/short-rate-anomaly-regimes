@@ -11,7 +11,7 @@
 - Critical issues: `0`
 - Major issues: `1`
 
-`empirical_release` reports whether the generated artifacts travel inside this archive. `empirical_rebuild` reports whether the archive carries a documented, deterministic path to regenerate them from the frozen public sources. The two are independent; the second never substitutes for the first.
+`empirical_release` reports whether the generated artifacts travel inside this archive. `empirical_rebuild` reports whether the archive carries a documented rebuild path that is verified against the frozen vintage: every acquisition download is checked against the SHA-256 recorded in the shipped provenance manifests, and the rebuild refuses to proceed when a provider has revised a series. It is not a claim that providers never revise, and it is not a guarantee that the frozen bytes stay retrievable from the provider. The two fields are independent; the second never substitutes for the first.
 
 ## What This Archive Contains
 
@@ -54,4 +54,12 @@ Copyrighted articles, publisher supplements, `prompts/`, credentials, local cata
 
 Verify the archive with `make check` and `make release-check` from a clean checkout; neither needs network access or rebuilt data.
 
-Rebuild the empirical artifacts with `make reproduce`. It runs source acquisition, panel construction, baseline estimation, the temporal extension, the regime analysis, and the paper build in dependency order. The acquisition stage needs network access and pulls the frozen vintages recorded in `configs/data_sources.yaml`; the bootstrap and simulation stages take hours. See `docs/DATA_ACQUISITION.md` for source-by-source access and redistribution status.
+Rebuild the empirical artifacts with `make reproduce`. It runs source acquisition, panel construction, baseline estimation, the temporal extension, the regime analysis, and the paper build in dependency order. The acquisition stage needs network access unless the frozen raw bytes are already on disk; the bootstrap and simulation stages take hours. See `docs/DATA_ACQUISITION.md` for source-by-source access and redistribution status.
+
+## Frozen-Vintage Verification
+
+Every provider endpoint this project reads serves the current vintage: FRED's `fredgraph.csv` returns the latest revision of a series, and the Kenneth French, global-q, and Wharton files are replaced in place when the libraries are rebuilt. The rebuild therefore does not trust the URL. It treats the SHA-256 values in the shipped provenance manifests under `artifacts/provenance` as expected hashes: each acquisition downloads, hashes, and compares, normalises only on a match, and on a mismatch aborts naming the series, the expected hash, the received hash, and what to do next. A verification run rewrites no provenance manifest.
+
+The guarantee is therefore that a rebuild either reproduces the frozen vintage or refuses to run. It is not a guarantee that a provider still serves those bytes. When a provider has revised a series, the archive's own results cannot be regenerated from that provider until the frozen bytes are recovered from an immutable source; `docs/DATA_ACQUISITION.md` names the preferred one for each.
+
+Moving to a new vintage is a deliberate, separate operation: `make update-vintage` and its per-source targets pass `--update-vintage`, which is the only switch that may overwrite a recorded expected hash. It changes the inputs of every downstream result, so `make reproduce` must be re-run in full afterwards and the new vintage reported. No `reproduce` stage passes that switch.

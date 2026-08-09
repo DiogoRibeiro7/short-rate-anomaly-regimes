@@ -505,8 +505,12 @@ def render_release_notes(issues: list[ReleaseIssue]) -> str:
         f"- Major issues: `{verdict['major_issue_count']}`",
         "",
         "`empirical_release` reports whether the generated artifacts travel inside this "
-        "archive. `empirical_rebuild` reports whether the archive carries a documented, "
-        "deterministic path to regenerate them from the frozen public sources. The two are "
+        "archive. `empirical_rebuild` reports whether the archive carries a documented "
+        "rebuild path that is verified against the frozen vintage: every acquisition "
+        "download is checked against the SHA-256 recorded in the shipped provenance "
+        "manifests, and the rebuild refuses to proceed when a provider has revised a "
+        "series. It is not a claim that providers never revise, and it is not a guarantee "
+        "that the frozen bytes stay retrievable from the provider. The two fields are "
         "independent; the second never substitutes for the first.",
         "",
         "## What This Archive Contains",
@@ -580,9 +584,32 @@ def render_release_notes(issues: list[ReleaseIssue]) -> str:
             f"Rebuild the empirical artifacts with `{REBUILD_ENTRY_POINT}`. It runs source "
             "acquisition, panel construction, baseline estimation, the temporal extension, the "
             "regime analysis, and the paper build in dependency order. The acquisition stage "
-            "needs network access and pulls the frozen vintages recorded in "
-            "`configs/data_sources.yaml`; the bootstrap and simulation stages take hours. See "
-            "`docs/DATA_ACQUISITION.md` for source-by-source access and redistribution status.",
+            "needs network access unless the frozen raw bytes are already on disk; the "
+            "bootstrap and simulation stages take hours. See `docs/DATA_ACQUISITION.md` for "
+            "source-by-source access and redistribution status.",
+            "",
+            "## Frozen-Vintage Verification",
+            "",
+            "Every provider endpoint this project reads serves the current vintage: FRED's "
+            "`fredgraph.csv` returns the latest revision of a series, and the Kenneth French, "
+            "global-q, and Wharton files are replaced in place when the libraries are rebuilt. "
+            "The rebuild therefore does not trust the URL. It treats the SHA-256 values in the "
+            "shipped provenance manifests under `artifacts/provenance` as expected hashes: each "
+            "acquisition downloads, hashes, and compares, normalises only on a match, and on a "
+            "mismatch aborts naming the series, the expected hash, the received hash, and what "
+            "to do next. A verification run rewrites no provenance manifest.",
+            "",
+            "The guarantee is therefore that a rebuild either reproduces the frozen vintage or "
+            "refuses to run. It is not a guarantee that a provider still serves those bytes. "
+            "When a provider has revised a series, the archive's own results cannot be "
+            "regenerated from that provider until the frozen bytes are recovered from an "
+            "immutable source; `docs/DATA_ACQUISITION.md` names the preferred one for each.",
+            "",
+            "Moving to a new vintage is a deliberate, separate operation: `make update-vintage` "
+            "and its per-source targets pass `--update-vintage`, which is the only switch that "
+            "may overwrite a recorded expected hash. It changes the inputs of every downstream "
+            f"result, so `{REBUILD_ENTRY_POINT}` must be re-run in full afterwards and the new "
+            "vintage reported. No `reproduce` stage passes that switch.",
             "",
         ]
     )
@@ -688,6 +715,74 @@ def render_data_acquisition_guide(
     lines.extend(
         [
             "",
+            "## Frozen-Vintage Verification",
+            "",
+            "None of the URLs above is a vintage. FRED's `fredgraph.csv?id=<series>` endpoint "
+            "returns the latest revision of the series, and the Kenneth French, global-q, and "
+            "Wharton files are replaced in place whenever those libraries are rebuilt. The "
+            "checksums recorded in the shipped manifests under `artifacts/provenance` are "
+            "therefore treated as **expected** hashes, not as a description of whatever "
+            "arrived.",
+            "",
+            "Each acquisition script downloads the file, computes its SHA-256, and compares it "
+            "with the recorded value. Only on a match does it normalise the payload and let the "
+            "rebuild continue. On a mismatch it aborts, naming the series, the expected hash, "
+            "the received hash, and the two ways forward; it writes no file and rewrites no "
+            "manifest. When the immutable raw file is already present and already matches, the "
+            "provider is not contacted at all.",
+            "",
+            "| Acquisition | Verifies | Expected hash read from |",
+            "|---|---|---|",
+            "| `scripts/acquire_short_rates.py` | FEDFUNDS, TB3MS, DFF, DTB3 raw CSV bytes | "
+            "`artifacts/provenance/short_rate/<SERIES>_<vintage>.json` |",
+            "| `scripts/acquire_french_factors.py` | both vintages of each three-factor, "
+            "momentum, and five-factor ZIP | "
+            "`artifacts/provenance/kenneth_french/<dataset>_<vintage>.json` |",
+            "| `scripts/acquire_anomaly_portfolios.py` | the `vvg_monthly` and `inv_monthly` "
+            "testing-portfolio ZIPs | "
+            "`artifacts/provenance/portfolios/<archive>_<vintage>.json` |",
+            "| `scripts/acquire_comparator_factors.py` | the q-factor CSV and both "
+            "Pastor-Stambaugh liquidity files | "
+            "`artifacts/provenance/comparators/<dataset>_<vintage>.json` |",
+            "| `srar acquire-data --live` | every registry-driven public source | "
+            "`artifacts/provenance/<source_id>.json` |",
+            "",
+            "### Preferred immutable sources",
+            "",
+            "Where a provider offers an addressable vintage, it is the better place to obtain "
+            "the frozen bytes, and the place to look first when verification fails because the "
+            "current file has been revised. The frozen vintage recorded in this archive is "
+            "**not** switched to these endpoints here: which vintage the results rest on is a "
+            "data decision, made and reported deliberately, not a side effect of changing an "
+            "acquisition URL.",
+            "",
+            "- **FRED short rates.** ALFRED serves archival vintages of the same series "
+            "(`alfredgraph.csv?id=<series>&vintage_date=<YYYY-MM-DD>`), and the FRED API exposes "
+            "`vintage_dates`. A vintage-dated request is reproducible in a way that "
+            "`fredgraph.csv` is not.",
+            "- **Kenneth French publication-era archives.** Internet Archive snapshots "
+            "(`https://web.archive.org/web/<timestamp>id_/<original URL>`) are content-addressed "
+            "by capture time and are already the source of the `publication_era_20170709` "
+            "vintage. The current-vintage archives have no immutable counterpart.",
+            "- **Pastor-Stambaugh liquidity.** The publication-era file is likewise taken from "
+            "an Internet Archive snapshot; the current file is served from a live Wharton path "
+            "that is extended in place.",
+            "- **global-q testing portfolios and q-factors.** No immutable endpoint is "
+            "published, and the earliest usable snapshot post-dates the article, so the recorded "
+            "checksum is the only vintage pin available for these files.",
+            "",
+            "### Changing the frozen vintage",
+            "",
+            "`make update-vintage` and its per-source targets "
+            "(`update-vintage-short-rates`, `update-vintage-french`, "
+            "`update-vintage-portfolios`, `update-vintage-comparators`) pass "
+            "`--update-vintage`. That flag is the only way to overwrite a recorded expected "
+            f"hash, and no `{REBUILD_ENTRY_POINT}` stage passes it. Running one of these "
+            "targets replaces the raw bytes and the provenance manifests, which changes the "
+            f"inputs of every downstream estimate: re-run `{REBUILD_ENTRY_POINT}` in full "
+            "afterwards and report the new vintage. A verification failure is not a reason to "
+            "run it.",
+            "",
             "## Clean-Room Procedure",
             "",
             "1. Clone the repository into an empty workspace.",
@@ -696,8 +791,10 @@ def render_data_acquisition_guide(
             "creation, release audit generation, and tests. This stage needs no network access "
             "and no rebuilt data.",
             f"4. Run `{REBUILD_ENTRY_POINT}` to rebuild the empirical artifacts from the frozen "
-            "public sources listed above. The acquisition stage needs network access; the "
-            "bootstrap and simulation stages take hours. Individual stages are available as "
+            "public sources listed above. The acquisition stage needs network access unless the "
+            "frozen raw bytes are already under `data/raw`, and it verifies every download "
+            "against the recorded hash before anything downstream runs; the bootstrap and "
+            "simulation stages take hours. Individual stages are available as "
             "`make reproduce-acquire`, `reproduce-panels`, `reproduce-estimates`, "
             "`reproduce-extension`, `reproduce-regimes`, and `reproduce-reports`.",
             "5. Register restricted files with `poetry run srar register-manual-source` only "

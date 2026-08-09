@@ -1,0 +1,13 @@
+{
+  "confirmatory": false,
+  "inputs": {
+    "artifacts/tables/regimes/regime_eligibility.csv": "fe2af196a69c6c1cd5de4c2a72577d2dbbd4ff30f142ecb703bec15101b0a2e5",
+    "data/processed/regimes/monthly_regimes.parquet": "8d82c850712c8503633dd59b38b170edd6c788ca7039baa6ee6e68fa33c468d6"
+  },
+  "label": "sensitivity",
+  "outputs": {
+    "artifacts/diagnostics/regime_short_sample_sensitivity.json": "004f39f1c04965c75760ad35e88f618de9c7c505a90b251c17ab51a92361f919",
+    "artifacts/tables/regimes/regime_second_pass_short_sample_sensitivity.csv": "b5126f8fb1f3621853b4ce56c5f34b0054b153cc3d5535a2fa5ca581348581f1"
+  },
+  "script": "scripts/run_regime_equivalence.py"
+}

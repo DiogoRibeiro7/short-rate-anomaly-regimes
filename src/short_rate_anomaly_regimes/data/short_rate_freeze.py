@@ -21,11 +21,15 @@ import pandas as pd
 from short_rate_anomaly_regimes.data.acquisition import (
     HTTPSession,
     _session_with_retries,
-    write_raw_once,
+    raw_writer,
 )
+from short_rate_anomaly_regimes.data.vintage import VintageMode, acquire_frozen_payload
 from short_rate_anomaly_regimes.exceptions import DataAccessError, DataValidationError
 
 FRED_CSV_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
+
+#: The only command permitted to overwrite the recorded short-rate hashes.
+SHORT_RATE_UPDATE_COMMAND = "make update-vintage-short-rates"
 
 #: Directory holding the normalized FRED freezes every panel builder reads.
 FRED_INTERIM_ROOT = Path("data/interim/fred")
@@ -276,8 +280,16 @@ def freeze_fred_series(
     session: HTTPSession | None = None,
     timeout: float = 60.0,
     retries: int = 3,
+    mode: VintageMode = VintageMode.VERIFY,
 ) -> SeriesFreezeRecord:
-    """Download one FRED series and freeze it with complete acquisition metadata.
+    """Download one FRED series, verify the frozen vintage, and freeze it with metadata.
+
+    ``fredgraph.csv`` serves the current vintage of a series, so the bytes it
+    returns change whenever the Board of Governors revises the H.15 history. In
+    the default verification mode the download is compared against the
+    ``raw_sha256`` recorded in the shipped manifest and the call aborts on a
+    mismatch without writing anything. When the immutable raw file is already
+    present and already matches, no request is made at all.
 
     Args:
         series_id: FRED series identifier.
@@ -288,6 +300,8 @@ def freeze_fred_series(
         session: Optional HTTP session for testing.
         timeout: Request timeout in seconds.
         retries: Retry budget for transient failures.
+        mode: Verification, or update when the caller was given the explicit
+            update-vintage flag. Only an update run writes the manifest.
 
     Returns:
         The complete freeze record.
@@ -295,6 +309,8 @@ def freeze_fred_series(
     Raises:
         DataAccessError: On a non-200 response, an empty payload, or an attempt to
             overwrite an existing raw file with different bytes.
+        FrozenVintageError: When the download does not match the recorded expected
+            hash, or when no expected hash is recorded and the run is verifying.
         DataValidationError: When the series is not registered, or when the payload
             is not a well-formed FRED series for ``series_id``. The payload is
             validated before any raw file is written, so a malformed response
@@ -304,21 +320,36 @@ def freeze_fred_series(
     if series_id not in DECLARED_SERIES_METADATA:
         raise DataValidationError(f"No declared metadata registered for series {series_id!r}")
     url = FRED_CSV_URL.format(series_id=series_id)
-    client = session or _session_with_retries(retries)
-    response = client.get(url, timeout=timeout)
-    if response.status_code != 200:
-        raise DataAccessError(f"Unexpected HTTP status {response.status_code} for {url}")
-    payload = response.content
-    if not payload:
-        raise DataAccessError(f"Empty payload for {url}")
+    raw_path = raw_root / series_id / f"{series_id}_{retrieval_date}.csv"
+    manifest_path = manifest_root / f"{series_id}_{retrieval_date}.json"
+
+    def fetch() -> tuple[bytes, dict[str, str]]:
+        client = session or _session_with_retries(retries)
+        response = client.get(url, timeout=timeout)
+        if response.status_code != 200:
+            raise DataAccessError(f"Unexpected HTTP status {response.status_code} for {url}")
+        payload = response.content
+        if not payload:
+            raise DataAccessError(f"Empty payload for {url}")
+        return payload, dict(response.headers)
+
+    verified = acquire_frozen_payload(
+        source_label=f"FRED series {series_id} at vintage {retrieval_date}",
+        url=url,
+        manifest_path=manifest_path,
+        raw_path=raw_path,
+        mode=mode,
+        update_command=SHORT_RATE_UPDATE_COMMAND,
+        fetch=fetch,
+    )
+    payload = verified.payload
 
     # The payload is parsed and validated before the raw bytes are committed, so a
     # malformed HTTP 200 cannot permanently occupy the immutable path.
     frame = _normalize_fred_payload(payload, series_id)
     normalized_bytes = _canonical_csv_bytes(frame)
 
-    raw_path = raw_root / series_id / f"{series_id}_{retrieval_date}.csv"
-    raw_sha = write_raw_once(raw_path, payload)
+    raw_sha = raw_writer(mode)(raw_path, payload)
 
     normalized_path = normalized_root / f"{series_id}_{retrieval_date}.csv"
     normalized_path.parent.mkdir(parents=True, exist_ok=True)
@@ -354,8 +385,8 @@ def freeze_fred_series(
             "no ALFRED vintage date was requested, so this is the latest published "
             "revision as of the retrieval timestamp"
         ),
-        vintage_http_last_modified=response.headers.get("Last-Modified"),
-        vintage_http_etag=response.headers.get("ETag"),
+        vintage_http_last_modified=verified.headers.get("Last-Modified"),
+        vintage_http_etag=verified.headers.get("ETag"),
         metadata_provenance=(
             "units, frequency, seasonal adjustment, aggregation, and notes are "
             "declared by this project because the FRED series metadata pages and "
@@ -371,11 +402,11 @@ def freeze_fred_series(
         declared_metadata_audit=audit_declared_metadata(series_id, frame),
     )
 
-    manifest_root.mkdir(parents=True, exist_ok=True)
-    manifest_path = manifest_root / f"{series_id}_{retrieval_date}.json"
-    manifest_path.write_text(
-        json.dumps(asdict(record), indent=2, sort_keys=True), encoding="utf-8", newline="\n"
-    )
+    if mode.writes_provenance:
+        manifest_root.mkdir(parents=True, exist_ok=True)
+        manifest_path.write_text(
+            json.dumps(asdict(record), indent=2, sort_keys=True), encoding="utf-8", newline="\n"
+        )
     return record
 
 

@@ -78,3 +78,5 @@ table_builder,scripts/build_manuscript_tables.py,Generator that writes every man
 figure_builder,scripts/build_manuscript_figures.py,Generator that writes every manuscript result figure from the frozen artifacts
 h4c_intervals,artifacts/tables/robustness/h4c_fitted_premium_intervals.csv,Per-family bootstrap intervals for the rate-attributable fitted-premium spread
 vintage_decomposition,artifacts/tables/extension/vintage_decomposition.csv,Vintage temporal and combined decomposition of the post-publication change
+h2_temporal_inference,artifacts/tables/extension/h2_temporal_inference.csv,Joint moving block bootstrap intervals and three way decisions for the temporal fitted premium and RMSE change
+regime_short_sample_sensitivity,artifacts/tables/regimes/regime_second_pass_short_sample_sensitivity.csv,Non-confirmatory second pass for the short-sample normalisation regime
