@@ -21,12 +21,16 @@ figure in the paper.
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
+from matplotlib.patches import Rectangle
 
 # Headless rendering, so the figures build identically in CI and locally.
 matplotlib.use("Agg")
@@ -62,16 +66,106 @@ FAMILY_LABELS: dict[str, str] = {
 }
 
 
-#: Pinning the embedded metadata makes the emitted PDF a pure function of the
-#: artifacts, so the drift guard can compare bytes. The creation date is the
-#: obvious source of variation, but ``Creator`` carries the matplotlib version
-#: and ``Producer`` the backend, either of which would make the guard fail on a
-#: dependency bump rather than on a changed result.
+#: Pinning the embedded metadata removes the obvious sources of byte variation:
+#: the creation date, the matplotlib version carried in ``Creator``, and the
+#: backend in ``Producer``. It does not make the PDF a pure function of the
+#: artifacts. Vector serialization details still change across matplotlib
+#: releases, so byte equality holds only within one plotting environment. The
+#: content manifest below is what the drift guard actually relies on.
 DETERMINISTIC_METADATA: dict[str, str | None] = {
     "CreationDate": None,
     "Creator": "short-rate-anomaly-regimes",
     "Producer": "matplotlib",
 }
+
+#: Where the version-independent description of every figure is recorded.
+CONTENT_MANIFEST = Path("paper/figures/figure_content.json")
+
+#: Coordinates are rounded before they are recorded, so that a difference in the
+#: last floating-point digit cannot be mistaken for a changed result.
+COORDINATE_PRECISION = 9
+
+
+@dataclass(frozen=True)
+class FigureArtifact:
+    """A rendered figure and the version-independent description of what it draws."""
+
+    path: Path
+    content: dict[str, Any]
+
+
+def _round(values: Any) -> list[float | str]:
+    """Coerce plotted coordinates to stable JSON scalars.
+
+    Date axes hand back timestamps rather than numbers, and their float encoding
+    is an epoch convention rather than a result, so they are recorded as ISO
+    strings.
+    """
+    coordinates: list[float | str] = []
+    for value in values:
+        isoformat = getattr(value, "isoformat", None)
+        coordinates.append(
+            isoformat() if callable(isoformat) else round(float(value), COORDINATE_PRECISION)
+        )
+    return coordinates
+
+
+def _axes_content(axis: Axes, explicit_xticklabels: list[str]) -> dict[str, Any]:
+    """Describe everything the builders draw on one axis.
+
+    Only artists placed explicitly are recorded. Autoscaled limits and
+    automatically located ticks are excluded on purpose: they are matplotlib's
+    layout decisions, they change across releases, and a change in one is not a
+    change in the result. Everything captured here traces back to an artifact
+    value, so a difference means the underlying numbers moved.
+    """
+    lines = [{"x": _round(line.get_xdata()), "y": _round(line.get_ydata())} for line in axis.lines]
+    bars = [
+        {
+            "x": round(float(patch.get_x()), COORDINATE_PRECISION),
+            "y": round(float(patch.get_y()), COORDINATE_PRECISION),
+            "width": round(float(patch.get_width()), COORDINATE_PRECISION),
+            "height": round(float(patch.get_height()), COORDINATE_PRECISION),
+        }
+        for patch in axis.patches
+        if isinstance(patch, Rectangle)
+    ]
+    legend = axis.get_legend()
+    return {
+        "title": axis.get_title(),
+        "xlabel": axis.get_xlabel(),
+        "ylabel": axis.get_ylabel(),
+        "lines": lines,
+        "bars": bars,
+        "explicit_xticklabels": explicit_xticklabels,
+        # The x position is data derived; the y position is read off an
+        # autoscaled limit, so it is deliberately not recorded.
+        "annotations": sorted(
+            text.get_text() for text in axis.texts if text.get_text() != axis.get_title()
+        ),
+        "legend": [text.get_text() for text in legend.get_texts()] if legend else [],
+    }
+
+
+def figure_content(
+    figure: Figure,
+    explicit_xticklabels: dict[int, list[str]] | None = None,
+) -> dict[str, Any]:
+    """Describe a figure in terms that do not depend on the plotting library version.
+
+    Tick labels are supplied by the caller rather than read back off the axis.
+    ``Axes.get_xticklabels`` cannot distinguish a label the builder chose from
+    one matplotlib generated, and on the date axis the generated labels depend
+    on the installed locator and formatter, so reading them back would put the
+    version dependence straight back into a manifest that exists to remove it.
+    The builder is the only place that knows which labels are results.
+    """
+    supplied = explicit_xticklabels or {}
+    return {
+        "axes": [
+            _axes_content(axis, supplied.get(index, [])) for index, axis in enumerate(figure.axes)
+        ]
+    }
 
 
 def _as_float(value: Any) -> float:
@@ -99,7 +193,7 @@ def _style() -> None:
     )
 
 
-def build_regime_innovation_figure() -> Path:
+def build_regime_innovation_figure() -> FigureArtifact:
     """Plot the short-rate level and innovation across the registered regimes."""
     panel = pd.read_csv(REGIME_SERIES)
     panel["month"] = pd.PeriodIndex(
@@ -151,11 +245,12 @@ def build_regime_innovation_figure() -> Path:
     figure.align_ylabels((upper, lower))
     path = FIGURE_ROOT / "regime_innovation.pdf"
     figure.savefig(path, metadata=DETERMINISTIC_METADATA)
+    content = figure_content(figure)
     plt.close(figure)
-    return path
+    return FigureArtifact(path=path, content=content)
 
 
-def build_spread_reversal_figure() -> Path:
+def build_spread_reversal_figure() -> FigureArtifact:
     """Plot per-family fitted-premium spreads, baseline against refitted extension."""
     frame = pd.read_csv(SPREADS).set_index("family")
     families = [family for family in FAMILY_LABELS if family in frame.index]
@@ -198,28 +293,44 @@ def build_spread_reversal_figure() -> Path:
 
     path = FIGURE_ROOT / "spread_reversal.pdf"
     figure.savefig(path, metadata=DETERMINISTIC_METADATA)
+    # The family order is data driven: it is the baseline-spread sort above, so a
+    # changed spread that reorders the bars shows up here as well as in the geometry.
+    content = figure_content(figure, {0: [FAMILY_LABELS[family] for family in families]})
     plt.close(figure)
-    return path
+    return FigureArtifact(path=path, content=content)
 
 
 BUILDERS = (build_regime_innovation_figure, build_spread_reversal_figure)
 
 
-def build_all() -> list[Path]:
+def build_all() -> list[FigureArtifact]:
     """Regenerate every manuscript result figure."""
     FIGURE_ROOT.mkdir(parents=True, exist_ok=True)
     _style()
     return [builder() for builder in BUILDERS]
 
 
+def build_content_manifest() -> dict[str, Any]:
+    """Return the version-independent content of every figure, keyed by file name."""
+    return {artifact.path.name: artifact.content for artifact in build_all()}
+
+
 def main() -> None:
-    """Write every generated figure and record its provenance."""
-    paths = build_all()
-    for path in paths:
-        print(f"wrote {path.as_posix()}")
+    """Write every generated figure, its content manifest, and its provenance."""
+    artifacts = build_all()
+    for artifact in artifacts:
+        print(f"wrote {artifact.path.as_posix()}")
+
+    content = {artifact.path.name: artifact.content for artifact in artifacts}
+    CONTENT_MANIFEST.write_text(
+        json.dumps(content, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n"
+    )
+    print(f"wrote {CONTENT_MANIFEST.as_posix()}")
+
     manifest: dict[str, Any] = {
         "script": "scripts/build_manuscript_figures.py",
-        "figures": sorted(path.name for path in paths),
+        "figures": sorted(artifact.path.name for artifact in artifacts),
+        "content_manifest": CONTENT_MANIFEST.as_posix(),
         "sources": [
             REGIME_SERIES.as_posix(),
             REGIME_ELIGIBILITY.as_posix(),

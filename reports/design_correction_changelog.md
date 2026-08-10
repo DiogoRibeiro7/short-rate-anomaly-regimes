@@ -366,3 +366,69 @@ per-portfolio decision categories are bit-identical before and after.
   by a test in `tests/test_article_second_pass.py` that requires it to be
   accepted and to yield finite risk prices, finite Shanken standard errors, and a
   usable chi-square statistic.
+
+## 12. The figure drift guard did not have the property it claimed
+
+Date: 2026-08-10. Applied after estimation. No estimate changes.
+
+- What it claimed: `test_committed_figures_match_a_fresh_regeneration` asserted
+  byte equality between the committed PDFs and a fresh build, and its docstring
+  said that suppressing the embedded creation date made the comparison detect
+  "a changed artifact and nothing else". The generator carried the same claim.
+- Why that was false: pinning `CreationDate`, `Creator` and `Producer` removes
+  the obvious sources of variation, but not matplotlib's vector serialization,
+  which changes across releases. `pyproject.toml` permits any matplotlib from
+  3.10 upward. A reviewer running 3.10.8 saw `regime_innovation.pdf` fail the
+  guard while the lock resolved 3.11.1. Nothing about the plotted values had
+  changed. The guard was reporting a dependency version as a changed result.
+- What changed: the version-independent guarantee is now a content manifest,
+  `paper/figures/figure_content.json`, written by
+  `scripts/build_manuscript_figures.py` alongside the PDFs. It records what each
+  figure draws: line and bar coordinates, titles, axis labels, explicitly set
+  tick labels, annotations, and legend entries. Every one of those traces back
+  to an artifact value. Autoscaled limits and automatically located ticks are
+  excluded on purpose, because those are layout decisions rather than results.
+  `test_committed_figure_content_matches_a_fresh_regeneration` compares that
+  manifest and holds under any matplotlib version.
+- What the byte comparison became: it is retained, but only where it is a real
+  property. `test_committed_figure_bytes_match_under_the_locked_plotting_environment`
+  reads the matplotlib version from `poetry.lock` and skips with a stated reason
+  when the running version differs. Continuous integration installs from the
+  lock, so the byte guard runs there.
+- What it now forbids: asserting byte equality of a rendered artifact without
+  naming the environment in which that equality holds.
+
+## 13. The release gate overstated rebuildability
+
+Date: 2026-08-10. Applied after estimation. No estimate changes.
+
+- What it claimed: `empirical_rebuild` reported `rebuildable_from_public_sources`,
+  and the Zenodo description called `make reproduce` a deterministic path that
+  regenerates every empirical artifact from the frozen public sources.
+- Why that was too strong: the frozen-hash mechanism makes reproduction
+  vintage-safe. A provider that revises a series is detected, and the rebuild
+  aborts rather than substituting the revision. That is a guarantee about what a
+  mismatch does. It is not a guarantee that the frozen bytes remain obtainable.
+  If a provider replaces a file and keeps no immutable historical copy, the
+  rebuild correctly refuses to run and a recipient holding only the source-only
+  archive cannot regenerate the published result. Failing safely and remaining
+  reproducible indefinitely are different properties, and one status string was
+  being read as both.
+- What changed: the verdict now reports three fields instead of one.
+  `vintage_integrity` is `enforced_by_frozen_expected_hashes`;
+  `rebuild_precondition` is `frozen_source_bytes_remain_retrievable`; and
+  `self_contained_empirical_reproduction` is
+  `not_supported_generated_artifacts_are_not_distributed`, which is the same
+  fact the pre-existing `empirical_artifacts_missing` issue and
+  `empirical_release: blocked` already recorded. The status value itself is now
+  `rebuildable_while_frozen_source_bytes_remain_retrievable`. `README.md`,
+  `docs/RELEASE_NOTES.md`, `docs/REPLICATION_STATUS.md` and `.zenodo.json` state
+  the three properties separately.
+- What it does not change: no gate outcome, no issue severity, and no
+  classification. The release verdict remains `source_only_release_ready` with
+  zero critical and one major issue.
+- What it now forbids: reporting a conditional reproducibility property as an
+  unconditional one. Where redistribution rights permit, depositing the frozen
+  source bytes with the archival release is the fix that would upgrade the
+  precondition; where they do not, `docs/DATA_ACQUISITION.md` names the most
+  immutable identifier available for each source.

@@ -150,7 +150,13 @@ def test_rebuild_status_is_reported_beside_the_release_status(tmp_path: Path) ->
     verdict = release_verdict(issues)
 
     assert verdict["empirical_release"] == "blocked"
-    assert verdict["empirical_rebuild"] == "rebuildable_from_public_sources"
+    assert (
+        verdict["empirical_rebuild"] == "rebuildable_while_frozen_source_bytes_remain_retrievable"
+    )
+    # The three properties the single field used to blur.
+    assert verdict["vintage_integrity"] == "enforced_by_frozen_expected_hashes"
+    assert verdict["rebuild_precondition"] == "frozen_source_bytes_remain_retrievable"
+    assert verdict["self_contained_empirical_reproduction"].startswith("not_supported")
     assert verdict["empirical_rebuild_entry_point"] == "make reproduce"
     # A rebuild path is not a pass. The release verdict is unchanged by it.
     assert verdict["release_verdict"] == "source_only_release_ready"
@@ -170,6 +176,44 @@ def test_missing_rebuild_scripts_block_the_rebuild_status(tmp_path: Path) -> Non
     assert incomplete.severity == "major"
     assert dropped.as_posix() in incomplete.location
     assert release_verdict(issues)["empirical_rebuild"] == "blocked"
+
+
+def test_missing_frozen_hash_manifests_block_the_rebuild_status(tmp_path: Path) -> None:
+    """A rebuild without the expected hashes is not the vintage-safe rebuild claimed.
+
+    ``acquire_data`` reads the frozen SHA-256 for each source from
+    ``artifacts/provenance/<group>/<source>.json`` and aborts when a download
+    disagrees. Ship the scripts without those manifests and the rebuild
+    downloads whatever a provider serves today with nothing to check it
+    against, which is precisely the substitution ``vintage_integrity`` says
+    cannot happen. They were distributed in practice but never required, so the
+    guarantee rested on habit rather than on the gate.
+    """
+    rebuild_paths = _rebuild_repo(tmp_path)
+    dropped = Path("artifacts/provenance/kenneth_french")
+    kept = tuple(path for path in rebuild_paths if path != dropped)
+
+    issues = build_release_issues(cwd=tmp_path, paths=kept)
+    incomplete = next(
+        issue for issue in issues if issue.issue_id == "empirical_rebuild_path_incomplete"
+    )
+
+    assert dropped.as_posix() in incomplete.location
+    assert release_verdict(issues)["empirical_rebuild"] == "blocked"
+
+
+def test_the_repository_distributes_every_frozen_hash_manifest_group() -> None:
+    """The real archive must carry the manifests the gate now requires."""
+    distributed = distributed_release_files()
+    groups = tuple(
+        required
+        for required in REQUIRED_EMPIRICAL_REBUILD_INPUTS
+        if required.startswith("artifacts/provenance/")
+    )
+
+    assert groups, "no frozen-hash manifest group is required"
+    for group in groups:
+        assert is_distributed_path(group, distributed), f"{group} is not distributed"
 
 
 def test_makefile_without_a_reproduce_target_blocks_the_rebuild_status(tmp_path: Path) -> None:
@@ -444,7 +488,7 @@ def test_release_notes_and_adversarial_reports_include_required_verdicts() -> No
     # The notes must carry both facts: what ships, and what can be rebuilt.
     assert "What This Archive Contains" in notes
     assert "Empirical-results release: `blocked`" in notes
-    assert "Empirical rebuild: `rebuildable_from_public_sources`" in notes
+    assert "Empirical rebuild: `rebuildable_while_frozen_source_bytes_remain_retrievable`" in notes
     assert "make reproduce" in notes
     assert "Minimal reproduction" in code_audit
     assert "distributed archive membership" in code_audit

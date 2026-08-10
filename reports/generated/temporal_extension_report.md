@@ -64,7 +64,7 @@ Interval note: both windows are re-estimated inside every draw and the two indep
 
 Dispersion note: recomputed from each window's own first-pass betas and factor standard deviations. The H4a dispersion floor is 0.1; the extension window clears it, so the extension does not fail the registered H4a dispersion criterion. That criterion does not measure exposure reliability, so a higher share is not evidence that the temporal result is well identified
 
-Vintage isolation: the temporal gates compare the refitted extension with the revised-history baseline, so revised historical values do enter the comparison, as the quantity the extension is measured against. What the shared vintage achieves is holding the revision contribution common to both sides, so it differences out of the temporal change; the publication-era against current-vintage effect is reported separately as the locked-against-revised comparison
+Vintage isolation: the magnitude and RMSE gates compare the refitted extension with the revised-history baseline, so revised historical values do enter those comparisons, as the quantity the extension is measured against. What the shared vintage achieves is holding the revision contribution common to both sides, so it differences out of the temporal change. The frozen sign gate retains its registered comparator, the locked baseline, and is therefore the one gate in which two vintages meet; a same-vintage sign comparison is reported alongside it as a non-decisional diagnostic. The publication-era against current-vintage effect is reported separately as the locked-against-revised comparison
 
 ## Evaluation Windows
 

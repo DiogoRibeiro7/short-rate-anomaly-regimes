@@ -26,7 +26,7 @@
     "data/processed/extension/revised_history_panel.parquet": "01ce15eeb3fbdaddcb2c7fab690463f32257599e6c563448d8a645d40ef08308"
   },
   "outputs": {
-    "artifacts/diagnostics/h2_temporal_stability.json": "63c6379badf71f3c46ba7b4ecd18db4a33488ca9eca4c190f3d63eefe53e0187",
+    "artifacts/diagnostics/h2_temporal_stability.json": "6641274e39e2a5cf5ffb596abbd2ba4350c5fbfd028bd652001c43d11c2339cd",
     "artifacts/tables/extension/fitted_premium_spreads.csv": "2295ed82ebc4059c1e3557b95842db65b9d95e2a3fe7dd173027e0429c6a8e45",
     "artifacts/tables/extension/h2_temporal_inference.csv": "ef1033b8b3be9afa128ecbf9d735519013d473c9c43e1c2a62ab904cd9fd2260",
     "artifacts/tables/extension/temporal_evaluation.csv": "85c180a18dd87afb646f1c4e88bea4029154cc5a4a4c01a0618f0cebab5406a8",

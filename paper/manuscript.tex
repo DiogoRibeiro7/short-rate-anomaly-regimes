@@ -98,7 +98,7 @@ until usable event data and monthly component artifacts exist.
 
 Four findings follow. On the baseline window the reconstruction recovers the
 published qualitative result: the short-rate innovation earns a negative price of
-risk of $-0.6985$ per month with a Shanken $t$ of $-2.86$, and it roughly halves % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
+risk of $-0.6985$ per month with a nominal Shanken $t$ of $-2.86$, and it roughly halves % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
 cross-sectional pricing errors relative to the market model. % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
 Against that, the incremental-pricing standard we registered in advance is not
 met on the joint asset set, and every traded multi-factor comparator we examine
@@ -108,14 +108,15 @@ models. The
 post-2013 estimates then fail the registered compatibility gates. The measured % artifact: configs/extensions.yaml
 data-vintage contribution does not explain that failure and the registered
 exposure-dispersion gate keeps passing, but the extension is 144 months long and % artifact: configs/extensions.yaml
-its rate price carries a Shanken $t$ of $-1.49$, so we stop short of concluding % artifact: artifacts/tables/extension/temporal_evaluation.csv
+its rate price carries a nominal Shanken $t$ of $-1.49$, so we stop short of concluding % artifact: artifacts/tables/extension/temporal_evaluation.csv
 that the underlying relation changed. Finally, short-rate exposures differ across monetary regimes,
 though the sample lengths available inside regimes are too short for the
 registered equivalence standard to resolve the size of the difference.
 
 Two of these findings are negative, and we regard that as the substantive
-contribution rather than as a failed replication. The baseline result reproduces;
-what does not survive is its extension. Every threshold, comparator, and decision
+contribution rather than as a failed replication. The baseline qualitative pattern
+is recovered in the documented reconstruction; what does not survive is its
+extension. Every threshold, comparator, and decision
 rule was fixed before the corresponding estimate existed, so the negative
 findings are not the product of specification search, and we report each
 registered gate whether it passed or failed.
@@ -596,7 +597,7 @@ H4c & Joint moving-block bootstrap of the rate-attributable fitted premium & The
 \small Source: Authors' replication protocol.
 \end{table}
 
-\section{Baseline replication}
+\section{Baseline reconstruction}
 \label{sec:baseline}
 
 \subsection{The short-rate innovation}
@@ -621,7 +622,7 @@ determination are scale invariant and need no conversion. % artifact: artifacts/
 The timing convention is not stated in the article and had to be recovered. Two
 variants are admissible: regressing the first window month on the level of the
 month preceding the window, or beginning the regression one month inside the
-window. Only the first reproduces the published slopes, $t$-ratios, and fit
+window. Only the first recovers the published slopes, $t$-ratios, and fit
 statistics, and it is the variant used throughout. Under it the federal funds
 reconstruction matches nine of ten registered Table 1 statistics and the % artifact: artifacts/diagnostics/rates/r1a_classification.csv
 Treasury-bill reconstruction matches ten of ten. % artifact: artifacts/diagnostics/rates/r1a_classification.csv
@@ -638,10 +639,10 @@ on the joint seventy-portfolio system over the 504 baseline months. % artifact: 
 
 \input{tables/baseline}
 
-The qualitative published result reproduces. Adding the funds-rate innovation to
+The qualitative published pattern is recovered. Adding the funds-rate innovation to
 the market model lowers cross-sectional RMSE from 0.1893 to 0.1004 and raises the % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
 article's fit statistic from $-0.613$ to 0.544, and the rate carries a negative % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
-price of risk with a Shanken $t$ of $-2.86$. The Treasury-bill specification % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
+price of risk with a nominal Shanken $t$ of $-2.86$. The Treasury-bill specification % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
 gives the same sign and a comparable $t$-ratio, so the finding does not hinge on
 which short rate is used. % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
 
@@ -901,8 +902,7 @@ the fitted premia explain less of the cross-section of average returns than a
 constant would. % artifact: artifacts/tables/extension/temporal_evaluation.csv
 
 Those sign reversals are weaker evidence than their count suggests, and the
-paper's own diagnostics say why. Section~
-ef{sec:identification} reports that
+paper's own diagnostics say why. Section~\ref{sec:identification} reports that
 five of the seven baseline fitted-premium intervals contain zero. Of the five
 families whose point estimate reverses, only book-to-market had a baseline
 interval excluding zero; the other four reverse a sign that was never % artifact: artifacts/tables/robustness/h4c_fitted_premium_intervals.csv
@@ -936,7 +936,7 @@ this sample size, is a change of any particular size in what the factor is
 paid. The registered gates fail; the economic change behind them remains
 unresolved.
 
-\subsection{The obvious benign explanation does not hold}
+\subsection{The registered dispersion gate does not account for the result}
 
 The extension window contains the effective lower bound, so the short-rate factor
 has far less variation in it: the innovation standard deviation falls from 0.5855 % artifact: artifacts/diagnostics/h2_temporal_stability.json
@@ -964,8 +964,18 @@ in the extension, against a floor of 0.10. Smaller factor variation is offset by
 larger betas, and the extension window clears the identification floor more
 comfortably than the baseline does. % artifact: artifacts/diagnostics/h2_temporal_stability.json
 
+Clearing that floor rules out the registered explanation, not the general one.
+The gate is a dispersion statistic, and Section~\ref{sec:power} shows it is not a
+reliability statistic: the same rate betas carry a reliability ratio of 0.386 % artifact: artifacts/diagnostics/regime_eligibility_power.json
+over the full 648 months, so most of the dispersion the gate measures is % artifact: artifacts/diagnostics/regime_eligibility_power.json
+first-pass estimation error rather than spread in true exposures. A window can
+therefore pass H4a while its betas remain too poorly resolved to price. Passing
+the gate closes off the reading that the extension fails because the factor has
+no cross-sectional variation left; it does not close off measurement error as a
+contributor to the instability.
+
 The extension estimate is nonetheless imprecise in its own right, at $-0.0825$ % artifact: artifacts/tables/extension/temporal_evaluation.csv
-with a Shanken $t$ of $-1.49$ against $-0.6985$ and $-2.86$ in the baseline. A % artifact: artifacts/tables/extension/temporal_evaluation.csv
+with a nominal Shanken $t$ of $-1.49$ against $-0.6985$ and $-2.86$ in the baseline. A % artifact: artifacts/tables/extension/temporal_evaluation.csv
 collapsed point estimate with a wide interval is consistent both with a relation
 that has weakened and with one estimated on 144 months instead of 504, and we do % artifact: artifacts/tables/extension/temporal_evaluation.csv
 not choose between those. % artifact: artifacts/tables/extension/temporal_evaluation.csv
@@ -1152,8 +1162,12 @@ On the joint seventy-asset system, resolving
 fitted-premium spreads against the 0.25 bound requires 180 months; the % artifact: artifacts/diagnostics/regime_eligibility_power.json
 lower-bound regime has 84. Driving the probability of a sign error on the rate % artifact: artifacts/diagnostics/regime_eligibility_power.json
 price of risk below 5 percent requires 444 months. % artifact: artifacts/diagnostics/regime_eligibility_power.json
-Because the design flatters the estimator, these are lower bounds on what the
-real problem would need.
+The design flatters the estimator in several respects, so these are best read as
+optimistic benchmarks rather than as precise requirements for the empirical
+problem. We do not claim them as lower bounds: the calibration is stylized, the
+true-beta distribution is itself built from estimated betas, and the simulation
+is not a fixed point of the estimator, so the ordering between simulated and
+empirical finite-sample difficulty is argued rather than established.
 
 The mechanism is errors-in-variables attenuation. It does vanish asymptotically
 under the stationary model simulated here, since the estimation variance carries
@@ -1266,7 +1280,7 @@ This paper is a documented reconstruction, not a numerical replication, and the
 distinction governs what may be concluded from it. The article identifies its
 providers rather than its files, so we built the closest system obtainable from
 identifiable public inputs. On that system the published qualitative result
-recovers: short-rate innovations carry a negative and statistically significant
+recovers: short-rate innovations carry a negative and nominally significant
 price of risk in the cross section of anomaly portfolios, and adding the factor
 to the market model roughly halves cross-sectional pricing errors. Numerical
 recovery of the published cells is much weaker, particularly for pricing-error
@@ -1285,7 +1299,7 @@ of that failure are ruled out and a third is not. It is not explained by the
 measured data-vintage contribution, which is smaller by three orders of
 magnitude, and the factor keeps clearing the registered exposure-dispersion gate % artifact: artifacts/diagnostics/h2_temporal_stability.json
 after 2013. What we cannot rule out is imprecision: on 144 months the extension % artifact: artifacts/tables/extension/temporal_evaluation.csv
-rate price carries a Shanken $t$ of $-1.49$, and four of the five sign reversals % artifact: artifacts/tables/extension/temporal_evaluation.csv
+rate price carries a nominal Shanken $t$ of $-1.49$, and four of the five sign reversals % artifact: artifacts/tables/extension/temporal_evaluation.csv
 are of signs the baseline never established. The registered criterion fails; the
 underlying economic change is not thereby demonstrated.
 

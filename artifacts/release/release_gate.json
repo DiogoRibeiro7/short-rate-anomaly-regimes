@@ -10,13 +10,16 @@
   ],
   "verdict": {
     "critical_issue_count": 0,
-    "empirical_rebuild": "rebuildable_from_public_sources",
+    "empirical_rebuild": "rebuildable_while_frozen_source_bytes_remain_retrievable",
     "empirical_rebuild_entry_point": "make reproduce",
     "empirical_release": "blocked",
     "empirical_result_tag": "blocked",
     "major_issue_count": 1,
+    "rebuild_precondition": "frozen_source_bytes_remain_retrievable",
     "release_verdict": "source_only_release_ready",
+    "self_contained_empirical_reproduction": "not_supported_generated_artifacts_are_not_distributed",
     "source_release": "permitted",
-    "source_tag": "source_only_tag_allowed"
+    "source_tag": "source_only_tag_allowed",
+    "vintage_integrity": "enforced_by_frozen_expected_hashes"
   }
 }

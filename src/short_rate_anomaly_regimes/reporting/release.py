@@ -85,10 +85,28 @@ REQUIRED_EMPIRICAL_REBUILD_INPUTS: tuple[str, ...] = (
     "scripts/run_weak_factor_diagnostics.py",
     "scripts/verify_title.py",
     "scripts/verify_manuscript.py",
+    # The acquisition provenance manifests. Each carries the frozen expected
+    # SHA-256 for one source, and `acquire_data` reads them to decide whether a
+    # download reproduces the frozen vintage or the rebuild must abort. Shipping
+    # the scripts without them leaves a rebuild that downloads whatever a
+    # provider serves today with nothing to check it against, which is the exact
+    # failure `vintage_integrity` claims is impossible. They were distributed in
+    # practice but never required, so the claim rested on habit.
+    "artifacts/provenance/short_rate",
+    "artifacts/provenance/kenneth_french",
+    "artifacts/provenance/portfolios",
+    "artifacts/provenance/comparators",
 )
 REBUILD_ENTRY_POINT_FILE = "Makefile"
 REBUILD_ENTRY_POINT_TARGET = "reproduce"
 REBUILD_ENTRY_POINT = f"make {REBUILD_ENTRY_POINT_TARGET}"
+
+#: The rebuild status when nothing blocks it. The qualifier is load bearing: the
+#: archive ships a hash-verified rebuild path, which fails safely when a provider
+#: has revised a series, but failing safely is not the same property as remaining
+#: rebuildable indefinitely. Unqualified "rebuildable from public sources" claimed
+#: the second while the code only delivers the first.
+REBUILDABLE_WHILE_SOURCES_RETRIEVABLE = "rebuildable_while_frozen_source_bytes_remain_retrievable"
 REBUILD_BLOCKING_ISSUE_IDS: frozenset[str] = frozenset(
     {
         "empirical_rebuild_path_incomplete",
@@ -450,8 +468,20 @@ def release_verdict(issues: list[ReleaseIssue]) -> dict[str, Any]:
         "major_issue_count": len(major),
         "source_release": "blocked" if critical else "permitted",
         "empirical_release": "blocked" if critical or major else "permitted",
-        "empirical_rebuild": "blocked" if rebuild_blocked else "rebuildable_from_public_sources",
+        "empirical_rebuild": (
+            "blocked" if rebuild_blocked else REBUILDABLE_WHILE_SOURCES_RETRIEVABLE
+        ),
         "empirical_rebuild_entry_point": REBUILD_ENTRY_POINT,
+        # Three properties that the single ``empirical_rebuild`` field used to blur.
+        # Hash pinning makes the rebuild vintage-safe, which is a guarantee about what
+        # a mismatch does, not a guarantee that a mismatch never happens. A provider
+        # that stops serving the frozen bytes leaves the rebuild correctly refusing to
+        # run and the recipient unable to regenerate the result.
+        "vintage_integrity": "enforced_by_frozen_expected_hashes",
+        "rebuild_precondition": "frozen_source_bytes_remain_retrievable",
+        "self_contained_empirical_reproduction": (
+            "not_supported_generated_artifacts_are_not_distributed"
+        ),
         "source_tag": "blocked" if critical else "source_only_tag_allowed",
         "empirical_result_tag": "blocked" if critical or major else "allowed",
         # The verdict must track both dimensions. Reporting
@@ -500,21 +530,42 @@ def render_release_notes(issues: list[ReleaseIssue]) -> str:
         f"- Rebuild entry point: `{verdict['empirical_rebuild_entry_point']}`",
         f"- Source-only tag status: `{verdict['source_tag']}`",
         f"- Empirical-result tag status: `{verdict['empirical_result_tag']}`",
+        f"- Vintage integrity: `{verdict['vintage_integrity']}`",
+        f"- Rebuild precondition: `{verdict['rebuild_precondition']}`",
+        "- Self-contained empirical reproduction: "
+        f"`{verdict['self_contained_empirical_reproduction']}`",
         f"- Critical issues: `{verdict['critical_issue_count']}`",
         f"- Major issues: `{verdict['major_issue_count']}`",
         "",
-        "`empirical_release` reports whether the generated artifacts travel inside this "
-        "archive. `empirical_rebuild` reports whether the archive carries a documented "
-        "rebuild path that is verified against the frozen vintage: every acquisition "
-        "download is checked against the SHA-256 recorded in the shipped provenance "
-        "manifests, and the rebuild refuses to proceed when a provider has revised a "
-        "series. It is not a claim that providers never revise, and it is not a guarantee "
-        "that the frozen bytes stay retrievable from the provider. The two fields are "
-        "independent; the second never substitutes for the first.",
+        "These describe three different properties, and only the first two are supported.",
+        "",
+        "1. **Vintage integrity.** Every acquisition download is checked against the "
+        "SHA-256 recorded in the shipped provenance manifests, and the rebuild aborts "
+        "when a provider has revised a series rather than rebuilding against the "
+        "revision. Changing a frozen vintage requires the separate `make update-vintage` "
+        "operation, which no `reproduce` stage invokes.",
+        "2. **Rebuildability, conditional.** `empirical_rebuild` reports that the archive "
+        "carries a documented, hash-verified rebuild path. That path regenerates the "
+        "empirical artifacts only while the frozen source bytes remain retrievable. If a "
+        "provider replaces a file and keeps no immutable historical copy, the rebuild "
+        "will correctly refuse to run, and a recipient holding only this archive will not "
+        "be able to regenerate the published result. Failing safely is not the same "
+        "property as remaining reproducible indefinitely, and the status string is "
+        "qualified so the two are not read as one.",
+        "3. **Self-contained empirical reproduction.** Not supported. The generated "
+        "panels and estimate stores are not distributed, which is what "
+        "`empirical_release: blocked` and the `empirical_artifacts_missing` issue "
+        "record. Where redistribution rights permit it, depositing the frozen source "
+        "bytes with the archival release would upgrade this property; where they do not, "
+        "`docs/DATA_ACQUISITION.md` names the most immutable identifier available for "
+        "each source.",
+        "",
+        "`empirical_release` and `empirical_rebuild` are independent; the second never "
+        "substitutes for the first.",
         "",
         "## What This Archive Contains",
         "",
-        "- Source code, configuration, the frozen source registry, the pre-registration, the "
+        "- Source code, configuration, the frozen source registry, the pre-specified design, the "
         "acquisition and estimation scripts, the manuscript with its generated tables and "
         "figures, and the result tables and diagnostics that the manuscript cites.",
         "- It does not contain raw or processed data panels, first-pass and second-pass "

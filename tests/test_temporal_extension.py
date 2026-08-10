@@ -839,13 +839,25 @@ def test_the_h2_artifact_states_what_the_shared_vintage_does_and_does_not_achiev
     They are the quantity the extension is measured against. What the shared
     vintage achieves is holding the revision contribution common to both sides
     so that it differences out, which is a different claim from excluding it.
+
+    The note must also be exact about which gates that describes. Only the
+    magnitude and RMSE gates use the revised-history comparator; the registered
+    sign gate keeps the frozen baseline, so it is the one gate where two
+    vintages meet. An artifact whose purpose is auditability cannot generalise
+    over that distinction, even where the two agree in the current data.
     """
     stability = json.loads(H2_STABILITY.read_text(encoding="utf-8"))
     isolation = stability["vintage_isolation"]
 
-    assert "revised historical values do enter the comparison" in isolation
+    assert "revised historical values do enter those comparisons" in isolation
     assert "cannot enter the temporal verdict" not in isolation
     assert "differences out" in isolation
+    assert "the magnitude and RMSE gates compare" in isolation
+    assert "frozen sign gate retains its registered comparator" in isolation
+    assert "non-decisional diagnostic" in isolation
+    # The generalisation the referee flagged: it read as though every gate used
+    # the revised-history comparator.
+    assert "the temporal gates compare" not in isolation
 
 
 def test_the_h2_dispersion_note_does_not_claim_the_factor_is_well_identified() -> None:
