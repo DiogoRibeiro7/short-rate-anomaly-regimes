@@ -237,7 +237,7 @@ def first_pass_diagnostics(
     )
     ljung_box = acorr_ljungbox(residuals, lags=[min(6, max(1, len(residuals) // 2))])
     arch_lags = min(6, max(1, len(residuals) // 3))
-    arch_stat, arch_pvalue, _, _ = het_arch(residuals, nlags=arch_lags)
+    _arch_stat, arch_pvalue, _, _ = het_arch(residuals, nlags=arch_lags)
     _jarque_bera_stat, jarque_bera_pvalue, _, _ = sm.stats.stattools.jarque_bera(residuals)
     influence = model.get_influence()
     leverage = pd.Series(influence.hat_matrix_diag, index=residuals.index)

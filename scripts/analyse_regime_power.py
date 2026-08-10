@@ -387,7 +387,7 @@ def cross_sectional_residual_dispersion(residual_covariance: FloatArray) -> floa
     mean_diagonal = float(np.mean(np.diag(residual_covariance)))
     off_diagonal_total = float(residual_covariance.sum() - np.trace(residual_covariance))
     mean_off_diagonal = off_diagonal_total / (n_assets * (n_assets - 1))
-    return mean_diagonal - mean_off_diagonal
+    return float(mean_diagonal - mean_off_diagonal)
 
 
 def first_pass_beta_reliability(dgp: PowerDgp, *, window_months: int | None = None) -> pd.DataFrame:

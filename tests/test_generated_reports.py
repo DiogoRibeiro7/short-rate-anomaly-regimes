@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -377,7 +378,7 @@ def test_artifact_helpers_format_and_locate_values(tmp_path: Path) -> None:
     assert dataframe_table(pd.DataFrame({"a": [1]})) == ["| a |", "|---|", "| 1 |"]
     assert missing_inputs((payload_path, tmp_path / "absent.json")) == (tmp_path / "absent.json",)
 
-    with pytest.raises(KeyError, match="outer.missing"):
+    with pytest.raises(KeyError, match=re.escape("outer.missing")):
         artifact_field(load_json_artifact(payload_path), "outer", "missing")
     list_path = tmp_path / "list.json"
     list_path.write_text("[1]", encoding="utf-8")

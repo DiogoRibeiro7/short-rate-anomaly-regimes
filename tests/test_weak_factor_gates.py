@@ -8,7 +8,7 @@ independently drawn one must pass it.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -428,7 +428,7 @@ def test_dfbeta_gate_fails_when_one_portfolio_dominates_the_risk_price() -> None
         **_influence_inputs(perturbation=5.0, residual_variance=1e-4)  # type: ignore[arg-type]
     )
     peak = influence.loc[influence["abs_standardized_dfbeta"].idxmax()]
-    assert float(peak["abs_standardized_dfbeta"]) >= MAX_ABS_STANDARDIZED_DFBETA
+    assert float(cast(float, peak["abs_standardized_dfbeta"])) >= MAX_ABS_STANDARDIZED_DFBETA
     assert str(peak["asset"]) == "family__decile_01"
     assert bool(peak["reaches_threshold"]) is True
     assert dfbeta_gate_passes(influence) is False
