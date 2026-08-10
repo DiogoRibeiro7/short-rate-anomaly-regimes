@@ -292,9 +292,9 @@ def test_release_environment_manifest_reports_the_locked_environment(tmp_path: P
 def test_release_environment_manifest_matches_the_repository_lock_file() -> None:
     manifest = build_release_environment_manifest()
     locked = tomllib.loads(Path("poetry.lock").read_text(encoding="utf-8"))
-    expected = {str(item["name"]).lower() for item in locked["package"]}
+    expected = {str(item["name"]).lower(): str(item["version"]) for item in locked["package"]}
 
-    assert set(manifest["packages"]) == expected
+    assert manifest["packages"] == expected
 
 
 def test_data_acquisition_guide_lists_nonredistributed_sources(tmp_path: Path) -> None:
