@@ -2728,7 +2728,7 @@
     "license": "MIT",
     "name": "short-rate-anomaly-regimes",
     "requires_python": ">=3.12,<4.0",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "schema_version": 1
 }

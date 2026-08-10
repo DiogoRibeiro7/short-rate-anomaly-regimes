@@ -1,10 +1,11 @@
 # Short Rate Anomaly Regimes
 
 [![CI](https://github.com/DiogoRibeiro7/short-rate-anomaly-regimes/actions/workflows/ci.yml/badge.svg)](https://github.com/DiogoRibeiro7/short-rate-anomaly-regimes/actions/workflows/ci.yml)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21860679.svg)](https://doi.org/10.5281/zenodo.21860679)
 
 A reproducible replication and extension of Maio and Santa-Clara (2017), *Short-Term Interest Rates and Stock Market Anomalies*, asking whether short-rate innovations still price equity anomalies after the publication sample and across monetary regimes.
 
-The paper is written and builds from this repository: [`paper/manuscript.pdf`](paper/manuscript.pdf), 26 pages.
+The paper is written and builds from this repository: [`paper/manuscript.pdf`](paper/manuscript.pdf), 27 pages.
 
 ## Status
 
@@ -181,6 +182,8 @@ Then the milestone reports: [`robustness_and_weak_factor_report.md`](reports/rob
 The baseline paper is
 
 Maio, Paulo F., and Pedro Santa-Clara. 2017. Short-Term Interest Rates and Stock Market Anomalies. *Journal of Financial and Quantitative Analysis* 52(3), 927-961. DOI 10.1017/S002210901700028X.
+
+This compendium is archived on Zenodo. Cite the concept DOI, [10.5281/zenodo.21860679](https://doi.org/10.5281/zenodo.21860679), which resolves to the newest version, unless you need to pin the exact one you ran against; the `v1.0.0-source` deposit is [10.5281/zenodo.21860680](https://doi.org/10.5281/zenodo.21860680).
 
 See [`CITATION.cff`](CITATION.cff) for repository citation metadata.
 
