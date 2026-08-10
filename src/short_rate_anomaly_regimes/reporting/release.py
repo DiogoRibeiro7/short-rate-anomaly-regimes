@@ -13,7 +13,6 @@ from typing import Any, Literal
 
 import yaml
 
-from short_rate_anomaly_regimes.environment import package_versions
 from short_rate_anomaly_regimes.provenance import sha256_file
 
 ReleaseSeverity = Literal["critical", "major", "minor"]
@@ -622,6 +621,22 @@ def write_release_notes(*, output_path: Path, issues: list[ReleaseIssue]) -> Non
     output_path.write_text(render_release_notes(issues), encoding="utf-8", newline="\n")
 
 
+def locked_package_versions(*, lock_path: Path) -> dict[str, str]:
+    """Return the resolved package versions recorded in the Poetry lock file.
+
+    The release manifest must describe the environment a recipient rebuilds, not the
+    interpreter that happened to write the file. Reading the lock keeps the manifest
+    deterministic across machines; reading the live interpreter did not, and recorded
+    whatever unrelated packages shared the author's interpreter.
+    """
+    lock_data = tomllib.loads(lock_path.read_text(encoding="utf-8"))
+    versions = {
+        str(package["name"]).lower(): str(package["version"])
+        for package in lock_data.get("package", [])
+    }
+    return dict(sorted(versions.items()))
+
+
 def build_release_environment_manifest(
     *,
     cwd: Path = Path("."),
@@ -631,11 +646,12 @@ def build_release_environment_manifest(
     return {
         "schema_version": 1,
         "machine_specific_paths_included": False,
+        "packages_resolved_from": "poetry.lock",
         "python": {
             "implementation": "CPython",
             "requires_python": ">=3.12,<4.0",
         },
-        "packages": package_versions(),
+        "packages": locked_package_versions(lock_path=cwd / "poetry.lock"),
         "source_state": "Resolved by the Git commit or tag that carries this manifest.",
         "config_hashes": {
             normalise_repo_path(path): sha256_file(cwd / path)

@@ -250,10 +250,19 @@ def test_checksum_manifest_hashes_only_release_candidates(tmp_path: Path) -> Non
     assert "prompts/private.md" not in output.read_text(encoding="utf-8")
 
 
+def _write_demo_lock(cwd: Path) -> None:
+    (cwd / "poetry.lock").write_text(
+        '[[package]]\nname = "Numpy"\nversion = "2.2.6"\n\n'
+        '[[package]]\nname = "pandas"\nversion = "2.3.1"\n',
+        encoding="utf-8",
+    )
+
+
 def test_release_environment_manifest_is_path_sanitized(tmp_path: Path) -> None:
     config = tmp_path / "configs" / "baseline.yaml"
     config.parent.mkdir()
     config.write_text("project: demo\n", encoding="utf-8")
+    _write_demo_lock(tmp_path)
 
     manifest = build_release_environment_manifest(
         cwd=tmp_path,
@@ -264,6 +273,28 @@ def test_release_environment_manifest_is_path_sanitized(tmp_path: Path) -> None:
     assert manifest["machine_specific_paths_included"] is False
     assert "executable" not in rendered
     assert "configs/baseline.yaml" in manifest["config_hashes"]
+
+
+def test_release_environment_manifest_reports_the_locked_environment(tmp_path: Path) -> None:
+    """The manifest must describe the rebuild target, not the interpreter that wrote it.
+
+    Reading the live interpreter made the file machine-specific, so it recorded packages
+    that were merely installed alongside the project and omitted locked ones that were not.
+    """
+    _write_demo_lock(tmp_path)
+
+    manifest = build_release_environment_manifest(cwd=tmp_path, config_paths=())
+
+    assert manifest["packages_resolved_from"] == "poetry.lock"
+    assert manifest["packages"] == {"numpy": "2.2.6", "pandas": "2.3.1"}
+
+
+def test_release_environment_manifest_matches_the_repository_lock_file() -> None:
+    manifest = build_release_environment_manifest()
+    locked = tomllib.loads(Path("poetry.lock").read_text(encoding="utf-8"))
+    expected = {str(item["name"]).lower(): str(item["version"]) for item in locked["package"]}
+
+    assert manifest["packages"] == expected
 
 
 def test_data_acquisition_guide_lists_nonredistributed_sources(tmp_path: Path) -> None:
