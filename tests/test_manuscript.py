@@ -292,9 +292,13 @@ def test_the_manuscript_reports_results_rather_than_a_pending_status() -> None:
     """Guard against the results sections reverting to the pending-design draft."""
     manuscript = Path("paper/manuscript.tex").read_text(encoding="utf-8")
     assert "Status: Preliminary research design" not in manuscript
-    for heading in (r"\section{Baseline replication}", r"\section{Monetary-regime stability}"):
+    for heading in (r"\section{Baseline reconstruction}", r"\section{Monetary-regime stability}"):
         assert heading in manuscript
     assert r"\section{Planned baseline replication}" not in manuscript
+    # The empirical sections describe a reconstruction. Naming one of them after
+    # replication invites exactly the reading the paper spends its design section
+    # refusing, since no result here is eligible for an exact-replication label.
+    assert r"\section{Baseline replication}" not in manuscript
 
 
 def test_manuscript_checks_follow_nested_inputs(tmp_path: Path) -> None:

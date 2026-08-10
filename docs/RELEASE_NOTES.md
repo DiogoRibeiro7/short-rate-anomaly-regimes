@@ -4,18 +4,27 @@
 
 - Source-code release: `permitted`
 - Empirical-results release: `blocked`
-- Empirical rebuild: `rebuildable_from_public_sources`
+- Empirical rebuild: `rebuildable_while_frozen_source_bytes_remain_retrievable`
 - Rebuild entry point: `make reproduce`
 - Source-only tag status: `source_only_tag_allowed`
 - Empirical-result tag status: `blocked`
+- Vintage integrity: `enforced_by_frozen_expected_hashes`
+- Rebuild precondition: `frozen_source_bytes_remain_retrievable`
+- Self-contained empirical reproduction: `not_supported_generated_artifacts_are_not_distributed`
 - Critical issues: `0`
 - Major issues: `1`
 
-`empirical_release` reports whether the generated artifacts travel inside this archive. `empirical_rebuild` reports whether the archive carries a documented rebuild path that is verified against the frozen vintage: every acquisition download is checked against the SHA-256 recorded in the shipped provenance manifests, and the rebuild refuses to proceed when a provider has revised a series. It is not a claim that providers never revise, and it is not a guarantee that the frozen bytes stay retrievable from the provider. The two fields are independent; the second never substitutes for the first.
+These describe three different properties, and only the first two are supported.
+
+1. **Vintage integrity.** Every acquisition download is checked against the SHA-256 recorded in the shipped provenance manifests, and the rebuild aborts when a provider has revised a series rather than rebuilding against the revision. Changing a frozen vintage requires the separate `make update-vintage` operation, which no `reproduce` stage invokes.
+2. **Rebuildability, conditional.** `empirical_rebuild` reports that the archive carries a documented, hash-verified rebuild path. That path regenerates the empirical artifacts only while the frozen source bytes remain retrievable. If a provider replaces a file and keeps no immutable historical copy, the rebuild will correctly refuse to run, and a recipient holding only this archive will not be able to regenerate the published result. Failing safely is not the same property as remaining reproducible indefinitely, and the status string is qualified so the two are not read as one.
+3. **Self-contained empirical reproduction.** Not supported. The generated panels and estimate stores are not distributed, which is what `empirical_release: blocked` and the `empirical_artifacts_missing` issue record. Where redistribution rights permit it, depositing the frozen source bytes with the archival release would upgrade this property; where they do not, `docs/DATA_ACQUISITION.md` names the most immutable identifier available for each source.
+
+`empirical_release` and `empirical_rebuild` are independent; the second never substitutes for the first.
 
 ## What This Archive Contains
 
-- Source code, configuration, the frozen source registry, the pre-registration, the acquisition and estimation scripts, the manuscript with its generated tables and figures, and the result tables and diagnostics that the manuscript cites.
+- Source code, configuration, the frozen source registry, the pre-specified design, the acquisition and estimation scripts, the manuscript with its generated tables and figures, and the result tables and diagnostics that the manuscript cites.
 - It does not contain raw or processed data panels, first-pass and second-pass estimate stores, or any other artifact whose redistribution rights are unrecorded. Those are rebuilt, not shipped.
 
 ## Exact Results

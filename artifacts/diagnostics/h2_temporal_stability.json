@@ -201,5 +201,5 @@
       }
     }
   },
-  "vintage_isolation": "the temporal gates compare the refitted extension with the revised-history baseline, so revised historical values do enter the comparison, as the quantity the extension is measured against. What the shared vintage achieves is holding the revision contribution common to both sides, so it differences out of the temporal change; the publication-era against current-vintage effect is reported separately as the locked-against-revised comparison"
+  "vintage_isolation": "the magnitude and RMSE gates compare the refitted extension with the revised-history baseline, so revised historical values do enter those comparisons, as the quantity the extension is measured against. What the shared vintage achieves is holding the revision contribution common to both sides, so it differences out of the temporal change. The frozen sign gate retains its registered comparator, the locked baseline, and is therefore the one gate in which two vintages meet; a same-vintage sign comparison is reported alongside it as a non-decisional diagnostic. The publication-era against current-vintage effect is reported separately as the locked-against-revised comparison"
 }

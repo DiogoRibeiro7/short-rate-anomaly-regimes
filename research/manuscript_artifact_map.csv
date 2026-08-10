@@ -3,7 +3,7 @@ baseline_config,configs/baseline.yaml,Baseline sample dates and strict replicati
 extension_config,configs/extensions.yaml,Temporal extension and out-of-sample design configuration
 regime_config,configs/regimes.yaml,Deterministic monetary-regime proposal and sensitivity rules
 table_targets,research/table_target_manifest.csv,Frozen table-level replication targets
-hypothesis_registry,research/hypothesis_registry.csv,Pre-registered replication and extension hypotheses
+hypothesis_registry,research/hypothesis_registry.csv,Pre-specified replication and extension hypotheses
 data_access,research/data_access_matrix.csv,Input availability and source-access status
 article_manifest,artifacts/evidence/article_manifest.json,Private article and supplement hash metadata
 replication_audit,artifacts/audit/table_replication.csv,Table-level replication audit output

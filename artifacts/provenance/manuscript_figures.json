@@ -1,4 +1,5 @@
 {
+  "content_manifest": "paper/figures/figure_content.json",
   "figures": [
     "regime_innovation.pdf",
     "spread_reversal.pdf"

@@ -150,7 +150,13 @@ def test_rebuild_status_is_reported_beside_the_release_status(tmp_path: Path) ->
     verdict = release_verdict(issues)
 
     assert verdict["empirical_release"] == "blocked"
-    assert verdict["empirical_rebuild"] == "rebuildable_from_public_sources"
+    assert (
+        verdict["empirical_rebuild"] == "rebuildable_while_frozen_source_bytes_remain_retrievable"
+    )
+    # The three properties the single field used to blur.
+    assert verdict["vintage_integrity"] == "enforced_by_frozen_expected_hashes"
+    assert verdict["rebuild_precondition"] == "frozen_source_bytes_remain_retrievable"
+    assert verdict["self_contained_empirical_reproduction"].startswith("not_supported")
     assert verdict["empirical_rebuild_entry_point"] == "make reproduce"
     # A rebuild path is not a pass. The release verdict is unchanged by it.
     assert verdict["release_verdict"] == "source_only_release_ready"
@@ -444,7 +450,7 @@ def test_release_notes_and_adversarial_reports_include_required_verdicts() -> No
     # The notes must carry both facts: what ships, and what can be rebuilt.
     assert "What This Archive Contains" in notes
     assert "Empirical-results release: `blocked`" in notes
-    assert "Empirical rebuild: `rebuildable_from_public_sources`" in notes
+    assert "Empirical rebuild: `rebuildable_while_frozen_source_bytes_remain_retrievable`" in notes
     assert "make reproduce" in notes
     assert "Minimal reproduction" in code_audit
     assert "distributed archive membership" in code_audit

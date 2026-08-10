@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import re
 import sys
+import tomllib
 from pathlib import Path
 
+import matplotlib
 import pytest
 
 SCRIPT = Path("scripts/build_manuscript_tables.py")
@@ -88,18 +91,64 @@ def test_generated_tables_declare_their_artifacts_in_the_map() -> None:
     assert cited <= declared, f"undeclared artifacts: {sorted(cited - declared)}"
 
 
-def test_committed_figures_match_a_fresh_regeneration(tmp_path: Path) -> None:
-    """The committed figures must be exactly what the generator produces.
+def _locked_version(package: str) -> str:
+    lock = tomllib.loads(Path("poetry.lock").read_text(encoding="utf-8"))
+    for entry in lock["package"]:
+        if str(entry["name"]).lower() == package:
+            return str(entry["version"])
+    raise AssertionError(f"{package} is not in poetry.lock")
 
-    Figure output is made deterministic by suppressing the embedded creation
-    date, so a byte comparison detects a changed artifact and nothing else.
+
+def test_committed_figure_content_matches_a_fresh_regeneration(tmp_path: Path) -> None:
+    """The committed figures must draw exactly what the current artifacts say.
+
+    This compares what is plotted, not how it is serialized. Line and bar
+    coordinates, titles, axis labels, legends and annotations all trace back to
+    an artifact value, so a difference here means a number moved. Autoscaled
+    limits and automatically located ticks are excluded, because those are
+    matplotlib's layout decisions rather than results.
     """
+    module = _load_builder(FIGURE_SCRIPT)
+    committed = json.loads(Path("paper/figures/figure_content.json").read_text(encoding="utf-8"))
+    assert committed, "no figure content manifest is committed"
+
+    module.FIGURE_ROOT = tmp_path  # type: ignore[attr-defined]
+    regenerated = module.build_content_manifest()  # type: ignore[attr-defined]
+
+    assert set(regenerated) == set(committed)
+    for name in sorted(committed):
+        assert regenerated[name] == committed[name], f"{name} has drifted from its artifacts"
+
+
+def test_committed_figure_bytes_match_under_the_locked_plotting_environment(
+    tmp_path: Path,
+) -> None:
+    """Byte equality is asserted only where it is a real property.
+
+    Pinning the embedded metadata removes the creation date and the version
+    strings, but matplotlib's vector serialization still changes across
+    releases: the committed PDFs do not reproduce byte for byte under every
+    version ``pyproject.toml`` permits. Byte equality is therefore a property of
+    one plotting environment, and claiming otherwise made a dependency bump look
+    like a changed result. The version-independent guarantee is the content
+    comparison above.
+    """
+    locked = _locked_version("matplotlib")
+    if matplotlib.__version__ != locked:
+        pytest.skip(
+            f"byte comparison applies to the locked matplotlib {locked}; "
+            f"this environment has {matplotlib.__version__}"
+        )
+
     module = _load_builder(FIGURE_SCRIPT)
     committed = {path.name: path.read_bytes() for path in FIGURE_ROOT.glob("*.pdf")}
     assert committed, "no generated figures are committed"
 
     module.FIGURE_ROOT = tmp_path  # type: ignore[attr-defined]
-    regenerated = {path.name: path.read_bytes() for path in module.build_all()}  # type: ignore[attr-defined]
+    regenerated = {
+        artifact.path.name: artifact.path.read_bytes()
+        for artifact in module.build_all()  # type: ignore[attr-defined]
+    }
 
     assert set(regenerated) == set(committed)
     for name in sorted(committed):
