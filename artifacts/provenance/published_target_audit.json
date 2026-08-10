@@ -2,12 +2,13 @@
   "bootstrap_p_values_available": true,
   "exact_input_available": false,
   "inputs": {
+    "artifacts/diagnostics/useless_factor_bootstrap.json": "d033af385a595e45f08d5c22a5fa68eb89055d8340751bde4abf1ed7c0edfd61",
     "artifacts/tables/cross_section/baseline_risk_prices.csv": "2751383f466740daa9a67b4c796cdb356d139a7ce1339b4c6bf8b6fe329d995c",
     "artifacts/tables/cross_section/useless_factor_bootstrap_p_values.csv": "d934e8751bd6a9b3694a8dea8386a06c547f8fa9ee3e269637ad449ebc301fa1",
     "research/published_target_values.csv": "ae2dc43da2dc3a038795657d3af423ecf808523db54ba9fde0a73c55cf7d5e9b"
   },
   "outputs": {
-    "artifacts/audit/published_target_audit.csv": "4f47314d70bca66e49d10ed2ba42f650a1361eff52628e9b7b2aa60bf4b2503b",
+    "artifacts/audit/published_target_audit.csv": "d89ec5de45ad9ec68b8ef014788ebd0cf8687537bc0f494f2603dbdcb69c8e58",
     "artifacts/audit/replication_layer_classification.csv": "922ae48fb8c5c3bb2f193fa1a0adb6e7d3f15706bd673597f5b67593e633b57b"
   },
   "replication_mode": "documented_reconstruction",

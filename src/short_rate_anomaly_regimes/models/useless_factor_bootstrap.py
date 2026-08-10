@@ -125,6 +125,15 @@ def first_pass_by_matrix_ols(
 
     factor_matrix = factors.to_numpy(dtype=float)
     design = np.column_stack([np.ones(n_months), factor_matrix])
+    if np.linalg.matrix_rank(design) < design.shape[1]:
+        # ``lstsq`` answers a rank-deficient design with a minimum-norm solution
+        # rather than an error, so a replication whose resampled factor came
+        # back constant would silently return betas that split the intercept
+        # across columns. Those betas can still pass the second pass's own rank
+        # check, which would put a fitted-from-nothing draw into the null
+        # distribution. Rejecting here sends the draw down the degenerate path
+        # instead, where it is counted.
+        raise ValueError("The first-pass design is rank deficient; betas are unidentified")
     targets = excess_returns.to_numpy(dtype=float)
     coefficients, *_ = np.linalg.lstsq(design, targets, rcond=None)
     residuals = targets - design @ coefficients

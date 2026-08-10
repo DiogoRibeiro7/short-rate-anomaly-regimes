@@ -131,11 +131,11 @@ The partial-recovery classifications say exactly that and no more.
   bootstrap p-value in Tables 3, 4, 6, and A.1 comes from the article's
   5,000-replication useless-factor bootstrap (Internet Appendix Section 4).
   That procedure is now implemented and run for all 29 systems, so all 118
-  cells are compared rather than skipped. Of them, 39 are recovered within
-  published rounding, 8 are not recovered, and 71 are not resolvable because
+  cells are compared rather than skipped. Of them, 36 are recovered within
+  published rounding, 8 are not recovered, and 74 are not resolvable because
   the Monte Carlo standard error of a 5,000-replication p-value exceeds the
-  tolerance implied by three printed decimals. Of the 40 cells where that
-  tolerance is attainable at all, 32 are recovered. The verdicts the p-values
+  tolerance implied by three printed decimals. Of the 37 cells where that
+  tolerance is attainable at all, 29 are recovered. The verdicts the p-values
   were printed to support agree far more closely than the digits do: 45 of 45
   risk-price cells agree on significance at the 5 percent level, and 27 of 29
   each for the specification test and the cross-sectional fit. See

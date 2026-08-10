@@ -75,7 +75,15 @@ UNCERTAINTY_COLUMN = {
 
 
 def _decimals_of(value: object) -> int:
-    """Count the decimals printed for an uncertainty value."""
+    """Count the decimals printed for an uncertainty value.
+
+    The count has to come from the string the article printed, which is why
+    ``uncertainty_value`` is read as text. Letting pandas parse it turned
+    ``0.000`` into ``0.0`` and so into a tolerance of 0.05 rather than 0.0005,
+    a hundredfold loosening that reported materially different values as
+    recovered. Twenty-eight of the registry's cells were affected, and the
+    asymptotic p-values were affected the same way.
+    """
     text = str(value)
     return len(text.split(".")[1]) if "." in text else 0
 
@@ -198,7 +206,9 @@ def _bootstrap_uncertainty(
 
 def main() -> None:
     """Build the cell-level audit and the layer-level classification."""
-    published = pd.read_csv(PUBLISHED_CSV)
+    # ``uncertainty_value`` stays text so its printed precision survives; see
+    # ``_decimals_of``.
+    published = pd.read_csv(PUBLISHED_CSV, dtype={"uncertainty_value": str})
     generated = pd.read_csv(GENERATED_CSV)
     lookup = generated.set_index(["model", "portfolio_set"])
     bootstrap = _load_bootstrap_p_values()
@@ -323,6 +333,14 @@ def main() -> None:
                     **(
                         {BOOTSTRAP_CSV.as_posix(): _sha256(BOOTSTRAP_CSV)}
                         if BOOTSTRAP_CSV.is_file()
+                        else {}
+                    ),
+                    # The replication count lives here, and it decides which
+                    # cells are resolvable at all, so the classification is not
+                    # reproducible without it.
+                    **(
+                        {BOOTSTRAP_DIAGNOSTICS_JSON.as_posix(): _sha256(BOOTSTRAP_DIAGNOSTICS_JSON)}
+                        if BOOTSTRAP_DIAGNOSTICS_JSON.is_file()
                         else {}
                     ),
                 },

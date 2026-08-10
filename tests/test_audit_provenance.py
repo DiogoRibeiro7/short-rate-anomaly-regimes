@@ -28,6 +28,7 @@ from scripts.audit_portfolio_source_compatibility import (
 from scripts.audit_portfolio_source_compatibility import (
     PROVENANCE_JSON as PORTFOLIO_PROVENANCE_JSON,
 )
+from scripts.audit_published_targets import _decimals_of
 from scripts.reconstruct_rate_innovations import (
     INNOVATION_PARQUET,
     INNOVATION_PROVENANCE_JSON,
@@ -458,3 +459,26 @@ class TestCommittedProvenanceRecords:
             assert manifest["normalized_sha256"] == entry["normalized_sha256"]
             assert manifest["vintage_label"] == entry["vintage_label"]
             assert entry["vintage_label"]
+
+
+def test_published_precision_survives_csv_parsing() -> None:
+    """A p-value printed as ``0.000`` must carry a three-decimal tolerance.
+
+    Letting pandas parse the column turned ``0.000`` into ``0.0``, so
+    ``_decimals_of`` counted one decimal and the audit allowed 0.05 either side
+    instead of 0.0005. That is a hundredfold loosening, and it reported
+    materially different values as recovered. Twenty-eight registry cells were
+    affected, the asymptotic p-values among them, so the column is read as text
+    and the tolerance is taken from what the article actually printed.
+    """
+    registry = pd.read_csv(
+        Path("research/published_target_values.csv"), dtype={"uncertainty_value": str}
+    )
+    printed = registry["uncertainty_value"].astype(str)
+
+    assert (printed == "0.000").any(), "the fixture assumes the registry prints a 0.000 p-value"
+    for value in printed[printed.str.startswith("0.00")].unique():
+        assert _decimals_of(value) == 3
+        assert 0.5 * 10.0 ** -_decimals_of(value) == pytest.approx(0.0005)
+    # The failure mode itself: the parsed float loses the trailing zeros.
+    assert _decimals_of(float("0.000")) == 1

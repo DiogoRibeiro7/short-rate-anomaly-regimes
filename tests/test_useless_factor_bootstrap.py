@@ -112,6 +112,16 @@ def test_the_p_value_branches_follow_the_published_definition() -> None:
         sample_risk_price=-0.4, sample_t_statistic=-99.0, bootstrap_t_statistics=draws
     ) == pytest.approx(0.0)
 
+    # The branch must follow the risk price, not the t-ratio. Pairing a positive
+    # price with a negative t-ratio separates the two: the published rule counts
+    # #{t_b >= -2} + #{t_b < 2} = 4 + 4, while a rule keyed on the t-ratio's sign
+    # would count #{t_b <= -2} + #{t_b > 2} = 1 + 1. Every same-signed case above
+    # gives the same answer either way, so none of them can catch a regression
+    # that switched the selector.
+    assert empirical_risk_price_p_value(
+        sample_risk_price=0.4, sample_t_statistic=-2.0, bootstrap_t_statistics=draws
+    ) == pytest.approx(8 / 5)
+
 
 def test_a_useless_factor_is_not_flagged_as_priced() -> None:
     """The calibration check: under the null the p-value must not reject.

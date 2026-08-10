@@ -51,11 +51,11 @@ The comparison needs one adjustment the other cells do not. A bootstrap p-value 
 
 | Outcome | Cells |
 |---|---|
-| `recovered_within_published_rounding` | 39 |
+| `recovered_within_published_rounding` | 36 |
 | `not_recovered_within_published_rounding` | 8 |
-| `not_resolvable_monte_carlo_error_exceeds_published_rounding` | 71 |
+| `not_resolvable_monte_carlo_error_exceeds_published_rounding` | 74 |
 
-Of the 40 cells where the printed tolerance is attainable at all, 32 are recovered. The 71 unresolvable cells are a property of comparing a simulated quantity against three printed decimals, not a finding about the reconstruction.
+Of the 37 cells where the printed tolerance is attainable at all, 29 are recovered. The 74 unresolvable cells are a property of comparing a simulated quantity against three printed decimals, not a finding about the reconstruction.
 
 What the cells agree on is the inference they were printed to support:
 
@@ -95,6 +95,5 @@ Any result that uses substituted data, reconstructed portfolios, revised series,
 ## Next Evidence Gates
 
 1. Extend the cell-level audit to Table 5 and the remaining appendix tables.
-2. Extend the cell-level audit to Table 5 and the remaining appendix tables.
-3. Acquire event-level data for the policy-information decomposition, or retire it from the design.
-4. Run the out-of-sample falsification against the frozen 1999-12 training endpoint and annual refit schedule.
+2. Acquire event-level data for the policy-information decomposition, or retire it from the design.
+3. Run the out-of-sample falsification against the frozen 1999-12 training endpoint and annual refit schedule.
