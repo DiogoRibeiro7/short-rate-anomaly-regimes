@@ -110,7 +110,7 @@ def _round(values: Any) -> list[float | str]:
     return coordinates
 
 
-def _axes_content(axis: Axes) -> dict[str, Any]:
+def _axes_content(axis: Axes, explicit_xticklabels: list[str]) -> dict[str, Any]:
     """Describe everything the builders draw on one axis.
 
     Only artists placed explicitly are recorded. Autoscaled limits and
@@ -137,8 +137,7 @@ def _axes_content(axis: Axes) -> dict[str, Any]:
         "ylabel": axis.get_ylabel(),
         "lines": lines,
         "bars": bars,
-        # Set explicitly by the bar builder; empty when matplotlib chose them.
-        "explicit_xticklabels": [text.get_text() for text in axis.get_xticklabels()],
+        "explicit_xticklabels": explicit_xticklabels,
         # The x position is data derived; the y position is read off an
         # autoscaled limit, so it is deliberately not recorded.
         "annotations": sorted(
@@ -148,9 +147,25 @@ def _axes_content(axis: Axes) -> dict[str, Any]:
     }
 
 
-def figure_content(figure: Figure) -> dict[str, Any]:
-    """Describe a figure in terms that do not depend on the plotting library version."""
-    return {"axes": [_axes_content(axis) for axis in figure.axes]}
+def figure_content(
+    figure: Figure,
+    explicit_xticklabels: dict[int, list[str]] | None = None,
+) -> dict[str, Any]:
+    """Describe a figure in terms that do not depend on the plotting library version.
+
+    Tick labels are supplied by the caller rather than read back off the axis.
+    ``Axes.get_xticklabels`` cannot distinguish a label the builder chose from
+    one matplotlib generated, and on the date axis the generated labels depend
+    on the installed locator and formatter, so reading them back would put the
+    version dependence straight back into a manifest that exists to remove it.
+    The builder is the only place that knows which labels are results.
+    """
+    supplied = explicit_xticklabels or {}
+    return {
+        "axes": [
+            _axes_content(axis, supplied.get(index, [])) for index, axis in enumerate(figure.axes)
+        ]
+    }
 
 
 def _as_float(value: Any) -> float:
@@ -278,7 +293,9 @@ def build_spread_reversal_figure() -> FigureArtifact:
 
     path = FIGURE_ROOT / "spread_reversal.pdf"
     figure.savefig(path, metadata=DETERMINISTIC_METADATA)
-    content = figure_content(figure)
+    # The family order is data driven: it is the baseline-spread sort above, so a
+    # changed spread that reorders the bars shows up here as well as in the geometry.
+    content = figure_content(figure, {0: [FAMILY_LABELS[family] for family in families]})
     plt.close(figure)
     return FigureArtifact(path=path, content=content)
 

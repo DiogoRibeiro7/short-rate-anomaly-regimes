@@ -85,6 +85,17 @@ REQUIRED_EMPIRICAL_REBUILD_INPUTS: tuple[str, ...] = (
     "scripts/run_weak_factor_diagnostics.py",
     "scripts/verify_title.py",
     "scripts/verify_manuscript.py",
+    # The acquisition provenance manifests. Each carries the frozen expected
+    # SHA-256 for one source, and `acquire_data` reads them to decide whether a
+    # download reproduces the frozen vintage or the rebuild must abort. Shipping
+    # the scripts without them leaves a rebuild that downloads whatever a
+    # provider serves today with nothing to check it against, which is the exact
+    # failure `vintage_integrity` claims is impossible. They were distributed in
+    # practice but never required, so the claim rested on habit.
+    "artifacts/provenance/short_rate",
+    "artifacts/provenance/kenneth_french",
+    "artifacts/provenance/portfolios",
+    "artifacts/provenance/comparators",
 )
 REBUILD_ENTRY_POINT_FILE = "Makefile"
 REBUILD_ENTRY_POINT_TARGET = "reproduce"

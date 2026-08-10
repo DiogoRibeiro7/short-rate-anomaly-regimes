@@ -178,6 +178,44 @@ def test_missing_rebuild_scripts_block_the_rebuild_status(tmp_path: Path) -> Non
     assert release_verdict(issues)["empirical_rebuild"] == "blocked"
 
 
+def test_missing_frozen_hash_manifests_block_the_rebuild_status(tmp_path: Path) -> None:
+    """A rebuild without the expected hashes is not the vintage-safe rebuild claimed.
+
+    ``acquire_data`` reads the frozen SHA-256 for each source from
+    ``artifacts/provenance/<group>/<source>.json`` and aborts when a download
+    disagrees. Ship the scripts without those manifests and the rebuild
+    downloads whatever a provider serves today with nothing to check it
+    against, which is precisely the substitution ``vintage_integrity`` says
+    cannot happen. They were distributed in practice but never required, so the
+    guarantee rested on habit rather than on the gate.
+    """
+    rebuild_paths = _rebuild_repo(tmp_path)
+    dropped = Path("artifacts/provenance/kenneth_french")
+    kept = tuple(path for path in rebuild_paths if path != dropped)
+
+    issues = build_release_issues(cwd=tmp_path, paths=kept)
+    incomplete = next(
+        issue for issue in issues if issue.issue_id == "empirical_rebuild_path_incomplete"
+    )
+
+    assert dropped.as_posix() in incomplete.location
+    assert release_verdict(issues)["empirical_rebuild"] == "blocked"
+
+
+def test_the_repository_distributes_every_frozen_hash_manifest_group() -> None:
+    """The real archive must carry the manifests the gate now requires."""
+    distributed = distributed_release_files()
+    groups = tuple(
+        required
+        for required in REQUIRED_EMPIRICAL_REBUILD_INPUTS
+        if required.startswith("artifacts/provenance/")
+    )
+
+    assert groups, "no frozen-hash manifest group is required"
+    for group in groups:
+        assert is_distributed_path(group, distributed), f"{group} is not distributed"
+
+
 def test_makefile_without_a_reproduce_target_blocks_the_rebuild_status(tmp_path: Path) -> None:
     rebuild_paths = _rebuild_repo(tmp_path)
     _write(tmp_path, REBUILD_ENTRY_POINT_FILE, "test:\n\tpytest\n")

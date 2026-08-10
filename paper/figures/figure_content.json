@@ -1370,16 +1370,7 @@
       {
         "annotations": [],
         "bars": [],
-        "explicit_xticklabels": [
-          "1960",
-          "1970",
-          "1980",
-          "1990",
-          "2000",
-          "2010",
-          "2020",
-          "2030"
-        ],
+        "explicit_xticklabels": [],
         "legend": [],
         "lines": [
           {
