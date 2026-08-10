@@ -41,7 +41,31 @@ Registered hypothesis outcomes are recorded in `artifacts/diagnostics/` and summ
 These are the parts of the original evidence base that this repository still cannot produce.
 
 - **Exact inputs.** The article identifies providers and people rather than files, so no reconstruction is eligible for an exact-replication label at any recovery rate. This bounds every claim here and is not resolvable without the original input files.
-- **The article's useless-factor bootstrap.** Every published empirical p-value comes from a 5,000-replication procedure that is not implemented, so those cells are `not_attempted_bootstrap_not_implemented` rather than compared against an asymptotic value that would be a different object.
+- **The article's useless-factor bootstrap.** Implemented, and no longer a blocker. See the section below.
+
+## The Article's Empirical p-Values
+
+All 118 published cells whose uncertainty is an empirical p-value were previously recorded as `not_attempted_bootstrap_not_implemented`. The article's procedure, Internet Appendix Section 4, is now implemented in `src/short_rate_anomaly_regimes/models/useless_factor_bootstrap.py` and run for all 29 systems the article prints a p-value for, at the published 5,000 replications, with no degenerate draws.
+
+The comparison needs one adjustment the other cells do not. A bootstrap p-value is a Monte Carlo quantity with standard error `sqrt(p (1 - p) / B)`, about 0.007 near `p = 0.5` at `B = 5000`, while a p-value printed to three decimals carries a rounding tolerance of 0.0005. For most of the range the procedure's own sampling noise is an order of magnitude wider than the band a cell would have to land in, so a miss says nothing about whether the reconstruction is faithful: the article's own bootstrap, rerun on the article's own data under a different seed, would miss its published value just as often. Those cells are therefore reported as not resolvable rather than not recovered, which is the same distinction the regime analysis draws between an inconclusive result and a demonstrated difference.
+
+| Outcome | Cells |
+|---|---|
+| `recovered_within_published_rounding` | 39 |
+| `not_recovered_within_published_rounding` | 8 |
+| `not_resolvable_monte_carlo_error_exceeds_published_rounding` | 71 |
+
+Of the 40 cells where the printed tolerance is attainable at all, 32 are recovered. The 71 unresolvable cells are a property of comparing a simulated quantity against three printed decimals, not a finding about the reconstruction.
+
+What the cells agree on is the inference they were printed to support:
+
+| Verdict at the 5 percent level | Agreement |
+|---|---|
+| Risk-price significance | 45 of 45 |
+| Specification test passes | 27 of 29 |
+| Cross-sectional fit significance | 27 of 29 |
+
+The p-value tests a useless-factor null: the factors are resampled on a time sequence independent of the residuals, so they cannot explain returns by construction. It answers how often a factor known to be useless produces a t-ratio this extreme, which is the Kan and Zhang (1999) concern the article guards against. It is not the p-value of a zero risk price in a correctly specified model. The procedure is an audit instrument and enters no registered gate; the repository's own confirmatory inference remains the moving-block bootstrap frozen in `research/bootstrap_contract.md`.
 - **Table 5, Tables 7 to 9, and Appendix Tables A.2 to A.14.** Outside the scope of the current audit pass.
 - **Equal-weighted results.** Blocked at the current sources.
 - **Security-level reconstruction.** Not attempted; CRSP and Compustat access is not confirmed. See [`reports/data_access_feasibility.md`](../reports/data_access_feasibility.md).
@@ -70,7 +94,7 @@ Any result that uses substituted data, reconstructed portfolios, revised series,
 
 ## Next Evidence Gates
 
-1. Implement the article's useless-factor bootstrap, which would make roughly half the published-target registry auditable.
+1. Extend the cell-level audit to Table 5 and the remaining appendix tables.
 2. Extend the cell-level audit to Table 5 and the remaining appendix tables.
 3. Acquire event-level data for the policy-information decomposition, or retire it from the design.
 4. Run the out-of-sample falsification against the frozen 1999-12 training endpoint and annual refit schedule.

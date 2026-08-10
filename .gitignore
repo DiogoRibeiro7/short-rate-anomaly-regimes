@@ -115,10 +115,15 @@ artifacts/**
 !artifacts/tables/cross_section/
 !artifacts/tables/cross_section/.gitkeep
 !artifacts/tables/cross_section/baseline_risk_prices.csv
+# The article's bootstrap p-values, which the published-target audit reads.
+# Shipping them means a recipient can re-run the audit without first
+# re-running 29 systems of 5,000 replications.
+!artifacts/tables/cross_section/useless_factor_bootstrap_p_values.csv
 !artifacts/provenance/baseline_replication_run.json
 !artifacts/provenance/comparator_panel.json
 !artifacts/provenance/comparator_panel_column_metadata.csv
 !artifacts/provenance/published_target_audit.json
+!artifacts/provenance/useless_factor_bootstrap.json
 !artifacts/diagnostics/weak_factor/*.json
 !artifacts/diagnostics/*.json
 !artifacts/tables/robustness/

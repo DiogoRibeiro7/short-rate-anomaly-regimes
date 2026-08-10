@@ -1,0 +1,27 @@
+{
+  "inputs": {
+    "baseline_panel": {
+      "path": "data/processed/baseline_panel.parquet",
+      "sha256": "f1354c66d8983bfed626dc9dbc62204d31d236f1117b700158e3b9b04f8a1cc0"
+    },
+    "comparator_factors": {
+      "path": "data/processed/comparator_factors.parquet",
+      "sha256": "43d96e181c25a2de895f1da5eff30f37b8a2aba0c131cd315da645fd360bfb77"
+    },
+    "published_target_registry": {
+      "path": "research/published_target_values.csv",
+      "sha256": "ae2dc43da2dc3a038795657d3af423ecf808523db54ba9fde0a73c55cf7d5e9b"
+    }
+  },
+  "outputs": {
+    "artifacts/diagnostics/useless_factor_bootstrap.json": "d033af385a595e45f08d5c22a5fa68eb89055d8340751bde4abf1ed7c0edfd61",
+    "artifacts/tables/cross_section/useless_factor_bootstrap_p_values.csv": "d934e8751bd6a9b3694a8dea8386a06c547f8fa9ee3e269637ad449ebc301fa1"
+  },
+  "replication_status": "documented_reconstruction",
+  "script": "scripts/run_useless_factor_bootstrap.py",
+  "window": {
+    "end": "2013-12",
+    "months": 504,
+    "start": "1972-01"
+  }
+}

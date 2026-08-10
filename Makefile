@@ -109,9 +109,14 @@ reproduce-panels:
 	poetry run python scripts/build_extension_panels.py
 
 # Offline. SLOW: run_h4c_precision.py runs a 10,000-draw moving-block bootstrap
-# of the full two-pass system.
+# of the full two-pass system, and run_useless_factor_bootstrap.py runs the
+# article's own 5,000-replication procedure for each of the twenty-nine systems
+# it prints an empirical p-value for. The bootstrap runs before the audit,
+# because the audit reads its output to compare those published cells; without
+# it they fall back to not attempted.
 reproduce-estimates:
 	poetry run python scripts/run_baseline_replication.py
+	poetry run python scripts/run_useless_factor_bootstrap.py
 	poetry run python scripts/audit_published_targets.py
 	poetry run python scripts/run_h1_materiality.py
 	poetry run python scripts/run_weak_factor_diagnostics.py

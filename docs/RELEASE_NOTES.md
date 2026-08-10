@@ -39,7 +39,7 @@ These describe three different properties, and only the first two are supported.
 ## Blocked Results
 
 - Reproduction from this archive alone. The generated data panels and estimate stores are not distributed; regenerate them with `make reproduce`.
-- The article's useless-factor bootstrap, Table 5 and the appendix tables, equal-weighted results, and security-level reconstruction remain blocked by inputs this repository cannot obtain.
+- Table 5 and the appendix tables, equal-weighted results, and security-level reconstruction remain blocked by inputs this repository cannot obtain.
 - The high-frequency shock decomposition and the out-of-sample falsification are not run; their generated reports record `blocked_missing_input` with the inputs named.
 
 ## Contradicted Results

@@ -71,6 +71,7 @@ REQUIRED_EMPIRICAL_REBUILD_INPUTS: tuple[str, ...] = (
     "scripts/build_extension_panels.py",
     "scripts/build_regime_panel.py",
     "scripts/run_baseline_replication.py",
+    "scripts/run_useless_factor_bootstrap.py",
     "scripts/run_temporal_extension.py",
     "scripts/run_regime_equivalence.py",
     "scripts/run_regime_interactions.py",
@@ -589,9 +590,8 @@ def render_release_notes(issues: list[ReleaseIssue]) -> str:
         "",
         "- Reproduction from this archive alone. The generated data panels and estimate stores "
         f"are not distributed; regenerate them with `{REBUILD_ENTRY_POINT}`.",
-        "- The article's useless-factor bootstrap, Table 5 and the appendix tables, "
-        "equal-weighted results, and security-level reconstruction remain blocked by inputs "
-        "this repository cannot obtain.",
+        "- Table 5 and the appendix tables, equal-weighted results, and security-level "
+        "reconstruction remain blocked by inputs this repository cannot obtain.",
         "- The high-frequency shock decomposition and the out-of-sample falsification are not "
         "run; their generated reports record `blocked_missing_input` with the inputs named.",
         "",
