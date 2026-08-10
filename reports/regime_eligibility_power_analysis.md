@@ -27,13 +27,18 @@ curve can see which marks were current when it was drawn.
 
 **One threshold was tightened after this analysis, and that is disclosed rather
 than hidden.** The standalone-second-pass floor in `configs/regimes.yaml` was
-raised from 60 to 72 months because section 3 established that the residual
-covariance the standalone second pass inverts does not exist below 71 months on
-the confirmatory 70-portfolio system, so the previous floor admitted regimes to
-an estimator that could not run. That revision is recorded in
-`reports/design_correction_changelog.md`. It changed no registered regime's tier
-and moved no reported result. Wherever this report reads a criterion off the
-curve at 60 months, 60 is a window length on the sweep, not the floor.
+raised from 60 to 72 months, and the reason first given for that change was
+false. It read that the residual covariance the standalone second pass inverts
+does not exist below 71 months; the second pass inverts no such matrix, and the
+covariance is rank deficient rather than non-existent. Correction 11 in
+`reports/design_correction_changelog.md` retracts the reason and keeps the floor,
+which is now stated as a conservative restriction: below 71 months the
+confirmatory system's residual covariance is singular, so its Shanken standard
+errors rest on a singular estimate and its chi-square p-value is not readable.
+The number itself has not moved in either direction. It changed no registered
+regime's tier and moved no reported result. Wherever this report reads a
+criterion off the curve at 60 months, 60 is a window length on the sweep, not the
+floor.
 
 **Acting on this evidence to loosen a floor would be a post-hoc design change.**
 A threshold relaxed after seeing that it binds is not the same object as a
@@ -67,11 +72,14 @@ refits the design's own second pass, `estimate_article_second_pass`, on the join
 standard error in the curve file.
 
 The Shanken covariance is reported twice. **Feasible** uses the simulated sample
-residual covariance through `residual_covariance_from_first_pass`, which refuses
-a window with no more months than assets. **Oracle** substitutes the calibrated
-population residual covariance and is infeasible in practice. The two agree to
-within Monte Carlo error wherever both exist, so the covariance estimate is not
-what is going wrong.
+residual covariance through `residual_covariance_from_first_pass`. That
+covariance exists at every window length, but with no more months than assets it
+is rank deficient, and this sweep reports the feasible interval only where it is
+of full rank. That is a reporting choice, not a computational limit: no step of
+the second pass inverts the residual covariance, so the estimator runs below that
+point too. **Oracle** substitutes the calibrated population residual covariance
+and is infeasible in practice. The two agree to within Monte Carlo error wherever
+both are reported, so the covariance estimate is not what is going wrong.
 
 ## 2. The curve
 
@@ -117,10 +125,40 @@ percent of the true risk price, at 60 months 14 percent, at 648 months 65
 percent.
 
 The mechanism is errors-in-variables attenuation in the two-pass estimator.
-`first_pass_beta_noise_shares` records that **66.7 percent** of the observed
-cross-sectional dispersion of `beta_rate` is first-pass sampling noise even at
-648 months, against **2.9 percent** for `beta_market`. Noisy first-pass betas
-inflate `B'B` and shrink `(B'B)^-1 B' rbar` toward zero.
+`first_pass_beta_reliability` splits the observed cross-sectional variance of the
+calibration first-pass loadings into genuine exposure dispersion and first-pass
+estimation error. At the 648-month calibration length the **reliability ratio**,
+signal over observed, is **0.386** for `beta_rate` against **0.973** for
+`beta_market`. Equivalently — and the two are exact complements, not two
+different measurements — **61.4 percent** of the observed cross-sectional
+dispersion of `beta_rate` is first-pass sampling noise, against **2.7 percent**
+for `beta_market`. Noisy first-pass betas inflate `B'B` and shrink
+`(B'B)^-1 B' rbar` toward zero.
+
+The estimation-error term is a **cross-sectional** variance,
+`[Sigma_f^-1]_kk / (T (N - 1)) * tr(M_N Sigma_eps)` with `M_N = I - 11'/N`, and
+not the average individual sampling variance. The distinction matters because
+first-pass errors are correlated across portfolios: the average off-diagonal
+first-pass residual covariance across these seventy portfolios is 0.388 against
+an average residual variance of 4.929. The common part of the estimation error
+therefore moves the cross-sectional *mean* of the estimated loadings rather than
+their *spread*, and `M_N` removes exactly that component. An earlier version of
+this report divided the average individual sampling variance by the observed
+cross-sectional variance and reported 66.7 percent and 2.9 percent. That
+calculation drops every off-diagonal term and overstates the noise share whenever
+residuals are positively correlated, which they are here; it has been replaced.
+The mean individual sampling variance is still recorded in the diagnostic, under
+`mean_individual_beta_sampling_variance`, because it answers a different and
+useful question — how precisely a *single* portfolio's loading is estimated — but
+it is a variance in squared-loading units and is not a share of any dispersion.
+
+The noise term carries an explicit `1/T`, so under the stationary process
+simulated here it falls in proportion to the window length and vanishes
+asymptotically. The claim to make is not that the attenuation survives an
+infinite sample; it is that **it remains economically large at every sample
+length considered here**. At 648 months — the longest window on the sweep, and
+the full length of the panel — more than three fifths of the observed dispersion
+in `beta_rate` is still estimation error.
 
 The Shanken standard error is not at fault and is not mis-sized. At 60 months it
 averages 0.151 against a realised dispersion of 0.141 — very slightly
@@ -141,7 +179,7 @@ registered anywhere, and not proposed as replacements for any frozen value.
 
 | Criterion | Joint 70-portfolio | 10-decile family |
 |---|---:|---:|
-| Shanken covariance constructible at all | **71 months** (exact) | 11 months (exact) |
+| Sample residual covariance of full rank | **71 months** (exact) | 11 months (exact) |
 | SD of fitted-premium spread below 0.25, all families | **60 months** | 180 months |
 | RMSE of fitted-premium spread below 0.25, all families | **180 months** | 444 months |
 | P(wrong sign on `lambda_rate`) at or below 0.05 | **444 months** | 444 to 648; never for two families |
@@ -165,20 +203,32 @@ dispersion alone — the RMSE row — is met at 180 months. A criterion that a w
 can satisfy by returning approximately zero is not evidence that the window is
 adequate.
 
-**The 71-month entry is a hard computational fact, not a judgement, and it is
-what closed a latent gap in the tier definition.** The design's own
-`residual_covariance_from_first_pass` refuses to build a covariance from no more
-months than assets, so on the confirmatory 70-portfolio system the Shanken
-covariance, the t-statistics, and the chi-square specification test do not exist
-below 71 months. Under the previous 60-month floor a regime of 60 to 70 months
-would have satisfied the `months >= 60 and test_assets >= 10 and beta_rank == K`
-tier while the standalone second pass that tier authorises could not have been
-computed on the confirmatory asset set. No registered regime ever occupied that
-band, so nothing estimated was affected, but the tier admitted an estimator that
-could not run. The floor is now 72 months, the first window on this sweep at
-which the covariance exists, so the band is empty by construction. Both regimes
+**The 71-month entry is an arithmetic fact about rank, and an earlier version of
+this report overstated what it means.** A sample residual covariance built from
+`T` months of `N` test assets has rank at most `T - 1`, so on the confirmatory
+70-portfolio system it is of full rank only from 71 months. It was previously
+written here, and in correction 9 of `reports/design_correction_changelog.md`,
+that below 71 months the Shanken covariance, the t-statistics, and the chi-square
+specification test **do not exist**. That is false, and correction 11 retracts
+it. The second pass never inverts the residual covariance: it enters only through
+`B' Sigma B`, reduced to `K x K` before any inverse is taken, and through
+`M Sigma M'`, read through a pseudo-inverse that is needed at any rank because
+`M` has rank `N - K`. A rank-deficient covariance is admitted, and every one of
+those statistics is computable below 71 months. What is true is that below that
+point the Shanken standard errors rest on a covariance that is singular in
+`N - rank` directions, and the chi-square is referred to `chi2(N - K)` while its
+pseudo-inverse measures at most `rank(Sigma)` of them, so its p-value is not
+readable. The 72-month floor is retained on that ground, as a conservative
+restriction rather than a necessity, and it has not moved. Under the previous
+60-month floor a regime of 60 to 70 months would have satisfied the
+`months >= 60 and test_assets >= 10 and beta_rank == K` tier while the
+confirmatory system's residual covariance was rank deficient. No registered
+regime ever occupied that band, so nothing estimated was affected. Both regimes
 that clear the frozen floor are well beyond it (`elb_qe` 84,
-`conventional_pre_elb` 444).
+`conventional_pre_elb` 444), and the next longest regime, `normalisation` at 51
+months, is now reported as a labelled sensitivity in
+`artifacts/tables/regimes/regime_second_pass_short_sample_sensitivity.csv`, which
+enters no confirmatory family.
 
 ## 4. The registered regimes read off the curve
 
@@ -274,5 +324,5 @@ than on the precision evidence here.
 | Artifact | Contents |
 |---|---|
 | `artifacts/tables/regimes/eligibility_power_curve.csv` | 368 rows: per system, cross-section, window, and estimand, with Monte Carlo standard errors |
-| `artifacts/diagnostics/regime_eligibility_power.json` | Calibrated truth, noise shares, criterion crossings, the fixed-point caveat, the post-hoc disclosure |
+| `artifacts/diagnostics/regime_eligibility_power.json` | Calibrated truth, the first-pass beta reliability decomposition, criterion crossings, the fixed-point caveat, the post-hoc disclosure |
 | `artifacts/provenance/regime_power_analysis.json` | Input and output checksums, seed, replications, window grid, `thresholds_changed: []` |

@@ -6,6 +6,7 @@ import hashlib
 import io
 import json
 import zipfile
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -16,8 +17,18 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+from short_rate_anomaly_regimes.data.vintage import (
+    VintageMode,
+    acquire_frozen_payload,
+)
 from short_rate_anomaly_regimes.exceptions import DataAccessError, DataValidationError
 from short_rate_anomaly_regimes.provenance import sha256_file
+
+#: Command permitted to overwrite the expected hashes of the registry-driven
+#: acquisition path.
+REGISTRY_UPDATE_COMMAND = (
+    "poetry run srar acquire-data --registry configs/data_sources.yaml --live --update-vintage"
+)
 
 
 class ResponseLike(Protocol):
@@ -115,6 +126,32 @@ def write_raw_once(path: Path, payload: bytes) -> str:
     return incoming
 
 
+def write_raw_for_new_vintage(path: Path, payload: bytes) -> str:
+    """Write raw provider bytes at an immutable path, replacing an earlier vintage.
+
+    This is the update-vintage counterpart of :func:`write_raw_once`. It is the
+    only writer permitted to replace raw bytes that are already on disk, and it
+    is reached only from an acquisition run that was given the explicit
+    update-vintage flag. Verification runs must keep using
+    :func:`write_raw_once`, which refuses the replacement.
+
+    Args:
+        path: Immutable destination for the raw provider bytes.
+        payload: Raw provider bytes of the new vintage.
+
+    Returns:
+        The SHA-256 hexadecimal digest of the bytes now stored at ``path``.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(payload)
+    return hashlib.sha256(payload).hexdigest()
+
+
+def raw_writer(mode: VintageMode) -> Callable[[Path, bytes], str]:
+    """Return the raw-file writer permitted in ``mode``."""
+    return write_raw_for_new_vintage if mode is VintageMode.UPDATE else write_raw_once
+
+
 def canonical_monthly_bytes(frame: pd.DataFrame) -> bytes:
     """Serialize a month-indexed panel deterministically for checksum comparison.
 
@@ -199,10 +236,6 @@ def _require_zip_payload(payload: bytes) -> None:
             raise DataAccessError("Downloaded ZIP archive contains only empty files")
 
 
-def _write_immutable_raw_file(path: Path, payload: bytes) -> str:
-    return write_raw_once(path, payload)
-
-
 def _parse_fred_csv(payload: bytes, interim_path: Path) -> None:
     frame = pd.read_csv(io.BytesIO(payload))
     if frame.empty:
@@ -242,23 +275,55 @@ def download_http_source(
     session: HTTPSession | None = None,
     timeout: float = 20.0,
     retries: int = 3,
+    mode: VintageMode = VintageMode.VERIFY,
+    update_command: str = REGISTRY_UPDATE_COMMAND,
 ) -> DownloadRecord:
-    """Download a public source as immutable raw bytes and parse an interim copy."""
-    client = session or _session_with_retries(retries)
-    response = client.get(url, timeout=timeout)
-    if response.status_code != 200:
-        raise DataAccessError(f"Unexpected HTTP status {response.status_code} for {url}")
-    payload = response.content
-    _require_nonempty_payload(payload)
-    content_type = response.headers.get("Content-Type", "")
-    _require_content_type(
-        content_type=content_type,
-        expected_content_types=expected_content_types,
-    )
-    if expect_zip:
-        _require_zip_payload(payload)
+    """Download a public source, verify it against the frozen vintage, and parse it.
 
-    checksum = _write_immutable_raw_file(raw_path, payload)
+    In the default verification mode the downloaded bytes must hash to the value
+    recorded in ``provenance_path``; on a mismatch the call aborts before writing
+    anything and leaves the recorded hash untouched. ``mode`` may be
+    :attr:`~short_rate_anomaly_regimes.data.vintage.VintageMode.UPDATE` only when
+    the caller was given the explicit update-vintage flag, and that is the sole
+    path that rewrites the provenance manifest.
+
+    Raises:
+        DataAccessError: On a non-200 response, an empty payload, an unexpected
+            content type, or a malformed archive.
+        FrozenVintageError: When the payload does not match the recorded expected
+            hash, or when no expected hash is recorded and the run is verifying.
+        DataValidationError: When ``parser`` is not registered.
+    """
+
+    def fetch() -> tuple[bytes, dict[str, str]]:
+        client = session or _session_with_retries(retries)
+        response = client.get(url, timeout=timeout)
+        if response.status_code != 200:
+            raise DataAccessError(f"Unexpected HTTP status {response.status_code} for {url}")
+        payload = response.content
+        _require_nonempty_payload(payload)
+        content_type = response.headers.get("Content-Type", "")
+        _require_content_type(
+            content_type=content_type,
+            expected_content_types=expected_content_types,
+        )
+        if expect_zip:
+            _require_zip_payload(payload)
+        return payload, dict(response.headers)
+
+    verified = acquire_frozen_payload(
+        source_label=source_id,
+        url=url,
+        manifest_path=provenance_path,
+        raw_path=raw_path,
+        mode=mode,
+        update_command=update_command,
+        fetch=fetch,
+        field="sha256",
+    )
+    payload = verified.payload
+
+    checksum = raw_writer(mode)(raw_path, payload)
     if parser == "fred_csv":
         _parse_fred_csv(payload, interim_path)
     elif parser == "kenneth_french_zip":
@@ -275,11 +340,12 @@ def download_http_source(
         raw_path=str(raw_path),
         interim_path=str(interim_path),
         sha256=checksum,
-        content_type=content_type,
-        etag=response.headers.get("ETag"),
-        last_modified=response.headers.get("Last-Modified"),
+        content_type=verified.headers.get("Content-Type", ""),
+        etag=verified.headers.get("ETag"),
+        last_modified=verified.headers.get("Last-Modified"),
     )
-    _write_json(record, provenance_path)
+    if mode.writes_provenance:
+        _write_json(record, provenance_path)
     return record
 
 
@@ -292,8 +358,14 @@ def download_fred_series(
     session: HTTPSession | None = None,
     timeout: float = 20.0,
     retries: int = 3,
+    mode: VintageMode = VintageMode.VERIFY,
 ) -> DownloadRecord:
-    """Download one FRED series CSV as immutable raw bytes."""
+    """Download one FRED series CSV and verify it against the frozen vintage.
+
+    ``fredgraph.csv`` is a current-vintage endpoint, so the bytes it serves change
+    whenever the series is revised. The download is therefore accepted only when
+    it hashes to the value recorded in the shipped provenance manifest.
+    """
     source_id = f"fred_{series_id.lower()}"
     return download_http_source(
         source_id=source_id,
@@ -308,6 +380,7 @@ def download_fred_series(
         session=session,
         timeout=timeout,
         retries=retries,
+        mode=mode,
     )
 
 
@@ -320,8 +393,15 @@ def download_kenneth_french_dataset(
     session: HTTPSession | None = None,
     timeout: float = 20.0,
     retries: int = 3,
+    mode: VintageMode = VintageMode.VERIFY,
 ) -> DownloadRecord:
-    """Download one Kenneth French ZIP archive as immutable raw bytes."""
+    """Download one Kenneth French ZIP archive and verify it against the frozen vintage.
+
+    The library republishes each archive whenever the underlying data are
+    rebuilt, so the archive served today need not be the archive the published
+    results used. The download is accepted only when it hashes to the value
+    recorded in the shipped provenance manifest.
+    """
     source_id = f"kenneth_french_{dataset_name.lower()}"
     return download_http_source(
         source_id=source_id,
@@ -337,6 +417,7 @@ def download_kenneth_french_dataset(
         session=session,
         timeout=timeout,
         retries=retries,
+        mode=mode,
     )
 
 

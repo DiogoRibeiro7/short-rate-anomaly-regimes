@@ -1,11 +1,24 @@
-"""Acquire the seven baseline anomaly decile families from the original author source."""
+"""Acquire and verify the anomaly decile families from the original author source.
+
+By default this is a verification run: each archive is downloaded, hashed, and
+compared against the ``raw_sha256`` recorded in
+``artifacts/provenance/portfolios``. A mismatch aborts the run and leaves the
+recorded hash untouched. Passing ``--update-vintage`` is the only way to record a
+different vintage, and it rewrites those manifests.
+"""
 
 from __future__ import annotations
 
 import csv
+from collections.abc import Sequence
 from dataclasses import asdict
 from pathlib import Path
 
+from short_rate_anomaly_regimes.data.vintage import (
+    VintageMode,
+    announce_mode,
+    parse_vintage_mode,
+)
 from short_rate_anomaly_regimes.portfolios.q_archive import (
     DECLARED_FAMILY_ALTERNATIVES,
     FAMILY_MEMBERS,
@@ -22,8 +35,10 @@ PANEL_MANIFEST_ROOT = Path("artifacts/provenance/portfolios/families")
 SUMMARY_CSV = Path("artifacts/provenance/anomaly_portfolio_summary.csv")
 
 
-def main() -> None:
-    """Freeze both archives and reshape every registered anomaly family."""
+def main(argv: Sequence[str] | None = None) -> None:
+    """Verify both archives against the frozen vintage and reshape every family."""
+    mode = parse_vintage_mode(argv, description=__doc__)
+    print(announce_mode(mode))
     specifications = {**FAMILY_MEMBERS, **SUPPLEMENT_MEMBERS}
     archives = sorted({spec["archive"] for spec in specifications.values()})
     payloads: dict[str, bytes] = {}
@@ -33,6 +48,7 @@ def main() -> None:
             vintage_label=VINTAGE_LABEL,
             raw_root=RAW_ROOT,
             manifest_root=ARCHIVE_MANIFEST_ROOT,
+            mode=mode,
         )
         payloads[archive] = payload
         print(f"{archive}: {record.member_count} members sha={record.raw_sha256[:12]}")
@@ -63,6 +79,13 @@ def main() -> None:
             f"continuous={panel_record.continuous_months} "
             f"min_stocks={panel_record.minimum_stocks_per_portfolio}"
         )
+
+    if mode is not VintageMode.UPDATE:
+        print(
+            f"Verified {len(archives)} archives against the frozen vintage; "
+            f"{ARCHIVE_MANIFEST_ROOT.as_posix()} and {SUMMARY_CSV.as_posix()} were not rewritten"
+        )
+        return
 
     SUMMARY_CSV.parent.mkdir(parents=True, exist_ok=True)
     with SUMMARY_CSV.open("w", encoding="utf-8", newline="") as handle:

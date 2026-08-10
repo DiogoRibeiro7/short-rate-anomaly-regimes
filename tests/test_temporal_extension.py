@@ -9,13 +9,20 @@ from scripts.run_temporal_extension import (
     BASELINE_PARQUET,
     EXTENSION_PARQUET,
     FEDFUNDS_CSV,
+    FITTED_PREMIUM_BOUND,
     RATE,
     REVISED_PARQUET,
+    _inferential_status,
     _load,
+    _spread_pairs,
     lagged_level,
     load_current_vintage_rate,
     pre_window_lag,
     rate_level,
+    relative_change_draws,
+    spread_draws,
+    standardized_dispersion_share,
+    window_bootstrap,
 )
 
 from short_rate_anomaly_regimes.extensions.temporal import (
@@ -33,6 +40,12 @@ from short_rate_anomaly_regimes.extensions.temporal import (
     write_temporal_extension_outputs,
 )
 from short_rate_anomaly_regimes.models.block_bootstrap import recover_lagged_level
+from short_rate_anomaly_regimes.portfolios.q_archive import FAMILY_MEMBERS
+from short_rate_anomaly_regimes.regimes.equivalence import (
+    EquivalenceOutcome,
+    classify_equivalence,
+    paired_difference_draws,
+)
 
 
 def _freeze() -> TemporalFreeze:
@@ -556,3 +569,300 @@ def test_pre_window_lag_refuses_to_substitute_a_missing_preceding_month() -> Non
 
     with pytest.raises(ValueError, match="1971-12"):
         pre_window_lag(rate, panel)
+
+
+# --------------------------------------------------------------------------- #
+# H2 supplementary inferential classification
+#
+# The registered H2 rule compares point estimates, so on its own it can only
+# report supported or unsupported. The registry defines a third outcome for
+# evidence too imprecise to classify, and the joint bootstrap below is what
+# makes that outcome reachable. These tests hold two things apart: that the
+# interval machinery distinguishes a demonstrated change from imprecision, and
+# that it never touches the frozen verdict.
+# --------------------------------------------------------------------------- #
+
+
+def _outcome(category: str, *, passes: bool) -> EquivalenceOutcome:
+    """Build an outcome carrying one decision category, for the status reducer."""
+    return EquivalenceOutcome(
+        estimand="synthetic",
+        point_change=0.0,
+        lower_90=-1.0,
+        upper_90=1.0,
+        lower_95=-2.0,
+        upper_95=2.0,
+        bound=FITTED_PREMIUM_BOUND,
+        one_sided=False,
+        passes=passes,
+        passes_strict_sensitivity=passes,
+        decision_category=category,
+    )
+
+
+def test_inferential_status_separates_imprecision_from_a_demonstrated_change() -> None:
+    """Failing the interval test is not the same claim as exceeding the bound.
+
+    All three registry outcomes must be reachable, and the middle one must not
+    absorb the third: a run in which every estimand merely straddles its bound
+    has demonstrated nothing about the economic relation and has to say so.
+    """
+    equivalent = _outcome("equivalent_within_bound", passes=True)
+    inconclusive = _outcome("inconclusive", passes=False)
+    exceeds = _outcome("difference_exceeds_bound", passes=False)
+
+    assert _inferential_status([equivalent, equivalent]).endswith(
+        "supported_under_the_bootstrap_interval_standard"
+    )
+    assert "inconclusive" in _inferential_status([equivalent, inconclusive])
+    assert "unsupported" in _inferential_status([inconclusive, exceeds])
+    # A single demonstrated exceedance outranks any number of open estimands.
+    assert "unsupported" in _inferential_status([exceeds, inconclusive, inconclusive])
+
+
+def test_relative_change_draws_pair_index_wise_and_truncate_to_the_shorter_run() -> None:
+    """The ratio pairing must reuse no draw and must follow the difference rule."""
+    current = np.array([2.0, 3.0, 4.0])
+    reference = np.array([1.0, 2.0])
+
+    paired = relative_change_draws(current, reference)
+
+    assert paired.size == 2
+    assert paired == pytest.approx([1.0, 0.5])
+    assert paired_difference_draws(current, reference).size == paired.size
+
+
+def _synthetic_window(months: int, seed: int) -> tuple[pd.DataFrame, list[str]]:
+    """Build a panel carrying one extreme-decile pair for every registered family."""
+    rng = np.random.default_rng(seed)
+    level = np.cumsum(rng.normal(0.0, 0.3, size=months)) + 5.0
+    market = rng.normal(0.5, 4.0, size=months)
+    columns = [
+        f"portfolio_excess_return__{family}__decile_{decile}"
+        for family in FAMILY_MEMBERS
+        for decile in ("01", "10")
+    ]
+    innovation = level - np.concatenate([[level[0]], level[:-1]])
+    data: dict[str, object] = {
+        f"short_rate_level__{RATE}": level,
+        "market_excess_return": market,
+    }
+    for position, column in enumerate(columns):
+        loading = 0.4 + 0.1 * position
+        data[column] = (
+            0.2
+            + loading * market
+            + (0.5 - 0.1 * position) * innovation
+            + rng.normal(0.0, 1.0, months)
+        )
+    panel = pd.DataFrame(data, index=pd.period_range("2000-01", periods=months, freq="M"))
+    return panel, columns
+
+
+def test_the_joint_bootstrap_pairs_two_re_estimated_windows_into_one_comparison() -> None:
+    """Both windows must be re-estimated per draw and differenced draw by draw.
+
+    This is the end-to-end shape of the temporal interval: two independent
+    window bootstraps, collapsed to the per-family extreme-decile spread, then
+    paired. The point change the interval is built around has to be the same
+    quantity the registered magnitude gate compares, so it is checked against a
+    spread difference computed outside the bootstrap.
+    """
+    first, columns = _synthetic_window(120, seed=11)
+    second, _ = _synthetic_window(96, seed=12)
+
+    results = []
+    for label, panel, seed in (("first", first, 101), ("second", second, 202)):
+        level = panel[f"short_rate_level__{RATE}"].to_numpy(dtype=float)
+        lagged = np.concatenate([[level[0] - 0.1], level[:-1]])
+        design = np.column_stack([np.ones(level.size), lagged])
+        innovation = level - design @ np.linalg.lstsq(design, level, rcond=None)[0]
+        bootstrap, selection = window_bootstrap(
+            window_id=label,
+            panel=panel,
+            columns=columns,
+            lagged=lagged,
+            innovation=innovation,
+            seed=seed,
+        )
+        results.append((bootstrap, selection))
+
+    first_bootstrap, first_selection = results[0]
+    second_bootstrap, _ = results[1]
+
+    assert first_selection.block_length >= 2
+    assert first_bootstrap.months == 120
+    assert second_bootstrap.months == 96
+    # Every draw solved a full re-estimation, so the RMSE distribution is not
+    # degenerate at the point estimate.
+    assert first_bootstrap.statistic_draws["rmse"].std() > 0.0
+
+    first_spreads = spread_draws(first_bootstrap, columns)
+    second_spreads = spread_draws(second_bootstrap, columns)
+    assert set(first_spreads) == set(FAMILY_MEMBERS)
+
+    pairs = _spread_pairs(columns)
+    for family, (low, high) in pairs.items():
+        expected = first_bootstrap.premium_draws[:, high] - first_bootstrap.premium_draws[:, low]
+        assert first_spreads[family] == pytest.approx(expected)
+
+    family = next(iter(FAMILY_MEMBERS))
+    low, high = pairs[family]
+    point_change = float(
+        (first_bootstrap.point_premia[high] - first_bootstrap.point_premia[low])
+        - (second_bootstrap.point_premia[high] - second_bootstrap.point_premia[low])
+    )
+    outcome = classify_equivalence(
+        estimand=f"temporal_fitted_premium_spread_change__{family}",
+        point_change=point_change,
+        change_draws=paired_difference_draws(first_spreads[family], second_spreads[family]),
+        bound=FITTED_PREMIUM_BOUND,
+    )
+
+    assert outcome.decision_category in {
+        "equivalent_within_bound",
+        "difference_exceeds_bound",
+        "inconclusive",
+    }
+    assert outcome.lower_90 <= outcome.upper_90
+    assert outcome.lower_95 <= outcome.lower_90
+    assert outcome.upper_95 >= outcome.upper_90
+
+
+def test_standardized_dispersion_share_is_computed_from_the_window_it_describes() -> None:
+    """The H4a share must follow the betas and factor scales it is handed.
+
+    The diagnostic previously carried two literal constants, so a rebuild on new
+    data would have reported the old window. Scaling the rate innovation scales
+    the share by construction, which a hard-coded value cannot do.
+    """
+    betas = pd.DataFrame({"RM": [1.0, 0.5, 1.5], "FFR_innovation": [0.4, -0.2, 0.1]})
+    market = np.array([1.0, -2.0, 3.0, -1.0])
+    innovation = np.array([0.5, -0.5, 1.0, 0.0])
+
+    share = standardized_dispersion_share(betas, market=market, innovation=innovation)
+    expected = float(np.std(betas["FFR_innovation"] * innovation.std(ddof=1), ddof=1)) / float(
+        np.std(betas["RM"] * market.std(ddof=1), ddof=1)
+    )
+
+    assert share == pytest.approx(expected)
+    assert standardized_dispersion_share(
+        betas, market=market, innovation=innovation * 2.0
+    ) == pytest.approx(2.0 * share)
+
+
+def test_standardized_dispersion_share_refuses_an_undefined_ratio() -> None:
+    """A zero market dispersion leaves the share undefined rather than infinite."""
+    betas = pd.DataFrame({"RM": [1.0, 1.0, 1.0], "FFR_innovation": [0.4, -0.2, 0.1]})
+
+    with pytest.raises(ValueError, match="market-exposure dispersion is zero"):
+        standardized_dispersion_share(
+            betas,
+            market=np.array([1.0, -2.0, 3.0]),
+            innovation=np.array([0.5, -0.5, 1.0]),
+        )
+
+
+def test_the_h2_artifact_carries_an_inferential_status_beside_the_frozen_verdict() -> None:
+    """The shipped artifact must record both classifications, and keep them apart.
+
+    The registered verdict is the point-estimate rule and must stay under
+    ``classification``. The interval classification is recorded separately, per
+    estimand, with a three-way decision so that the registry's ``inconclusive``
+    outcome is reachable from the artifact rather than only in principle.
+    """
+    stability = json.loads(H2_STABILITY.read_text(encoding="utf-8"))
+
+    assert stability["classification"] in {
+        "post_publication_compatibility_supported",
+        "post_publication_compatibility_unsupported",
+    }
+    assert stability["classification_role"] == "registered_confirmatory_point_estimate_rule"
+
+    inferential = stability["supplementary_inferential_classification"]
+    assert inferential["status"].endswith("_under_the_bootstrap_interval_standard")
+    assert inferential["status"] != stability["classification"]
+    assert inferential["rule"] == "tost_5pct_90pct_interval"
+    assert inferential["draws"] == 10_000
+
+    estimands = inferential["estimands"]
+    expected = {f"temporal_fitted_premium_spread_change__{family}" for family in FAMILY_MEMBERS}
+    assert expected | {"temporal_rmse_relative_change"} == set(estimands)
+    for name, record in estimands.items():
+        assert record["decision_category"] in {
+            "equivalent_within_bound",
+            "difference_exceeds_bound",
+            "inconclusive",
+        }
+        assert record["lower_90"] <= record["upper_90"]
+        assert record["bound"] == (
+            0.10 if name == "temporal_rmse_relative_change" else FITTED_PREMIUM_BOUND
+        )
+    assert estimands["temporal_rmse_relative_change"]["one_sided_bound"] is True
+
+    # The reduction rule the artifact reports has to be the one implemented.
+    categories = [record["decision_category"] for record in estimands.values()]
+    if all(record["tost_5pct_90pct_interval_passes"] for record in estimands.values()):
+        assert "supported_under" in inferential["status"]
+    elif "difference_exceeds_bound" in categories:
+        assert "unsupported_under" in inferential["status"]
+    else:
+        assert "inconclusive_under" in inferential["status"]
+
+    for window in inferential["windows"].values():
+        assert window["successful_draws"] > 0
+        assert 2 <= window["block_length"] <= 24
+
+
+def test_the_h2_artifact_reports_both_sign_vintages_and_names_the_registered_one() -> None:
+    """The sign gate spans two vintages, so the artifact must say which it uses.
+
+    The registered gate compares the refitted extension with the locked
+    baseline; the same-vintage comparison against the revised history is
+    reported beside it and decides nothing. Recording only one of the two left
+    the manuscript's vintage-isolation claim unverifiable from the artifact.
+    """
+    stability = json.loads(H2_STABILITY.read_text(encoding="utf-8"))
+    sign_gate = stability["sign_gate_vintage"]
+
+    assert sign_gate["registered_gate_compares_against"] == "locked_baseline"
+    assert sign_gate["same_vintage_gate_compares_against"] == "revised_history"
+    assert sign_gate["registered_gate_passes"] == stability["gates"]["sign_compatibility"]
+    assert sign_gate["gates_agree"] == (
+        sign_gate["registered_gate_passes"] == sign_gate["same_vintage_gate_passes"]
+    )
+
+
+def test_the_h2_artifact_states_what_the_shared_vintage_does_and_does_not_achieve() -> None:
+    """The artifact must not deny that revised values enter the comparison.
+
+    They are the quantity the extension is measured against. What the shared
+    vintage achieves is holding the revision contribution common to both sides
+    so that it differences out, which is a different claim from excluding it.
+    """
+    stability = json.loads(H2_STABILITY.read_text(encoding="utf-8"))
+    isolation = stability["vintage_isolation"]
+
+    assert "revised historical values do enter the comparison" in isolation
+    assert "cannot enter the temporal verdict" not in isolation
+    assert "differences out" in isolation
+
+
+def test_the_h2_dispersion_note_does_not_claim_the_factor_is_well_identified() -> None:
+    """H4a dispersion is a registered gate, not a measure of exposure reliability.
+
+    The artifact previously read the extension's higher share as evidence that
+    the temporal result was not driven by a weak factor. The permitted claim is
+    only that the extension does not fail the registered criterion.
+    """
+    stability = json.loads(H2_STABILITY.read_text(encoding="utf-8"))
+    dispersion = stability["standardized_rate_exposure_dispersion_share"]
+
+    assert dispersion["floor"] == 0.10
+    assert dispersion["refitted_extension"] >= dispersion["floor"]
+    assert "does not fail the registered H4a dispersion criterion" in dispersion["note"]
+    assert "not attributable to a weakly identified factor" not in dispersion["note"]
+    # Recomputed rather than pinned: the stale literals were 0.2540 and 0.5800,
+    # which the live values agree with only to four decimal places.
+    assert dispersion["locked_baseline"] != 0.2540
+    assert dispersion["refitted_extension"] != 0.5800

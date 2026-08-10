@@ -17,6 +17,15 @@ blocks to be resampled within regime. Since `pi_rate` is invariant to rescaling
 the innovation, the global-innovation estimates are also computed and reported
 as a labelled sensitivity, so the classification can be checked against that
 choice rather than resting on it.
+
+A second labelled sensitivity is written to its own files. Regimes that clear the
+first-pass floor but not the 72-month standalone floor are estimated once, in
+`regime_second_pass_short_sample_sensitivity.csv`, with their residual-covariance
+rank and short-sample flag stated. That estimate is possible because the design's
+residual-covariance constructor admits a rank-deficient covariance; it is
+reported *outside* the confirmatory family and enters no registered
+classification, no Holm family, and not the H3 verdict. The frozen floor is
+unchanged and still decides which regimes reach the confirmatory record.
 """
 
 from __future__ import annotations
@@ -30,6 +39,7 @@ import pandas as pd
 
 from short_rate_anomaly_regimes.config import load_regime_config
 from short_rate_anomaly_regimes.models.article_second_pass import (
+    ArticleSecondPassResult,
     estimate_article_second_pass,
     residual_covariance_from_first_pass,
 )
@@ -56,6 +66,9 @@ REGIME_PARQUET = Path("data/processed/regimes/monthly_regimes.parquet")
 ELIGIBILITY_CSV = Path("artifacts/tables/regimes/regime_eligibility.csv")
 
 SECOND_PASS_CSV = Path("artifacts/tables/regimes/regime_second_pass.csv")
+SENSITIVITY_CSV = Path("artifacts/tables/regimes/regime_second_pass_short_sample_sensitivity.csv")
+SENSITIVITY_JSON = Path("artifacts/diagnostics/regime_short_sample_sensitivity.json")
+SENSITIVITY_PROVENANCE_JSON = Path("artifacts/provenance/regime_short_sample_sensitivity.json")
 EQUIVALENCE_CSV = Path("artifacts/tables/regimes/h3_equivalence.csv")
 PREMIA_CSV = Path("artifacts/tables/regimes/regime_fitted_premia.csv")
 DIAGNOSTIC_JSON = Path("artifacts/diagnostics/h3_regime_equivalence.json")
@@ -107,8 +120,18 @@ def _within_regime_innovation(window: pd.DataFrame) -> tuple[FloatArray, FloatAr
     return lagged, level - design @ np.linalg.lstsq(design, level, rcond=None)[0]
 
 
-def _second_pass_row(window: pd.DataFrame, columns: list[str], regime_id: str) -> dict[str, object]:
-    """Estimate the article second pass on one regime with Shanken standard errors."""
+def _second_pass_result(
+    window: pd.DataFrame, columns: list[str], regime_id: str
+) -> ArticleSecondPassResult:
+    """Estimate the article second pass on one regime with Shanken standard errors.
+
+    The residual covariance is permitted to be rank deficient, which is what a
+    window with fewer months than test assets produces. Nothing in the estimator
+    inverts it, so the estimate exists; what a short window costs is precision
+    and the meaning of the chi-square, not existence. ``minimum_months`` still
+    rejects a window no longer than the first-pass design itself, which would
+    leave no residual variation to measure at all.
+    """
     timestamps = pd.PeriodIndex(window.index, freq="M").to_timestamp(how="start")
     returns = window[columns].set_axis(timestamps)
     _, innovation = _within_regime_innovation(window)
@@ -119,15 +142,22 @@ def _second_pass_row(window: pd.DataFrame, columns: list[str], regime_id: str) -
     first_pass = estimate_time_series_betas(
         returns, factors, hac_lags=automatic_newey_west_lags(len(window))
     )
-    result = estimate_article_second_pass(
+    return estimate_article_second_pass(
         mean_excess_returns=returns.mean().rename("mean_return"),
         betas=first_pass.coefficients[["RM", "FFR_innovation"]],
-        residual_covariance=residual_covariance_from_first_pass(first_pass.residuals),
+        residual_covariance=residual_covariance_from_first_pass(
+            first_pass.residuals, minimum_months=factors.shape[1] + 2
+        ),
         factor_covariance=factors.cov(),
         n_months=len(window),
         portfolio_set="all_seven_families_joint",
         model=regime_id,
     )
+
+
+def _second_pass_row(window: pd.DataFrame, columns: list[str], regime_id: str) -> dict[str, object]:
+    """Summarise one regime's second pass as a table row."""
+    result = _second_pass_result(window, columns, regime_id)
     return {
         "lambda_market": float(result.risk_prices["RM"]),
         "lambda_rate": float(result.risk_prices["FFR_innovation"]),
@@ -189,12 +219,17 @@ def _global_innovation_sensitivity(
 def _residual_conditioning(window: pd.DataFrame, columns: list[str]) -> dict[str, float]:
     """Measure how well the residual covariance is determined in one regime.
 
-    The chi-square specification test and the Shanken correction both need an
-    inverse of the residual covariance. With ``T`` months and ``N`` test assets
-    that matrix is estimated from ``T`` observations, so a small ``T - N`` makes
-    the inverse unstable however well conditioned the point estimates are. This
-    is reported so the specification test is not read as evidence when it rests
-    on a nearly indeterminate matrix.
+    Neither the Shanken correction nor the chi-square statistic inverts the
+    residual covariance: it enters only through ``B' Sigma B``, which is reduced
+    to ``K x K`` before any inverse, and through ``M Sigma M'``, which is read
+    through a pseudo-inverse. What a small ``T - N`` costs is therefore not
+    existence but information. With ``T`` months and ``N`` test assets the
+    covariance is estimated from ``T`` observations, so as ``T - N`` falls its
+    smaller eigenvalues are increasingly noise, and at ``T <= N`` some are exactly
+    zero. The chi-square is the statistic to distrust first, because it is
+    referred to ``chi2(N - K)`` however few directions its pseudo-inverse
+    actually measures. This is reported so that the specification test is not
+    read as evidence when it rests on a barely determined matrix.
     """
     _, innovation = _within_regime_innovation(window)
     returns = window[columns].to_numpy(dtype=float)
@@ -212,6 +247,142 @@ def _residual_conditioning(window: pd.DataFrame, columns: list[str]) -> dict[str
         ),
         "smallest_eigenvalue": float(eigenvalues.min()),
     }
+
+
+def _short_sample_sensitivity(
+    panel: pd.DataFrame, eligibility: pd.DataFrame, columns: list[str]
+) -> pd.DataFrame:
+    """Estimate a standalone second pass for regimes below the standalone floor.
+
+    This is a sensitivity, not a result. It exists because the design's
+    residual-covariance constructor admits a rank-deficient covariance, which is
+    what a regime shorter than the test-asset count produces, so the estimate can
+    now be computed and shown rather than asserted to be impossible. Every row is
+    labelled, carries its residual-covariance rank and its short-sample flag, and
+    is written to its own file. Nothing here enters the registered
+    classification, any Holm family, the equivalence gates, or the H3 verdict,
+    and the frozen 72-month floor still decides the confirmatory record.
+
+    Only regimes that clear the first-pass floor are estimated. A regime below
+    that floor is blocked from regime-specific estimation altogether, and
+    reporting one here would reverse a floor rather than illustrate one.
+    """
+    admitted = eligibility.loc[
+        eligibility["regime_specific_first_pass_permitted"]
+        & ~eligibility["standalone_second_pass_permitted"],
+        "regime_id",
+    ]
+    rows: list[dict[str, object]] = []
+    for regime_id in admitted:
+        window = panel[panel["regime_primary"] == regime_id]
+        result = _second_pass_result(window, columns, str(regime_id))
+        tier = eligibility.loc[eligibility["regime_id"] == regime_id, "eligibility_tier"].iloc[0]
+        rows.append(
+            {
+                "regime_id": regime_id,
+                "months": len(window),
+                "test_assets": len(columns),
+                "eligibility_tier": tier,
+                "status": "sensitivity_outside_the_confirmatory_family",
+                "short_sample_flag": True,
+                "standalone_second_pass_permitted": False,
+                "enters_registered_classification": False,
+                "enters_any_holm_family": False,
+                "enters_h3_verdict": False,
+                "lambda_market": float(result.risk_prices["RM"]),
+                "lambda_rate": float(result.risk_prices["FFR_innovation"]),
+                "shanken_t_market": float(result.shanken_t_statistics["RM"]),
+                "shanken_t_rate": float(result.shanken_t_statistics["FFR_innovation"]),
+                "rmse": result.root_mean_squared_pricing_error,
+                "mae": result.mean_absolute_pricing_error,
+                "max_abs_error": result.max_absolute_pricing_error,
+                "article_fit": result.article_cross_sectional_fit,
+                "chi_square_statistic": result.chi_square_statistic,
+                "chi_square_degrees_of_freedom": result.chi_square_degrees_of_freedom,
+                "chi_square_asymptotic_p_value": result.chi_square_asymptotic_p_value,
+                "residual_covariance_rank": int(result.diagnostics["residual_covariance_rank"]),
+                "residual_covariance_rank_deficient": bool(
+                    result.diagnostics["residual_covariance_rank_deficient"]
+                ),
+                "months_minus_assets": int(result.diagnostics["months_minus_assets"]),
+                "replication_status": "documented_reconstruction",
+            }
+        )
+    return pd.DataFrame.from_records(rows)
+
+
+def _write_short_sample_sensitivity(sensitivity: pd.DataFrame) -> None:
+    """Write the short-sample sensitivity table, its diagnostics, and provenance."""
+    for path in (SENSITIVITY_CSV, SENSITIVITY_JSON, SENSITIVITY_PROVENANCE_JSON):
+        path.parent.mkdir(parents=True, exist_ok=True)
+    sensitivity.to_csv(SENSITIVITY_CSV, index=False, lineterminator="\n")
+    SENSITIVITY_JSON.write_text(
+        json.dumps(
+            {
+                "label": "sensitivity",
+                "status": "outside_the_confirmatory_family",
+                "hypothesis_membership": "none",
+                "enters_registered_classification": False,
+                "enters_any_holm_family": False,
+                "enters_h3_verdict": False,
+                "enters_the_equivalence_gates": False,
+                "frozen_minimum_months_for_standalone_second_pass": 72,
+                "frozen_floor_changed": False,
+                "regimes": sensitivity["regime_id"].tolist(),
+                "months_by_regime": dict(
+                    zip(sensitivity["regime_id"], sensitivity["months"], strict=True)
+                ),
+                "residual_covariance_rank_by_regime": dict(
+                    zip(
+                        sensitivity["regime_id"],
+                        sensitivity["residual_covariance_rank"],
+                        strict=True,
+                    )
+                ),
+                "why_it_is_now_computable": (
+                    "the residual covariance of a regime with fewer months than test assets is "
+                    "rank deficient, not undefined, and no step of the second pass inverts it; "
+                    "the design's constructor previously refused it on the false justification "
+                    "given in correction 9 of reports/design_correction_changelog.md, which "
+                    "correction 11 retracts"
+                ),
+                "why_it_is_not_confirmatory": (
+                    "the 72-month standalone floor is frozen and unchanged. These regimes carry "
+                    "a short-sample flag, their residual covariance is rank deficient, and the "
+                    "simulated precision at these lengths is reported in "
+                    "reports/regime_eligibility_power_analysis.md. The estimate is shown so "
+                    "that the restriction is visible rather than asserted, not so that it can "
+                    "be read as evidence"
+                ),
+                "chi_square_caveat": (
+                    "the chi-square statistic is referred to chi2(N - K) while its "
+                    "pseudo-inverse measures at most the rank of the residual covariance, which "
+                    "is below N - K here; its nominal degrees of freedom therefore overstate "
+                    "the directions actually tested and the p-value should not be read"
+                ),
+                "replication_status": "documented_reconstruction",
+            },
+            indent=2,
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+    SENSITIVITY_PROVENANCE_JSON.write_text(
+        json.dumps(
+            {
+                "script": "scripts/run_regime_equivalence.py",
+                "inputs": {p.as_posix(): _sha256(p) for p in (REGIME_PARQUET, ELIGIBILITY_CSV)},
+                "outputs": {p.as_posix(): _sha256(p) for p in (SENSITIVITY_CSV, SENSITIVITY_JSON)},
+                "label": "sensitivity",
+                "confirmatory": False,
+            },
+            indent=2,
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
 
 
 def _aggregate_outcome(
@@ -455,10 +626,15 @@ def main() -> None:
                 "global_innovation_sensitivity": sensitivity,
                 "residual_covariance_conditioning": conditioning,
                 "specification_test_caveat": (
-                    "the chi-square statistic and the Shanken correction invert a residual "
-                    "covariance estimated from T months for N test assets; where T - N is "
-                    "small that inverse is unstable and the statistic should not be read as "
-                    "evidence. The equivalence gates do not invert it"
+                    "neither the Shanken correction nor the chi-square statistic inverts the "
+                    "residual covariance; it enters only through B' Sigma B, reduced to K by K "
+                    "before any inverse, and through M Sigma M', read through a pseudo-inverse. "
+                    "A residual covariance estimated from T months for N test assets is "
+                    "therefore usable at any T, but as T - N falls its smaller eigenvalues are "
+                    "increasingly noise, and at T <= N some are exactly zero. The chi-square is "
+                    "the statistic to distrust first, because it is referred to chi2(N - K) "
+                    "however few directions its pseudo-inverse measures. The equivalence gates "
+                    "use neither the covariance nor its pseudo-inverse"
                 ),
                 "draws": DRAWS,
                 "coverage_note": (
@@ -543,6 +719,27 @@ def main() -> None:
             f"condition number = {values['residual_covariance_condition_number']:.3e}"
         )
     print(f"H3: {classification}")
+
+    # Everything above is confirmatory and is already written. The block below is
+    # a labelled sensitivity on its own files and changes nothing above it.
+    sensitivity_frame = _short_sample_sensitivity(panel, eligibility, columns)
+    _write_short_sample_sensitivity(sensitivity_frame)
+    print("\nSENSITIVITY ONLY, not confirmatory, not in H3 or any Holm family:")
+    print(
+        sensitivity_frame[
+            [
+                "regime_id",
+                "months",
+                "lambda_rate",
+                "shanken_t_rate",
+                "rmse",
+                "article_fit",
+                "residual_covariance_rank",
+            ]
+        ]
+        .round(4)
+        .to_string(index=False)
+    )
 
 
 if __name__ == "__main__":

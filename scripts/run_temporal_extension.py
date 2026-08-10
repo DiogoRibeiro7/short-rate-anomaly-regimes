@@ -12,8 +12,24 @@ Three evaluations are produced.
    differencing the refitted extension against it isolates the temporal change.
 
 The third evaluation is what allows the milestone's acceptance gate to be met:
-revised historical data are reported separately from vintage-consistent results
-rather than being mixed into the temporal verdict.
+the publication-era against current-vintage revision effect is reported as its
+own comparison rather than being folded into the temporal verdict.
+
+Two classifications are produced, and they are not interchangeable.
+
+- The **registered** classification is the frozen point-estimate rule in the H2
+  registry row: sign compatibility, a fitted-premium magnitude bound, and an
+  RMSE deterioration bound, each applied to point estimates. It is confirmatory
+  and nothing here alters it.
+- A **supplementary inferential** classification puts an interval around the
+  same temporal comparison. Both windows are re-estimated inside every joint
+  moving-block draw and the two independent draw sequences are paired, exactly
+  as the H3 regime comparison pairs two within-regime bootstraps. Each estimand
+  is then classified three ways under the frozen TOST rule: compatible with the
+  registered bound, incompatible with it, or inconclusive. This is what makes
+  the registry's `inconclusive` outcome reachable, which the point-estimate rule
+  alone cannot express: "fails the registered gates" and "the economic relation
+  changed" are different claims on 144 months.
 """
 
 from __future__ import annotations
@@ -34,13 +50,31 @@ from short_rate_anomaly_regimes.models.article_second_pass import (
     estimate_article_second_pass,
     residual_covariance_from_first_pass,
 )
-from short_rate_anomaly_regimes.models.block_bootstrap import FloatArray, recover_lagged_level
+from short_rate_anomaly_regimes.models.block_bootstrap import (
+    BlockLengthSelection,
+    FloatArray,
+    recover_lagged_level,
+    select_block_length,
+)
+from short_rate_anomaly_regimes.models.diagnostics import (
+    MIN_STANDARDIZED_RATE_DISPERSION_SHARE,
+    weak_factor_report,
+)
 from short_rate_anomaly_regimes.models.time_series import (
     automatic_newey_west_lags,
     estimate_time_series_betas,
 )
 from short_rate_anomaly_regimes.portfolios.q_archive import FAMILY_MEMBERS
 from short_rate_anomaly_regimes.rates.baseline_reconstruction import monthly_rate_from_freeze
+from short_rate_anomaly_regimes.regimes.equivalence import (
+    CONFIRMATORY_RULE,
+    SENSITIVITY_RULE,
+    EquivalenceOutcome,
+    RegimePremiumBootstrap,
+    bootstrap_regime_premia,
+    classify_equivalence,
+    paired_difference_draws,
+)
 
 BASELINE_PARQUET = Path("data/processed/baseline_panel.parquet")
 EXTENSION_PARQUET = Path("data/processed/extension/monthly_panel.parquet")
@@ -57,12 +91,21 @@ FEDFUNDS_CSV = frozen_fred_path("FEDFUNDS")
 EVALUATION_CSV = Path("artifacts/tables/extension/temporal_evaluation.csv")
 SPREAD_CSV = Path("artifacts/tables/extension/fitted_premium_spreads.csv")
 VINTAGE_CSV = Path("artifacts/tables/extension/vintage_decomposition.csv")
+INFERENCE_CSV = Path("artifacts/tables/extension/h2_temporal_inference.csv")
 DIAGNOSTIC_JSON = Path("artifacts/diagnostics/h2_temporal_stability.json")
 PROVENANCE_JSON = Path("artifacts/provenance/temporal_extension.json")
 
 #: research/economic_thresholds.md and the H2 registry row.
 FITTED_PREMIUM_BOUND = 0.25
 RMSE_DETERIORATION_BOUND = 0.10
+
+#: research/bootstrap_contract.md: confirmatory repetitions and the project seed
+#: from configs/baseline.yaml. The two windows are disjoint calendar samples, so
+#: each gets its own stream and the draws are paired index-wise afterwards.
+DRAWS = 10_000
+BASE_SEED = 20260727
+REVISED_HISTORY_SEED = BASE_SEED
+REFITTED_EXTENSION_SEED = BASE_SEED + 1
 
 RATE = "fedfunds"
 
@@ -218,6 +261,153 @@ def _spreads(betas: pd.DataFrame, lambda_rate: float, columns: list[str]) -> dic
     }
 
 
+def standardized_dispersion_share(
+    betas: pd.DataFrame, *, market: FloatArray, innovation: FloatArray
+) -> float:
+    """Return the H4a standardized rate-exposure dispersion share for one window.
+
+    The share is
+    ``sd_cs(beta_rate * sd(rate innovation)) / sd_cs(beta_mkt * sd(market))`` on
+    the window's own betas and its own factor standard deviations, which is the
+    quantity ``research/inference_contract.md`` puts a floor on. It is computed
+    through :func:`weak_factor_report` rather than inline so that the H2
+    diagnostic and the H4a gate cannot drift apart in definition, and so that a
+    rebuild reports the window it actually estimated rather than a constant.
+
+    Args:
+        betas: First-pass betas with the ``RM`` and ``FFR_innovation`` columns.
+        market: Market excess return over the same months.
+        innovation: Short-rate innovation over the same months.
+
+    Returns:
+        The rate share of market standardized dispersion.
+
+    Raises:
+        ValueError: If the market standardized dispersion is zero, which would
+            leave the share undefined.
+    """
+    factors = pd.DataFrame({"RM": np.asarray(market, dtype=float), "FFR_innovation": innovation})
+    dispersion = weak_factor_report(
+        betas=betas[["RM", "FFR_innovation"]], factors=factors
+    ).standardized_exposure_dispersion
+    if dispersion["RM"] == 0.0:
+        raise ValueError("Standardized market-exposure dispersion is zero")
+    return float(dispersion["FFR_innovation"] / dispersion["RM"])
+
+
+def window_bootstrap(
+    *,
+    window_id: str,
+    panel: pd.DataFrame,
+    columns: list[str],
+    lagged: FloatArray,
+    innovation: FloatArray,
+    seed: int,
+) -> tuple[RegimePremiumBootstrap, BlockLengthSelection]:
+    """Run the joint moving-block bootstrap over one estimation window.
+
+    Every stage is recomputed inside each draw, including the autoregression that
+    builds the short-rate innovation, so the interval describes the estimator the
+    point estimate came from. The block length is selected per window under the
+    frozen contract, because the two windows differ by a factor of three and a
+    single shared length would be selected on neither.
+
+    Args:
+        window_id: Label carried onto the result for provenance.
+        panel: The window's monthly panel.
+        columns: Test-asset columns in their canonical order.
+        lagged: The window's one-month lagged rate level under the frozen
+            pre-window-lag convention.
+        innovation: The window's short-rate innovation, used only to select the
+            block length; each draw re-estimates its own.
+        seed: Random seed for this window's draw stream.
+
+    Returns:
+        The bootstrap result and the block-length selection that produced it.
+    """
+    selection = select_block_length(
+        pd.DataFrame(
+            {
+                "market_excess_return": panel["market_excess_return"].to_numpy(dtype=float),
+                f"short_rate_innovation__{RATE}": innovation,
+            }
+        )
+    )
+    result = bootstrap_regime_premia(
+        # The bootstrap is labelled by regime in H3 and by evaluation window
+        # here; the label is provenance only and is never resampled either way.
+        regime_id=window_id,
+        assets=tuple(columns),
+        rate_level=panel[f"short_rate_level__{RATE}"].to_numpy(dtype=float),
+        lagged_rate_level=lagged,
+        market=panel["market_excess_return"].to_numpy(dtype=float),
+        excess_returns=panel[columns].to_numpy(dtype=float),
+        block_length=selection.block_length,
+        draws=DRAWS,
+        seed=seed,
+        block_length_selected_by=selection.selected_by,
+    )
+    return result, selection
+
+
+def spread_draws(bootstrap: RegimePremiumBootstrap, columns: list[str]) -> dict[str, FloatArray]:
+    """Collapse per-portfolio premium draws to the per-family decile spread.
+
+    Args:
+        bootstrap: One window's bootstrap over per-portfolio fitted premia.
+        columns: Test-asset columns in the order the draws were stored in.
+
+    Returns:
+        Draw-level ``pi(decile_10) - pi(decile_01)`` for each registered family.
+    """
+    draws = bootstrap.premium_draws
+    return {
+        family: draws[:, high] - draws[:, low]
+        for family, (low, high) in _spread_pairs(columns).items()
+    }
+
+
+def _inferential_status(outcomes: list[EquivalenceOutcome]) -> str:
+    """Reduce the per-estimand interval decisions to one supplementary status.
+
+    The three outcomes are not interchangeable, and the middle one is the whole
+    reason this function exists. ``unsupported`` asserts that the economic
+    relation changed, so it requires at least one estimand whose entire interval
+    lies beyond its bound. An estimand that merely fails to certify
+    compatibility leaves the question open, which is the registry's registered
+    ``inconclusive`` reading for H2.
+
+    Args:
+        outcomes: The classified estimands of the temporal comparison.
+
+    Returns:
+        The supplementary inferential status label.
+    """
+    if all(outcome.passes for outcome in outcomes):
+        return "post_publication_compatibility_supported_under_the_bootstrap_interval_standard"
+    if any(outcome.decision_category == "difference_exceeds_bound" for outcome in outcomes):
+        return "post_publication_compatibility_unsupported_under_the_bootstrap_interval_standard"
+    return "post_publication_compatibility_inconclusive_under_the_bootstrap_interval_standard"
+
+
+def relative_change_draws(current: FloatArray, reference: FloatArray) -> FloatArray:
+    """Pair two independent draw sequences into a relative change, draw by draw.
+
+    The multiplicative counterpart of
+    :func:`short_rate_anomaly_regimes.regimes.equivalence.paired_difference_draws`,
+    with the same truncation rule so that no draw is reused.
+
+    Args:
+        current: Draws for the window under test.
+        reference: Draws for the comparison window.
+
+    Returns:
+        ``current / reference - 1`` over the paired draws.
+    """
+    usable = min(current.size, reference.size)
+    return current[:usable] / reference[:usable] - 1.0
+
+
 def main() -> None:
     """Run all three evaluations and classify H2."""
     baseline = _load(BASELINE_PARQUET)
@@ -369,8 +559,17 @@ def main() -> None:
                 "temporal_change": refit_spreads[family] - revised_spreads[family],
                 "vintage_change": revised_spreads[family] - base,
                 "total_change": refit_spreads[family] - base,
+                # The registered gate. It compares the refitted extension with
+                # the LOCKED baseline, so it is the one place in H2 where two
+                # vintages meet; the magnitude gate below is vintage isolated.
                 "sign_compatible_with_baseline": bool(
                     np.sign(refit_spreads[family]) == np.sign(base)
+                ),
+                # The same-vintage counterpart, reported so the vintage-isolated
+                # reading of the sign comparison is auditable. It decides
+                # nothing: the frozen rule is the column above.
+                "sign_compatible_with_revised_history": bool(
+                    np.sign(refit_spreads[family]) == np.sign(revised_spreads[family])
                 ),
                 "temporal_change_within_bound": bool(
                     abs(refit_spreads[family] - revised_spreads[family]) <= FITTED_PREMIUM_BOUND
@@ -388,6 +587,8 @@ def main() -> None:
     rmse_vs_revised = (refit_rmse - revised_rmse) / revised_rmse
     rmse_vs_locked = (refit_rmse - baseline_rmse) / baseline_rmse
 
+    # The registered, confirmatory rule, applied to point estimates exactly as
+    # frozen in the H2 registry row. Nothing below may modify it.
     sign_ok = bool(spreads["sign_compatible_with_baseline"].all())
     magnitude_ok = bool(spreads["temporal_change_within_bound"].all())
     rmse_ok = bool(rmse_vs_revised <= RMSE_DETERIORATION_BOUND)
@@ -397,6 +598,14 @@ def main() -> None:
         if supported
         else "post_publication_compatibility_unsupported"
     )
+
+    # The same-vintage sign comparison. It is reported, never substituted: the
+    # frozen gate is the locked-baseline column. The two can only diverge for a
+    # family whose revised-history spread has crossed zero relative to the
+    # locked one, which the vintage decomposition would show as a spread change
+    # of the order of the spread itself rather than of the revision.
+    same_vintage_sign_ok = bool(spreads["sign_compatible_with_revised_history"].all())
+    sign_gate_vintage_disagreement = sign_ok != same_vintage_sign_ok
 
     vintage = pd.DataFrame.from_records(
         [
@@ -424,21 +633,225 @@ def main() -> None:
         ]
     )
 
+    # ------------------------------------------------------------------ #
+    # Supplementary inferential comparison.
+    #
+    # The registered rule above is a point-estimate rule, so it can only ever
+    # say supported or unsupported. The registry, however, defines a third H2
+    # outcome for evidence that is too imprecise to classify, and on 144 months
+    # that is not a hypothetical: the refitted lambda_rate carries a Shanken t
+    # of about -1.5. What follows puts an interval around the same temporal
+    # comparison so that outcome is reachable. It is recorded beside the
+    # registered verdict and never in place of it.
+    # ------------------------------------------------------------------ #
+    revised_bootstrap, revised_selection = window_bootstrap(
+        window_id="revised_history_1972_2013",
+        panel=revised,
+        columns=columns,
+        lagged=revised_lagged,
+        innovation=revised_innovation,
+        seed=REVISED_HISTORY_SEED,
+    )
+    refit_bootstrap, refit_selection = window_bootstrap(
+        window_id="refitted_extension_2014_2025",
+        panel=extension,
+        columns=columns,
+        lagged=refit_lagged,
+        innovation=refit_innovation,
+        seed=REFITTED_EXTENSION_SEED,
+    )
+    # The two windows partition the calendar, so their bootstrap distributions
+    # are independent and pairing the draws index-wise samples the product
+    # distribution. This is the same argument the H3 regime comparison rests on.
+    revised_spread_draws = spread_draws(revised_bootstrap, columns)
+    refit_spread_draws = spread_draws(refit_bootstrap, columns)
+
+    outcomes = [
+        classify_equivalence(
+            estimand=f"temporal_fitted_premium_spread_change__{family}",
+            point_change=refit_spreads[family] - revised_spreads[family],
+            change_draws=paired_difference_draws(
+                refit_spread_draws[family], revised_spread_draws[family]
+            ),
+            bound=FITTED_PREMIUM_BOUND,
+        )
+        for family in FAMILY_MEMBERS
+    ]
+    outcomes.append(
+        classify_equivalence(
+            estimand="temporal_rmse_relative_change",
+            point_change=rmse_vs_revised,
+            change_draws=relative_change_draws(
+                refit_bootstrap.statistic_draws["rmse"],
+                revised_bootstrap.statistic_draws["rmse"],
+            ),
+            bound=RMSE_DETERIORATION_BOUND,
+            # Only deterioration is bounded, so the registered comparison is a
+            # one-sided one and so is its interval test.
+            one_sided=True,
+        )
+    )
+
+    inference = pd.DataFrame.from_records(
+        [
+            {
+                "estimand": outcome.estimand,
+                "comparison": "refitted_extension_2014_2025_minus_revised_history_1972_2013",
+                "point_change": outcome.point_change,
+                "lower_90": outcome.lower_90,
+                "upper_90": outcome.upper_90,
+                "lower_95": outcome.lower_95,
+                "upper_95": outcome.upper_95,
+                "bound": outcome.bound,
+                "one_sided_bound": outcome.one_sided,
+                "tost_5pct_90pct_interval_passes": outcome.passes,
+                "decision_category": outcome.decision_category,
+                "strict_95pct_interval_sensitivity_passes": outcome.passes_strict_sensitivity,
+                "rule": CONFIRMATORY_RULE,
+                "sensitivity_rule": SENSITIVITY_RULE,
+                "role": "supplementary_inferential_not_the_registered_gate",
+                "replication_status": "documented_reconstruction",
+            }
+            for outcome in outcomes
+        ]
+    )
+    inferential_status = _inferential_status(outcomes)
+    exceeded = sorted(
+        outcome.estimand
+        for outcome in outcomes
+        if outcome.decision_category == "difference_exceeds_bound"
+    )
+    inconclusive = sorted(
+        outcome.estimand for outcome in outcomes if outcome.decision_category == "inconclusive"
+    )
+
+    baseline_dispersion_share = standardized_dispersion_share(
+        baseline_betas,
+        market=baseline["market_excess_return"].to_numpy(dtype=float),
+        innovation=baseline_innovation,
+    )
+    refit_dispersion_share = standardized_dispersion_share(
+        refit_betas,
+        market=extension["market_excess_return"].to_numpy(dtype=float),
+        innovation=refit_innovation,
+    )
+
     for path in (EVALUATION_CSV, DIAGNOSTIC_JSON):
         path.parent.mkdir(parents=True, exist_ok=True)
     evaluation.to_csv(EVALUATION_CSV, index=False, lineterminator="\n")
     spreads.to_csv(SPREAD_CSV, index=False, lineterminator="\n")
     vintage.to_csv(VINTAGE_CSV, index=False, lineterminator="\n")
+    inference.to_csv(INFERENCE_CSV, index=False, lineterminator="\n")
 
     DIAGNOSTIC_JSON.write_text(
         json.dumps(
             {
                 "hypothesis": "H2",
+                # The registered, confirmatory verdict. The supplementary
+                # interval classification is recorded under
+                # `supplementary_inferential_classification` and does not touch
+                # this key or the gates below.
                 "classification": classification,
+                "classification_role": "registered_confirmatory_point_estimate_rule",
                 "gates": {
                     "sign_compatibility": sign_ok,
                     "fitted_premium_magnitude_within_0_25": magnitude_ok,
                     "rmse_deterioration_within_10_percent": rmse_ok,
+                },
+                "sign_gate_vintage": {
+                    "registered_gate_compares_against": "locked_baseline",
+                    "registered_gate_passes": sign_ok,
+                    "same_vintage_gate_compares_against": "revised_history",
+                    "same_vintage_gate_passes": same_vintage_sign_ok,
+                    "gates_agree": not sign_gate_vintage_disagreement,
+                    "note": (
+                        "the registered sign gate compares the refitted extension with the "
+                        "locked baseline and so is the one H2 gate that spans two vintages; "
+                        "the fitted-premium magnitude gate is vintage isolated against the "
+                        "revised history. The same-vintage sign comparison is reported here "
+                        "for audit and decides nothing. Where the two disagree the registered "
+                        "verdict still follows the locked-baseline column"
+                    ),
+                },
+                "supplementary_inferential_classification": {
+                    "status": inferential_status,
+                    "role": (
+                        "supplementary interval evidence; the registered point-estimate rule "
+                        "above remains the confirmatory classification"
+                    ),
+                    "rule": CONFIRMATORY_RULE,
+                    "sensitivity_rule": SENSITIVITY_RULE,
+                    "comparison": ("refitted_extension_2014_2025_minus_revised_history_1972_2013"),
+                    "estimands": {
+                        outcome.estimand: {
+                            "point_change": outcome.point_change,
+                            "lower_90": outcome.lower_90,
+                            "upper_90": outcome.upper_90,
+                            "lower_95": outcome.lower_95,
+                            "upper_95": outcome.upper_95,
+                            "bound": outcome.bound,
+                            "one_sided_bound": outcome.one_sided,
+                            "decision_category": outcome.decision_category,
+                            "tost_5pct_90pct_interval_passes": outcome.passes,
+                            "strict_95pct_interval_sensitivity_passes": (
+                                outcome.passes_strict_sensitivity
+                            ),
+                        }
+                        for outcome in outcomes
+                    },
+                    "estimands_with_a_demonstrated_exceedance": exceeded,
+                    "estimands_that_are_inconclusive": inconclusive,
+                    "status_basis": (
+                        "at least one estimand has its whole 90 percent interval beyond its "
+                        "bound, which is what a demonstrated temporal change asserts"
+                        if exceeded
+                        else (
+                            "no estimand demonstrates an exceedance; the registered gates fail "
+                            "on point estimates that the interval cannot separate from the "
+                            "bound, which is imprecision rather than a demonstrated change"
+                        )
+                    ),
+                    "draws": DRAWS,
+                    "windows": {
+                        "revised_history_1972_2013": {
+                            "months": revised_bootstrap.months,
+                            "seed": revised_bootstrap.seed,
+                            "successful_draws": revised_bootstrap.successful_draws,
+                            "block_length": revised_bootstrap.block_length,
+                            "block_length_selected_by": revised_selection.selected_by,
+                            "block_length_failure_reasons": list(revised_selection.failure_reasons),
+                            "raw_politis_white_lengths": list(
+                                revised_selection.raw_optimal_lengths
+                            ),
+                        },
+                        "refitted_extension_2014_2025": {
+                            "months": refit_bootstrap.months,
+                            "seed": refit_bootstrap.seed,
+                            "successful_draws": refit_bootstrap.successful_draws,
+                            "block_length": refit_bootstrap.block_length,
+                            "block_length_selected_by": refit_selection.selected_by,
+                            "block_length_failure_reasons": list(refit_selection.failure_reasons),
+                            "raw_politis_white_lengths": list(refit_selection.raw_optimal_lengths),
+                        },
+                    },
+                    "resampled_variables": [
+                        "market_excess_return",
+                        "portfolio_excess_returns",
+                        "short_rate_level",
+                    ],
+                    "recomputed_per_draw": [
+                        "short_rate_innovation",
+                        "first_pass_betas",
+                        "second_pass_risk_prices",
+                        "fitted_premia",
+                        "pricing_errors",
+                        "fit_metrics",
+                    ],
+                    "note": (
+                        "both windows are re-estimated inside every draw and the two "
+                        "independent draw sequences are paired index-wise, so the interval "
+                        "describes the temporal comparison rather than either window alone"
+                    ),
                 },
                 "rmse_relative_change_vs_revised_history": rmse_vs_revised,
                 "rmse_relative_change_vs_locked_baseline": rmse_vs_locked,
@@ -466,18 +879,27 @@ def main() -> None:
                     "refitted_extension": refit_lambda_rate,
                 },
                 "standardized_rate_exposure_dispersion_share": {
-                    "locked_baseline": 0.2540,
-                    "refitted_extension": 0.5800,
+                    "locked_baseline": baseline_dispersion_share,
+                    "refitted_extension": refit_dispersion_share,
+                    "floor": MIN_STANDARDIZED_RATE_DISPERSION_SHARE,
                     "note": (
-                        "the H4a dispersion gate floor is 0.10; the extension window "
-                        "clears it more comfortably than the baseline, so the temporal "
-                        "result is not attributable to a weakly identified factor"
+                        "recomputed from each window's own first-pass betas and factor "
+                        f"standard deviations. The H4a dispersion floor is "
+                        f"{MIN_STANDARDIZED_RATE_DISPERSION_SHARE}; the extension window "
+                        "clears it, so the extension does not fail the registered H4a "
+                        "dispersion criterion. That criterion does not measure exposure "
+                        "reliability, so a higher share is not evidence that the temporal "
+                        "result is well identified"
                     ),
                 },
                 "vintage_isolation": (
                     "the temporal gates compare the refitted extension with the "
-                    "revised-history baseline, which shares its vintage, so revised "
-                    "historical data cannot enter the temporal verdict"
+                    "revised-history baseline, so revised historical values do enter the "
+                    "comparison, as the quantity the extension is measured against. What "
+                    "the shared vintage achieves is holding the revision contribution "
+                    "common to both sides, so it differences out of the temporal change; "
+                    "the publication-era against current-vintage effect is reported "
+                    "separately as the locked-against-revised comparison"
                 ),
                 "replication_status": "documented_reconstruction",
             },
@@ -502,11 +924,33 @@ def main() -> None:
                 },
                 "outputs": {
                     p.as_posix(): _sha256(p)
-                    for p in (EVALUATION_CSV, SPREAD_CSV, VINTAGE_CSV, DIAGNOSTIC_JSON)
+                    for p in (
+                        EVALUATION_CSV,
+                        SPREAD_CSV,
+                        VINTAGE_CSV,
+                        INFERENCE_CSV,
+                        DIAGNOSTIC_JSON,
+                    )
                 },
                 "bounds": {
                     "fitted_premium": FITTED_PREMIUM_BOUND,
                     "rmse_deterioration": RMSE_DETERIORATION_BOUND,
+                },
+                "bootstrap": {
+                    "draws": DRAWS,
+                    "base_seed": BASE_SEED,
+                    "seeds_by_window": {
+                        "revised_history_1972_2013": revised_bootstrap.seed,
+                        "refitted_extension_2014_2025": refit_bootstrap.seed,
+                    },
+                    "successful_draws_by_window": {
+                        "revised_history_1972_2013": revised_bootstrap.successful_draws,
+                        "refitted_extension_2014_2025": refit_bootstrap.successful_draws,
+                    },
+                    "block_lengths_by_window": {
+                        "revised_history_1972_2013": revised_bootstrap.block_length,
+                        "refitted_extension_2014_2025": refit_bootstrap.block_length,
+                    },
                 },
             },
             indent=2,
@@ -521,10 +965,41 @@ def main() -> None:
     print(vintage.round(4).to_string(index=False))
     print()
     print(spreads.round(4).to_string(index=False))
-    print(f"\nH2: {classification}")
-    print(f"  sign compatibility        : {sign_ok}")
+    print()
+    print(
+        inference[
+            [
+                "estimand",
+                "point_change",
+                "lower_90",
+                "upper_90",
+                "bound",
+                "tost_5pct_90pct_interval_passes",
+                "decision_category",
+            ]
+        ]
+        .round(4)
+        .to_string(index=False)
+    )
+    print(f"\nH2 registered classification: {classification}")
+    print(f"  sign compatibility        : {sign_ok} (against the locked baseline, as registered)")
+    print(f"  same-vintage sign check   : {same_vintage_sign_ok} (reported only, decides nothing)")
     print(f"  fitted-premium magnitude  : {magnitude_ok}")
     print(f"  RMSE deterioration        : {rmse_ok} ({rmse_vs_revised:+.1%} vs revised history)")
+    if sign_gate_vintage_disagreement:
+        print(
+            "  WARNING: the registered locked-baseline sign gate and the same-vintage sign "
+            "comparison disagree; the registered verdict still follows the locked-baseline "
+            "column, and the divergence is recorded under sign_gate_vintage"
+        )
+    print(f"\nH2 supplementary inferential status: {inferential_status}")
+    print(f"  demonstrated exceedances  : {exceeded or 'none'}")
+    print(f"  inconclusive estimands    : {inconclusive or 'none'}")
+    print(
+        "  dispersion share          : locked baseline "
+        f"{baseline_dispersion_share:.4f}, refitted extension {refit_dispersion_share:.4f} "
+        f"(H4a floor {MIN_STANDARDIZED_RATE_DISPERSION_SHARE})"
+    )
 
 
 if __name__ == "__main__":

@@ -46,7 +46,7 @@ hold every threshold and decision rule fixed in advance, and report each
 registered gate whether it passes or fails.
 On the 1972--2013 baseline the reconstruction recovers the published pattern % artifact: configs/baseline.yaml
 qualitatively: the short-rate innovation carries a negative price of risk that is
-significant under the Shanken correction, and it cuts cross-sectional pricing
+nominally significant under the article's Shanken correction, and it cuts cross-sectional pricing
 errors against the market model by roughly a half. Recovery of the published
 cells at printed precision is much weaker, particularly for pricing-error and fit
 statistics, so the exercise supports statements about patterns and not about
@@ -56,14 +56,18 @@ factor models, later data, beta-estimation error, and regime dependence are
 considered. The incremental-pricing standard registered in advance is not met on
 the headline asset set, and every registered traded multi-factor comparator
 attains a lower in-sample cross-sectional RMSE on the same seventy portfolios,
-albeit on richer factor sets. Refitted post-2013 estimates reverse sign for five % artifact: configs/extensions.yaml
-of seven anomaly families, which we show is neither a data-vintage artifact nor,
-by the registered identification gate, a weak-factor artifact. Rate exposures are
+albeit on richer factor sets. The post-2013 point estimates fail the registered % artifact: configs/extensions.yaml
+compatibility gates, reversing sign for five of seven anomaly families. That
+failure is not explained by the measured data-vintage contribution, and the
+registered exposure-dispersion gate continues to pass; substantial
+beta-estimation uncertainty nevertheless prevents reading it as proof that the
+underlying pricing relation changed, and four of the five reversals are of signs
+the baseline never established. Rate exposures are
 regime dependent under a pooled interaction test, while regime-specific
 differences in the price of risk cannot be identified at feasible regime lengths.
-A calibrated simulation points to what these share: two thirds of the
-cross-sectional dispersion of estimated rate betas is sampling noise even in the
-full sample, and the nominal Shanken interval for the rate price attains its
+A calibrated simulation points to what these share: estimated rate betas have a
+reliability ratio of 0.386 even in the full sample, so most of their % artifact: artifacts/diagnostics/regime_eligibility_power.json
+cross-sectional dispersion is estimation error, and the nominal Shanken interval
 stated coverage at no simulated sample size.
 \end{abstract}
 
@@ -101,18 +105,31 @@ met on the joint asset set, and every traded multi-factor comparator we examine
 attains a lower in-sample cross-sectional RMSE on the same portfolios, though on
 factor sets of higher dimension, so that comparison ranks fit rather than
 models. The
-relation then fails to extend past the publication sample, in a way we can
-attribute to the passage of time rather than to data revisions or to weak
-identification. Finally, short-rate exposures differ across monetary regimes,
+post-2013 estimates then fail the registered compatibility gates. The measured % artifact: configs/extensions.yaml
+data-vintage contribution does not explain that failure and the registered
+exposure-dispersion gate keeps passing, but the extension is 144 months long and % artifact: configs/extensions.yaml
+its rate price carries a Shanken $t$ of $-1.49$, so we stop short of concluding % artifact: artifacts/tables/extension/temporal_evaluation.csv
+that the underlying relation changed. Finally, short-rate exposures differ across monetary regimes,
 though the sample lengths available inside regimes are too short for the
 registered equivalence standard to resolve the size of the difference.
 
 Two of these findings are negative, and we regard that as the substantive
 contribution rather than as a failed replication. The baseline result reproduces;
-what does not survive is its extension. Because every threshold, comparator, and
-decision rule was fixed before the corresponding estimate existed, the negative
+what does not survive is its extension. Every threshold, comparator, and decision
+rule was fixed before the corresponding estimate existed, so the negative
 findings are not the product of specification search, and we report each
 registered gate whether it passed or failed.
+
+That ordering is checkable rather than asserted. The hypothesis registry, the
+economic thresholds, and the inference and bootstrap contracts were committed to
+a public repository on 2026-07-30 and 2026-07-31 and tagged as a release on % artifact: research/hypothesis_registry.csv
+2026-07-31; the first cross-sectional estimate was produced on 2026-08-04. The % artifact: research/hypothesis_registry.csv
+commit history and that tag provide the timestamps, so a reader need not take the
+ordering on trust. We nonetheless describe the design as pre-specified in a
+versioned research workflow rather than as preregistered in the conventional
+sense, since it was not lodged with an external registry. The one threshold
+altered after estimation, the standalone-second-pass floor, is disclosed as such
+in the design-correction changelog and changes no registered classification. % artifact: reports/design_correction_changelog.md
 
 \section{Related literature}
 
@@ -757,9 +774,9 @@ estimate seriously as an estimate.
 
 It is not enough to treat an individual estimated beta as a measurement. The
 simulation in Section~\ref{sec:power}, calibrated to this process, attributes
-66.7 percent of the cross-sectional dispersion of estimated rate betas to % artifact: artifacts/diagnostics/regime_eligibility_power.json
-first-pass sampling noise even at 648 months, against 2.9 percent for market % artifact: artifacts/diagnostics/regime_eligibility_power.json
-betas. % artifact: artifacts/diagnostics/regime_eligibility_power.json
+61.4 percent of the cross-sectional dispersion of estimated rate betas to % artifact: artifacts/diagnostics/regime_eligibility_power.json
+first-pass estimation error even at 648 months, against 2.7 percent for market % artifact: artifacts/diagnostics/regime_eligibility_power.json
+betas, a reliability ratio of 0.386 against 0.973. % artifact: artifacts/diagnostics/regime_eligibility_power.json
 The dispersion gate is satisfied by dispersion that is substantially noise, and
 the gate was never designed to distinguish the two. We flag this as a limitation
 of the registered identification standard rather than a finding against the
@@ -883,6 +900,42 @@ model unchanged to the later months gives a fit statistic of $-0.691$, meaning %
 the fitted premia explain less of the cross-section of average returns than a
 constant would. % artifact: artifacts/tables/extension/temporal_evaluation.csv
 
+Those sign reversals are weaker evidence than their count suggests, and the
+paper's own diagnostics say why. Section~
+ef{sec:identification} reports that
+five of the seven baseline fitted-premium intervals contain zero. Of the five
+families whose point estimate reverses, only book-to-market had a baseline
+interval excluding zero; the other four reverse a sign that was never % artifact: artifacts/tables/robustness/h4c_fitted_premium_intervals.csv
+established. Counting reversals therefore overstates the evidence, and we report
+the count only alongside this qualification.
+
+\subsection{What the registered gates do not establish}
+
+The registered H2 rule compares point estimates against fixed bounds, so it
+can report compatibility or its absence but never that the data cannot
+resolve the question. The hypothesis registry anticipates an inconclusive
+state; the point-estimate rule alone cannot reach it. We therefore add a
+supplementary interval estimate, on the same joint moving-block bootstrap the
+regime analysis uses, re-estimating both windows in every draw and pairing
+the two independent distributions. It is reported beside the registered
+verdict and never replaces it.
+
+The result changes what the temporal evidence can be said to show. Of the
+seven per-family fitted-premium changes, not one is resolved: every 90 percent % artifact: artifacts/tables/extension/h2_temporal_inference.csv
+interval straddles the 0.25 bound, so none demonstrates a change and none % artifact: artifacts/tables/extension/h2_temporal_inference.csv
+certifies equivalence. The point estimates are large, up to $-0.9881$ for % artifact: artifacts/tables/extension/h2_temporal_inference.csv
+earnings to price, but so are the intervals, and the largest of them spans % artifact: artifacts/tables/extension/h2_temporal_inference.csv
+from $-1.68$ to $-0.06$. The single demonstrated exceedance is the relative % artifact: artifacts/tables/extension/h2_temporal_inference.csv
+deterioration in cross-sectional RMSE, whose entire interval, $[+0.173, % artifact: artifacts/tables/extension/h2_temporal_inference.csv
++1.844]$, lies above the 10 percent bound. % artifact: artifacts/tables/extension/h2_temporal_inference.csv
+
+That pattern is the same one the regime analysis returns in
+Section~\ref{sec:regimes}, and for the same reason. What is demonstrated is
+a deterioration in pricing-error performance. What is not demonstrated, at
+this sample size, is a change of any particular size in what the factor is
+paid. The registered gates fail; the economic change behind them remains
+unresolved.
+
 \subsection{The obvious benign explanation does not hold}
 
 The extension window contains the effective lower bound, so the short-rate factor
@@ -982,6 +1035,25 @@ statistic is negative. The average absolute rate-attributable fitted premium
 falls from 0.1517 to 0.0281 monthly percentage points, and every one of the seven % artifact: artifacts/tables/regimes/regime_fitted_premia.csv
 families moves toward zero rather than reversing. % artifact: artifacts/tables/regimes/regime_fitted_premia.csv
 
+
+One regime can be estimated outside the confirmatory family, and it is worth
+reporting because it is the only look available at the years between the
+lower bound and the pandemic. The normalisation regime has 51 months against % artifact: artifacts/tables/regimes/regime_eligibility.csv
+70 test assets, so its residual covariance is rank deficient, at rank 48. That % artifact: artifacts/tables/regimes/regime_second_pass_short_sample_sensitivity.csv
+makes it ineligible under the frozen floor but not incomputable: no step of
+the second pass inverts the residual covariance, and the pricing-error test
+already uses a pseudo-inverse. Estimated on that basis it gives a rate price
+of $-0.0844$ with a nominal Shanken $t$ of $-2.14$, between the conventional % artifact: artifacts/tables/regimes/regime_second_pass_short_sample_sensitivity.csv
+regime's $-0.7259$ and the lower bound's $0.0037$. % artifact: artifacts/tables/regimes/regime_second_pass.csv
+
+We report it as a sensitivity and nothing more. It enters no registered
+classification, no multiplicity family, and not the H3 verdict; its short
+sample carries the registered flag; and its chi-square is unreadable, since
+the statistic is referred to $N-K$ degrees of freedom while its pseudo-inverse
+measures at most 48 directions. The frozen floor is unchanged. What the % artifact: artifacts/tables/regimes/regime_second_pass_short_sample_sensitivity.csv
+estimate adds is a datum consistent with the rest of the section rather than
+a new claim: the rate price after 2008 is small in every window we can look % artifact: configs/regimes.yaml
+at, and small differently in each.
 \subsection{Equivalence is not demonstrated, and neither is difference}
 
 The confirmatory rule is two one-sided tests at the 5 percent level, implemented % artifact: research/inference_contract.md
@@ -1083,9 +1155,11 @@ price of risk below 5 percent requires 444 months. % artifact: artifacts/diagnos
 Because the design flatters the estimator, these are lower bounds on what the
 real problem would need.
 
-The mechanism is errors-in-variables attenuation, and it does not wash out with
-sample size: even at 648 months, 66.7 percent of the cross-sectional dispersion % artifact: artifacts/diagnostics/regime_eligibility_power.json
-of estimated rate betas is first-pass sampling noise, against 2.9 percent for % artifact: artifacts/diagnostics/regime_eligibility_power.json
+The mechanism is errors-in-variables attenuation. It does vanish asymptotically
+under the stationary model simulated here, since the estimation variance carries
+an explicit $1/T$, but it remains economically large at every sample length % artifact: artifacts/diagnostics/regime_eligibility_power.json
+considered: even at 648 months, 61.4 percent of the cross-sectional dispersion % artifact: artifacts/diagnostics/regime_eligibility_power.json
+of estimated rate betas is first-pass estimation error, against 2.7 percent for % artifact: artifacts/diagnostics/regime_eligibility_power.json
 market betas. The sampling standard deviation of the rate price of risk is
 essentially flat, 0.1499 at 12 months and 0.1167 at 648, so a longer window moves % artifact: artifacts/diagnostics/regime_eligibility_power.json
 the estimate rather than tightening it. % artifact: artifacts/diagnostics/regime_eligibility_power.json
@@ -1102,12 +1176,22 @@ the machinery itself is sound. The gap between the two is the errors-in-variable
 problem again: the Shanken correction adjusts for beta estimation error under
 assumptions that a factor with this noise share strains.
 
-Two consequences follow, and we prefer to state them plainly rather than bury
-them. The Shanken $t$-ratio of $-2.86$ on the baseline rate price should be read % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
-as weaker evidence than its nominal size suggests. And this, rather than any
-regime-specific story, is the most coherent account of how a risk price that is
-significant in the full sample coexists with economic quantities that will not
-hold still across subsamples. It also qualifies the identification discussion in
+How far this carries to the empirical estimate needs care, and we deliberately
+stop short of the strongest reading. The calibration treats full-sample estimated
+betas as true and then re-estimates them with fresh noise, so the simulated
+system is not a fixed point of its own estimator: part of the attenuation, and
+part of the undercoverage, is built into that construction rather than measured
+from the data. We therefore describe the baseline $t$-ratio of $-2.86$ as % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
+\emph{nominal} throughout, and treat the simulation as a warning that its nominal
+size may overstate the evidence rather than as a measurement of how far it does.
+Establishing the latter would require a latent-beta calibration that reproduces
+the observed cross-sectional beta dispersion after re-estimation, which we do not
+attempt here.
+
+Within those limits the exercise still does useful work. It offers the most
+coherent account available of how a risk price that is nominally significant in
+the full sample coexists with economic quantities that will not hold still across
+subsamples, and it qualifies the identification discussion in
 Section~\ref{sec:identification}: passing a dispersion floor is not the same as
 measuring exposures well.
 
@@ -1146,8 +1230,8 @@ pre-registration should express the three gates on a common scale.
 The third limitation is econometric, and it is the binding one for the whole
 paper rather than for the regime evidence alone. Cross-sectional pricing is
 fragile when betas carry a large share of sampling noise, and the calibrated
-simulation in Section~\ref{sec:power} puts that share at 66.7 percent for rate % artifact: artifacts/diagnostics/regime_eligibility_power.json
-betas even at 648 months, against 2.9 percent for market betas. Two consequences % artifact: artifacts/diagnostics/regime_eligibility_power.json
+simulation in Section~\ref{sec:power} puts that share at 61.4 percent for rate % artifact: artifacts/diagnostics/regime_eligibility_power.json
+betas even at 648 months, against 2.7 percent for market betas. Two consequences % artifact: artifacts/diagnostics/regime_eligibility_power.json
 run through the results. Regime-length samples cannot resolve fitted-premium
 differences against the registered bound, which is why 44 of 70 equivalence tests % artifact: artifacts/diagnostics/regime_eligibility_power.json
 are inconclusive. And the nominal Shanken interval for the rate price of risk
@@ -1194,12 +1278,16 @@ say which of the two is responsible.
 The extensions are where the paper contributes, and both are negative. The
 short-rate factor does not meet the incremental-pricing standard we registered in
 advance, and every registered traded multi-factor comparator attains a smaller
-in-sample pricing error on the same seventy portfolios. The relation then does not survive its own
-publication sample: refitted post-2013 estimates reverse sign for five of seven % artifact: artifacts/diagnostics/h2_temporal_stability.json
-anomaly families and deteriorate far beyond the registered bound. We can rule out
-two benign readings of that failure, since the change is an order of magnitude
-larger than the data-vintage contribution and the factor clears the registered
-identification gate more comfortably after 2013 than before. % artifact: artifacts/diagnostics/h2_temporal_stability.json
+in-sample pricing error on the same seventy portfolios. The post-2013 estimates % artifact: artifacts/diagnostics/h2_temporal_stability.json
+then fail every registered compatibility gate, reversing sign for five of seven % artifact: artifacts/diagnostics/h2_temporal_stability.json
+anomaly families and deteriorating far beyond the registered bound. Two readings
+of that failure are ruled out and a third is not. It is not explained by the
+measured data-vintage contribution, which is smaller by three orders of
+magnitude, and the factor keeps clearing the registered exposure-dispersion gate % artifact: artifacts/diagnostics/h2_temporal_stability.json
+after 2013. What we cannot rule out is imprecision: on 144 months the extension % artifact: artifacts/tables/extension/temporal_evaluation.csv
+rate price carries a Shanken $t$ of $-1.49$, and four of the five sign reversals % artifact: artifacts/tables/extension/temporal_evaluation.csv
+are of signs the baseline never established. The registered criterion fails; the
+underlying economic change is not thereby demonstrated.
 
 Across monetary regimes the evidence is asymmetric by construction. Exposures are
 demonstrably regime dependent under the pooled test, while the size of the change

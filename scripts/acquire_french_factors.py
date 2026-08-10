@@ -1,9 +1,17 @@
-"""Acquire publication-era and current Kenneth French factor archives."""
+"""Acquire and verify the publication-era and current Kenneth French archives.
+
+By default this is a verification run: each archive is downloaded, hashed, and
+compared against the ``raw_sha256`` recorded in
+``artifacts/provenance/kenneth_french``. A mismatch aborts the run and leaves the
+recorded hash untouched. Passing ``--update-vintage`` is the only way to record a
+different vintage, and it rewrites those manifests.
+"""
 
 from __future__ import annotations
 
 import csv
 import json
+from collections.abc import Sequence
 from dataclasses import asdict
 from pathlib import Path
 
@@ -14,6 +22,11 @@ from short_rate_anomaly_regimes.data.french_freeze import (
     compare_vintages,
     freeze_french_archive,
     load_normalized_french,
+)
+from short_rate_anomaly_regimes.data.vintage import (
+    VintageMode,
+    announce_mode,
+    parse_vintage_mode,
 )
 
 RAW_ROOT = Path("data/raw/kenneth_french")
@@ -50,8 +63,10 @@ ARCHIVE_DATES = {
 }
 
 
-def main() -> None:
-    """Freeze both vintages of every registered archive and compare them."""
+def main(argv: Sequence[str] | None = None) -> None:
+    """Verify both vintages of every registered archive and compare them."""
+    mode = parse_vintage_mode(argv, description=__doc__)
+    print(announce_mode(mode))
     records = []
     for dataset, historical_url in HISTORICAL_SNAPSHOTS.items():
         for label, url, archive_date in (
@@ -66,6 +81,7 @@ def main() -> None:
                 raw_root=RAW_ROOT,
                 normalized_root=NORMALIZED_ROOT,
                 manifest_root=MANIFEST_ROOT,
+                mode=mode,
             )
             records.append(record)
             print(
@@ -74,24 +90,30 @@ def main() -> None:
                 f"missing={record.missing_value_count} sha={record.raw_sha256[:12]}"
             )
 
-    rows = []
-    for record in records:
-        row = {
-            key: value
-            for key, value in asdict(record).items()
-            if not isinstance(value, dict | tuple | list)
-        }
-        row["columns"] = ";".join(record.columns)
-        row["missing_value_codes"] = ";".join(str(code) for code in record.missing_value_codes)
-        row["source_metadata_lines"] = " | ".join(record.source_metadata_lines)
-        row["value_minimum"] = record.value_range["minimum"]
-        row["value_maximum"] = record.value_range["maximum"]
-        rows.append(row)
-    SUMMARY_CSV.parent.mkdir(parents=True, exist_ok=True)
-    with SUMMARY_CSV.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()), lineterminator="\n")
-        writer.writeheader()
-        writer.writerows(rows)
+    if mode is VintageMode.UPDATE:
+        rows = []
+        for record in records:
+            row = {
+                key: value
+                for key, value in asdict(record).items()
+                if not isinstance(value, dict | tuple | list)
+            }
+            row["columns"] = ";".join(record.columns)
+            row["missing_value_codes"] = ";".join(str(code) for code in record.missing_value_codes)
+            row["source_metadata_lines"] = " | ".join(record.source_metadata_lines)
+            row["value_minimum"] = record.value_range["minimum"]
+            row["value_maximum"] = record.value_range["maximum"]
+            rows.append(row)
+        SUMMARY_CSV.parent.mkdir(parents=True, exist_ok=True)
+        with SUMMARY_CSV.open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()), lineterminator="\n")
+            writer.writeheader()
+            writer.writerows(rows)
+    else:
+        print(
+            f"Verified {len(records)} archive vintages against the frozen vintage; "
+            f"{MANIFEST_ROOT.as_posix()} and {SUMMARY_CSV.as_posix()} were not rewritten"
+        )
 
     baseline_window = pd.period_range("1972-01", "2013-12", freq="M")
     summaries = []

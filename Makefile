@@ -1,4 +1,4 @@
-.PHONY: install validate-metadata lint typecheck manuscript-check manuscript-tables paper paper-clean config-check data-check provenance-check release-check test check clean milestones env-manifest reproduce reproduce-acquire reproduce-panels reproduce-estimates reproduce-extension reproduce-regimes reproduce-reports
+.PHONY: install validate-metadata lint typecheck manuscript-check manuscript-tables paper paper-clean config-check data-check provenance-check release-check test check clean milestones env-manifest reproduce reproduce-acquire reproduce-panels reproduce-estimates reproduce-extension reproduce-regimes reproduce-reports update-vintage update-vintage-short-rates update-vintage-french update-vintage-portfolios update-vintage-comparators
 
 install:
 	poetry install
@@ -67,7 +67,7 @@ clean:
 	rm -rf .pytest_cache .mypy_cache .ruff_cache htmlcov .coverage build dist
 
 # ---------------------------------------------------------------------------
-# Deterministic rebuild of the empirical artifacts.
+# Rebuild of the empirical artifacts, verified against the frozen vintage.
 #
 # The release archive ships source, configuration, the frozen source registry,
 # and the result tables the manuscript cites. It does not ship raw or processed
@@ -76,18 +76,21 @@ clean:
 # archive to those artifacts. `poetry run srar release-audit` reports the two
 # facts separately as `empirical_release` and `empirical_rebuild`.
 #
-# NETWORK: only reproduce-acquire reaches the internet. Every later stage reads
-# the frozen files it wrote under data/raw and data/interim.
+# NETWORK: only reproduce-acquire reaches the internet, and it does not reach it
+# at all once the frozen raw bytes are on disk. Every later stage reads the
+# frozen files under data/raw and data/interim.
 # SLOW: reproduce-estimates, reproduce-regimes. Budget hours, not minutes.
 # The stages are ordered by dependency and are safe to run one at a time.
 reproduce: reproduce-acquire reproduce-panels reproduce-estimates reproduce-extension reproduce-regimes reproduce-reports paper release-check
 
-# NETWORK REQUIRED. Downloads the frozen vintages recorded in
-# configs/data_sources.yaml: FRED short rates, the Ken French publication-era
-# and current archives, the global-q anomaly deciles and q-factors, and the
-# Pastor-Stambaugh liquidity series. Raw bytes are written once; a provider
-# revision makes a re-download fail rather than silently overwrite, so delete
-# data/raw and data/interim before re-acquiring against a new vintage.
+# NETWORK REQUIRED unless the frozen raw bytes are already under data/raw.
+# VERIFICATION ONLY. Every provider URL here serves the current vintage, so this
+# stage downloads each source, hashes it, and compares the digest against the
+# raw_sha256 recorded in the shipped manifests under artifacts/provenance. A
+# mismatch aborts the stage naming the series, both hashes, and what to do next;
+# nothing is written and no recorded hash is changed. This stage can never move
+# the archive onto a new vintage: only `make update-vintage` can, and `reproduce`
+# never invokes it.
 reproduce-acquire:
 	poetry run python scripts/acquire_short_rates.py
 	poetry run python scripts/acquire_french_factors.py
@@ -141,3 +144,32 @@ reproduce-reports:
 	-poetry run srar shock-decomposition
 	-poetry run srar out-of-sample
 	poetry run srar build-report --config configs/reporting.yaml
+
+# ---------------------------------------------------------------------------
+# Moving the archive onto a NEW frozen vintage. THIS IS NOT PART OF `reproduce`.
+#
+# These are the only targets that may overwrite a recorded expected hash. They
+# pass `--update-vintage`, which replaces the raw bytes under data/raw, rewrites
+# the provenance manifests under artifacts/provenance, and therefore changes the
+# inputs of every downstream estimate. The published results were produced from
+# the vintage currently recorded; running these invalidates them until the whole
+# of `make reproduce` has been re-run and the new vintage reported.
+#
+# Run one of these only when you intend to change the data, never to make a
+# failing `reproduce-acquire` go away. A verification failure means the provider
+# revised the series, and the fix for a reproduction is to obtain the frozen
+# bytes (ALFRED for FRED, Internet Archive for the publication-era files; see
+# docs/DATA_ACQUISITION.md), not to adopt the revision.
+update-vintage: update-vintage-short-rates update-vintage-french update-vintage-portfolios update-vintage-comparators
+
+update-vintage-short-rates:
+	poetry run python scripts/acquire_short_rates.py --update-vintage
+
+update-vintage-french:
+	poetry run python scripts/acquire_french_factors.py --update-vintage
+
+update-vintage-portfolios:
+	poetry run python scripts/acquire_anomaly_portfolios.py --update-vintage
+
+update-vintage-comparators:
+	poetry run python scripts/acquire_comparator_factors.py --update-vintage

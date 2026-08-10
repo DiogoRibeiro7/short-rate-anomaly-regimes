@@ -21,7 +21,7 @@ These instructions describe the archive in your hands. The gate reports two inde
 | Gate field | Value | Meaning |
 |---|---|---|
 | `empirical_release` | `blocked` | The generated data panels and first- and second-pass estimate stores are **not** in this archive. |
-| `empirical_rebuild` | `rebuildable_from_public_sources` | The archive carries a documented, deterministic path to regenerate them: `make reproduce`. |
+| `empirical_rebuild` | `rebuildable_from_public_sources` | The archive carries a documented rebuild path, `make reproduce`, verified against the frozen vintage: every download is checked against the checksum recorded in the shipped provenance manifests and the rebuild refuses to proceed on a mismatch. |
 
 **In the archive.** Source code, configuration, the frozen source registry, the pre-registration, the acquisition and estimation scripts, the manuscript and its compiled PDF, and the result tables, figures, and diagnostics that the manuscript cites. Every numeric claim in the paper can be traced to a shipped artifact and re-read without running anything.
 
@@ -36,7 +36,11 @@ poetry install
 make reproduce
 ```
 
-`make reproduce` runs acquisition, panel construction, estimation, the temporal extension, the regime analysis, the generated reports, and the paper build in dependency order. Only the first stage needs network access. Budget hours: the precision, equivalence, interaction, and power stages run 10,000-draw bootstraps, an exhaustive Bai-Perron search, and 32,000 Monte Carlo replications. Stages can be run individually as `make reproduce-acquire`, `reproduce-panels`, `reproduce-estimates`, `reproduce-extension`, `reproduce-regimes`, and `reproduce-reports`.
+`make reproduce` runs acquisition, panel construction, estimation, the temporal extension, the regime analysis, the generated reports, and the paper build in dependency order. Only the first stage needs network access, and it needs none once the frozen raw bytes are on disk. Budget hours: the precision, equivalence, interaction, and power stages run 10,000-draw bootstraps, an exhaustive Bai-Perron search, and 32,000 Monte Carlo replications. Stages can be run individually as `make reproduce-acquire`, `reproduce-panels`, `reproduce-estimates`, `reproduce-extension`, `reproduce-regimes`, and `reproduce-reports`.
+
+**What the rebuild guarantees.** Every provider endpoint this project reads serves the current vintage: FRED's `fredgraph.csv` returns the latest revision of a series, and the Kenneth French, global-q, and Wharton files are replaced in place when those libraries are rebuilt. The rebuild therefore does not trust the URL. It treats the SHA-256 values in the shipped provenance manifests under `artifacts/provenance` as expected hashes: each acquisition downloads, hashes, compares, and continues only on a match. On a mismatch it aborts naming the series, the expected hash, the received hash, and what to do next, and it rewrites no manifest. So the rebuild either reproduces the frozen vintage or refuses to run. It is not a claim that providers never revise, nor a guarantee that a provider still serves those bytes; when one has revised a series, the frozen bytes must be recovered from an immutable source before the archive's results can be regenerated. See [`docs/DATA_ACQUISITION.md`](docs/DATA_ACQUISITION.md) for the preferred immutable source for each input.
+
+Moving to a new vintage is a separate, deliberate operation. `make update-vintage` and its per-source targets pass `--update-vintage`, the only switch that may overwrite a recorded expected hash; no `reproduce` stage passes it. It changes the inputs of every downstream result, so `make reproduce` must be re-run in full afterwards and the new vintage reported.
 
 ## Findings
 
@@ -50,9 +54,9 @@ Thresholds, comparators, and decision rules were fixed before the corresponding 
 | **H3** regime stability | `regime_stability_unsupported_under_the_registered_equivalence_standard` |
 | **H4a/b/c** weak-factor identification, influence, precision | all `pass` |
 
-On the baseline the short-rate innovation earns a price of risk of `-0.6985` per month with a Shanken *t* of `-2.86`, and roughly halves cross-sectional pricing errors against the market model. Two qualifications follow, and both are pre-registered. The registered materiality standard is not met on the headline asset set, failing its absolute gate by `0.0136` monthly percentage points, and every registered traded multi-factor comparator attains a lower in-sample cross-sectional RMSE on the same seventy portfolios, though on richer factor sets, so that comparison ranks fit rather than models. Refitted post-2013 estimates then reverse sign for five of seven anomaly families, which the design shows is neither a data-vintage artifact nor, by the registered identification gate, a weak-factor artifact.
+On the baseline the short-rate innovation earns a price of risk of `-0.6985` per month with a Shanken *t* of `-2.86`, and roughly halves cross-sectional pricing errors against the market model. Two qualifications follow, and both are pre-registered. The registered materiality standard is not met on the headline asset set, failing its absolute gate by `0.0136` monthly percentage points, and every registered traded multi-factor comparator attains a lower in-sample cross-sectional RMSE on the same seventy portfolios, though on richer factor sets, so that comparison ranks fit rather than models. The post-2013 estimates then fail every registered compatibility gate, reversing sign for five of seven anomaly families. A supplementary joint bootstrap shows what that does and does not establish: all seven per-family fitted-premium changes are inconclusive at the registered bound, and only the cross-sectional RMSE deterioration is demonstrated. The failure is not explained by the measured data-vintage contribution, but imprecision is not ruled out.
 
-Across regimes the evidence is deliberately asymmetric. The pooled interaction model rejects beta stability on all 648 months, while of the seventy per-portfolio equivalence tests 26 certify equivalence, 44 are inconclusive, and none demonstrates a change beyond the registered bound. A calibrated simulation locates the shared limitation: two thirds of the cross-sectional dispersion of estimated rate betas is sampling noise even in the full sample, and the nominal Shanken interval for the rate price attains its stated coverage at no simulated sample size. Resolving fitted-premium spreads against the `0.25` bound needs 180 months, and the lower-bound regime has 84.
+Across regimes the evidence is deliberately asymmetric. The pooled interaction model rejects beta stability on all 648 months, while of the seventy per-portfolio equivalence tests 26 certify equivalence, 44 are inconclusive, and none demonstrates a change beyond the registered bound. A calibrated simulation locates the shared limitation: estimated rate betas have a reliability ratio of 0.386 even in the full sample, so 61.4 percent of their cross-sectional dispersion is estimation error against 2.7 percent for market betas, and the nominal Shanken interval for the rate price attains its stated coverage at no simulated sample size. Resolving fitted-premium spreads against the `0.25` bound needs 180 months, and the lower-bound regime has 84.
 
 ## Research question
 
@@ -131,7 +135,7 @@ The empirical pipeline lives in [`scripts/`](scripts/) and is driven by `make re
 
 | Stage | Target | Notes |
 |---|---|---|
-| Acquisition | `make reproduce-acquire` | **Network required.** Pulls the frozen vintages in `configs/data_sources.yaml`. Raw bytes are written once; delete `data/raw` and `data/interim` before re-acquiring against a new vintage. |
+| Acquisition | `make reproduce-acquire` | **Network required** unless the frozen raw bytes are already under `data/raw`. Verification only: each download is checked against the SHA-256 recorded in `artifacts/provenance` and the stage aborts on a mismatch without writing anything. Use `make update-vintage` to move to a different vintage on purpose. |
 | Panels | `make reproduce-panels` | Source audits, AR(1) innovation reconstruction, baseline, comparator, and extension panels. Minutes. |
 | Estimation | `make reproduce-estimates` | Baseline replication, published-target audit, H1 materiality, weak-factor diagnostics. **Slow:** `run_h4c_precision.py` is a 10,000-draw moving-block bootstrap. |
 | Extension | `make reproduce-extension` | Post-2013 temporal evaluation. Minutes. |

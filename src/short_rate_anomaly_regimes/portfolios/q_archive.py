@@ -24,11 +24,15 @@ from short_rate_anomaly_regimes.data.acquisition import (
     _session_with_retries,
     canonical_monthly_bytes,
     load_normalized_month_panel,
-    write_raw_once,
+    raw_writer,
 )
+from short_rate_anomaly_regimes.data.vintage import VintageMode, acquire_frozen_payload
 from short_rate_anomaly_regimes.exceptions import DataAccessError, DataValidationError
 
 Q_ARCHIVE_BASE_URL = "https://global-q.org/uploads/1/2/2/6/122679606"
+
+#: The only command permitted to overwrite the recorded q-archive hashes.
+Q_ARCHIVE_UPDATE_COMMAND = "make update-vintage-portfolios"
 
 #: The archive host refuses the default requests user agent with HTTP 400.
 Q_ARCHIVE_USER_AGENT = (
@@ -181,8 +185,15 @@ def freeze_q_archive(
     session: HTTPSession | None = None,
     timeout: float = 180.0,
     retries: int = 3,
+    mode: VintageMode = VintageMode.VERIFY,
 ) -> tuple[QArchiveRecord, bytes]:
-    """Download one testing-portfolio archive and write its immutable raw bytes.
+    """Download one testing-portfolio archive, verify it, and write its raw bytes.
+
+    The archive URL carries no vintage: global-q.org replaces the file in place
+    when the library is rebuilt. In the default verification mode the download is
+    compared against the ``raw_sha256`` recorded in the shipped manifest and the
+    call aborts on a mismatch without writing anything. When the immutable raw
+    file is already present and already matches, no request is made at all.
 
     Args:
         archive: Archive base name without the ``.zip`` suffix.
@@ -192,6 +203,8 @@ def freeze_q_archive(
         session: Optional HTTP session for testing.
         timeout: Request timeout in seconds.
         retries: Retry budget for transient failures.
+        mode: Verification, or update when the caller was given the explicit
+            update-vintage flag. Only an update run writes the manifest.
 
     Returns:
         The archive record and the raw payload.
@@ -199,21 +212,39 @@ def freeze_q_archive(
     Raises:
         DataAccessError: On a non-200 response, an empty or non-ZIP payload, or an
             attempt to overwrite an existing raw file with different bytes.
+        FrozenVintageError: When the download does not match the recorded expected
+            hash, or when no expected hash is recorded and the run is verifying.
         DataValidationError: When the archive carries no member or only empty
             members. The archive is inspected before any raw file is written, so a
             hollow payload is neither recorded as a successful freeze nor left
             occupying the immutable path.
     """
     url = f"{Q_ARCHIVE_BASE_URL}/{archive}.zip"
-    client = session or _q_session(retries)
-    response = client.get(url, timeout=timeout)
-    if response.status_code != 200:
-        raise DataAccessError(f"Unexpected HTTP status {response.status_code} for {url}")
-    payload = response.content
-    if not payload:
-        raise DataAccessError(f"Empty payload for {url}")
-    if not zipfile.is_zipfile(io.BytesIO(payload)):
-        raise DataAccessError(f"Payload for {url} is not a ZIP archive")
+    raw_path = raw_root / f"{archive}_{vintage_label}.zip"
+    manifest_path = manifest_root / f"{archive}_{vintage_label}.json"
+
+    def fetch() -> tuple[bytes, dict[str, str]]:
+        client = session or _q_session(retries)
+        response = client.get(url, timeout=timeout)
+        if response.status_code != 200:
+            raise DataAccessError(f"Unexpected HTTP status {response.status_code} for {url}")
+        payload = response.content
+        if not payload:
+            raise DataAccessError(f"Empty payload for {url}")
+        if not zipfile.is_zipfile(io.BytesIO(payload)):
+            raise DataAccessError(f"Payload for {url} is not a ZIP archive")
+        return payload, dict(response.headers)
+
+    verified = acquire_frozen_payload(
+        source_label=f"q-factor testing-portfolio archive {archive} at vintage {vintage_label}",
+        url=url,
+        manifest_path=manifest_path,
+        raw_path=raw_path,
+        mode=mode,
+        update_command=Q_ARCHIVE_UPDATE_COMMAND,
+        fetch=fetch,
+    )
+    payload = verified.payload
 
     with zipfile.ZipFile(io.BytesIO(payload)) as handle:
         members = [item for item in handle.infolist() if not item.is_dir()]
@@ -223,8 +254,7 @@ def freeze_q_archive(
         raise DataValidationError(f"Archive {archive} contains only empty files")
     member_count = len(members)
 
-    raw_path = raw_root / f"{archive}_{vintage_label}.zip"
-    raw_sha = write_raw_once(raw_path, payload)
+    raw_sha = raw_writer(mode)(raw_path, payload)
 
     record = QArchiveRecord(
         archive=archive,
@@ -240,13 +270,14 @@ def freeze_q_archive(
             "or licensing condition. Raw archive bytes are retained locally and are "
             "not redistributed by this repository."
         ),
-        http_last_modified=response.headers.get("Last-Modified"),
-        http_etag=response.headers.get("ETag"),
+        http_last_modified=verified.headers.get("Last-Modified"),
+        http_etag=verified.headers.get("ETag"),
     )
-    manifest_root.mkdir(parents=True, exist_ok=True)
-    (manifest_root / f"{archive}_{vintage_label}.json").write_text(
-        json.dumps(asdict(record), indent=2, sort_keys=True), encoding="utf-8", newline="\n"
-    )
+    if mode.writes_provenance:
+        manifest_root.mkdir(parents=True, exist_ok=True)
+        manifest_path.write_text(
+            json.dumps(asdict(record), indent=2, sort_keys=True), encoding="utf-8", newline="\n"
+        )
     return record, payload
 
 

@@ -177,10 +177,47 @@ def _temporal_artifact() -> dict[str, Any]:
         "replication_status": "documented_reconstruction",
         "rmse_relative_change_vs_locked_baseline": 0.910148,
         "rmse_relative_change_vs_revised_history": 0.889665,
+        "sign_gate_vintage": {
+            "gates_agree": True,
+            "note": "the registered sign gate compares against the locked baseline",
+            "registered_gate_compares_against": "locked_baseline",
+            "registered_gate_passes": False,
+            "same_vintage_gate_compares_against": "revised_history",
+            "same_vintage_gate_passes": False,
+        },
         "standardized_rate_exposure_dispersion_share": {
+            "floor": 0.1,
             "locked_baseline": 0.254,
             "note": "the H4a dispersion gate floor is 0.10",
             "refitted_extension": 0.58,
+        },
+        "supplementary_inferential_classification": {
+            "comparison": "refitted_extension_2014_2025_minus_revised_history_1972_2013",
+            "draws": 10000,
+            "estimands": {
+                "temporal_fitted_premium_spread_change__book_to_market": {
+                    "bound": 0.25,
+                    "decision_category": "inconclusive",
+                    "lower_90": -1.9,
+                    "point_change": -0.93,
+                    "upper_90": 0.11,
+                },
+                "temporal_rmse_relative_change": {
+                    "bound": 0.1,
+                    "decision_category": "difference_exceeds_bound",
+                    "lower_90": 0.42,
+                    "point_change": 0.91,
+                    "upper_90": 1.71,
+                },
+            },
+            "note": "both windows are re-estimated inside every draw",
+            "role": "supplementary interval evidence",
+            "rule": "tost_5pct_90pct_interval",
+            "sensitivity_rule": "strict_95pct_interval_sensitivity",
+            "status": "post_publication_compatibility_unsupported_under_the_bootstrap_"
+            "interval_standard",
+            "status_basis": "at least one estimand has its whole 90 percent interval beyond "
+            "its bound",
         },
         "vintage_isolation": "the temporal gates compare vintage-consistent windows",
     }

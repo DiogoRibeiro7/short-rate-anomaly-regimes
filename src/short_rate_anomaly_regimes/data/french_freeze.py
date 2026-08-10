@@ -25,11 +25,15 @@ from short_rate_anomaly_regimes.data.acquisition import (
     _session_with_retries,
     canonical_monthly_bytes,
     load_normalized_month_panel,
-    write_raw_once,
+    raw_writer,
 )
+from short_rate_anomaly_regimes.data.vintage import VintageMode, acquire_frozen_payload
 from short_rate_anomaly_regimes.exceptions import DataAccessError, DataValidationError
 
 FRENCH_BASE_URL = "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp"
+
+#: The only command permitted to overwrite the recorded Kenneth French hashes.
+FRENCH_UPDATE_COMMAND = "make update-vintage-french"
 
 #: Kenneth French encodes an unavailable observation with these sentinels.
 FRENCH_MISSING_VALUE_CODES = (-99.99, -999.0)
@@ -130,8 +134,16 @@ def freeze_french_archive(
     session: HTTPSession | None = None,
     timeout: float = 120.0,
     retries: int = 3,
+    mode: VintageMode = VintageMode.VERIFY,
 ) -> FrenchFreezeRecord:
-    """Download one Kenneth French archive vintage and freeze it with metadata.
+    """Download one Kenneth French archive vintage, verify it, and freeze it.
+
+    Neither the library URL nor an Internet Archive snapshot is guaranteed to
+    keep serving the bytes it served when this vintage was frozen, so in the
+    default verification mode the download is compared against the ``raw_sha256``
+    recorded in the shipped manifest and the call aborts on a mismatch without
+    writing anything. When the immutable raw file is already present and already
+    matches, no request is made at all.
 
     Args:
         dataset: Archive base name without the ``_CSV.zip`` suffix.
@@ -144,6 +156,8 @@ def freeze_french_archive(
         session: Optional HTTP session for testing.
         timeout: Request timeout in seconds.
         retries: Retry budget for transient failures.
+        mode: Verification, or update when the caller was given the explicit
+            update-vintage flag. Only an update run writes the manifest.
 
     Returns:
         The complete freeze record.
@@ -151,20 +165,38 @@ def freeze_french_archive(
     Raises:
         DataAccessError: On a non-200 response, an empty or non-ZIP payload, or an
             attempt to overwrite an existing raw file with different bytes.
+        FrozenVintageError: When the download does not match the recorded expected
+            hash, or when no expected hash is recorded and the run is verifying.
         DataValidationError: When the archive contains no parsable member. The
             archive member is extracted and parsed before any raw file is written,
             so a malformed payload never occupies the immutable path and a later
             retry with the valid payload still succeeds.
     """
-    client = session or _session_with_retries(retries)
-    response = client.get(url, timeout=timeout)
-    if response.status_code != 200:
-        raise DataAccessError(f"Unexpected HTTP status {response.status_code} for {url}")
-    payload = response.content
-    if not payload:
-        raise DataAccessError(f"Empty payload for {url}")
-    if not zipfile.is_zipfile(io.BytesIO(payload)):
-        raise DataAccessError(f"Payload for {url} is not a ZIP archive")
+    raw_path = raw_root / dataset / f"{dataset}_{vintage_label}.zip"
+    manifest_path = manifest_root / f"{dataset}_{vintage_label}.json"
+
+    def fetch() -> tuple[bytes, dict[str, str]]:
+        client = session or _session_with_retries(retries)
+        response = client.get(url, timeout=timeout)
+        if response.status_code != 200:
+            raise DataAccessError(f"Unexpected HTTP status {response.status_code} for {url}")
+        payload = response.content
+        if not payload:
+            raise DataAccessError(f"Empty payload for {url}")
+        if not zipfile.is_zipfile(io.BytesIO(payload)):
+            raise DataAccessError(f"Payload for {url} is not a ZIP archive")
+        return payload, dict(response.headers)
+
+    verified = acquire_frozen_payload(
+        source_label=f"Kenneth French archive {dataset} at vintage {vintage_label}",
+        url=url,
+        manifest_path=manifest_path,
+        raw_path=raw_path,
+        mode=mode,
+        update_command=FRENCH_UPDATE_COMMAND,
+        fetch=fetch,
+    )
+    payload = verified.payload
 
     # The member is extracted and parsed before the raw bytes are committed, so a
     # malformed HTTP 200 cannot permanently occupy the immutable path.
@@ -179,8 +211,7 @@ def freeze_french_archive(
     normalized_bytes = canonical_monthly_bytes(frame)
 
     file_name = f"{dataset}_CSV.zip"
-    raw_path = raw_root / dataset / f"{dataset}_{vintage_label}.zip"
-    raw_sha = write_raw_once(raw_path, payload)
+    raw_sha = raw_writer(mode)(raw_path, payload)
 
     normalized_path = normalized_root / f"{dataset}_{vintage_label}.csv"
     normalized_path.parent.mkdir(parents=True, exist_ok=True)
@@ -213,17 +244,18 @@ def freeze_french_archive(
             "repository"
         ),
         source_metadata_lines=descriptive,
-        http_last_modified=response.headers.get("Last-Modified"),
-        http_etag=response.headers.get("ETag"),
+        http_last_modified=verified.headers.get("Last-Modified"),
+        http_etag=verified.headers.get("ETag"),
         value_range={
             "minimum": float(np.nanmin(frame.to_numpy(dtype=float))),
             "maximum": float(np.nanmax(frame.to_numpy(dtype=float))),
         },
     )
-    manifest_root.mkdir(parents=True, exist_ok=True)
-    (manifest_root / f"{dataset}_{vintage_label}.json").write_text(
-        json.dumps(asdict(record), indent=2, sort_keys=True), encoding="utf-8", newline="\n"
-    )
+    if mode.writes_provenance:
+        manifest_root.mkdir(parents=True, exist_ok=True)
+        manifest_path.write_text(
+            json.dumps(asdict(record), indent=2, sort_keys=True), encoding="utf-8", newline="\n"
+        )
     return record
 
 

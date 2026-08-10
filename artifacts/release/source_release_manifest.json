@@ -1,6 +1,6 @@
 {
   "archive_path": "artifacts/release/source_release.zip",
-  "archive_sha256": "cdc5c85eae656de914752077da1217dbb98b6e6034dcb888eeb67e9f678dd76d",
+  "archive_sha256": "eda8f7b0eb2ee8f4eebed74b86e752a67f8a3f022d10a96059e9ea6700a69b0c",
   "excluded": [
     "prompts/",
     "references/private/",
@@ -9,7 +9,7 @@
     "artifacts/environment/manifest.json",
     "data/catalog.duckdb"
   ],
-  "file_count": 345,
+  "file_count": 351,
   "members": [
     ".editorconfig",
     ".env.example",
@@ -58,6 +58,7 @@
     "artifacts/diagnostics/rates/ar1_reconstruction_estimates.csv",
     "artifacts/diagnostics/rates/r1a_classification.csv",
     "artifacts/diagnostics/regime_eligibility_power.json",
+    "artifacts/diagnostics/regime_short_sample_sensitivity.json",
     "artifacts/diagnostics/shocks/.gitkeep",
     "artifacts/diagnostics/time_series/.gitkeep",
     "artifacts/diagnostics/weak_factor/.gitkeep",
@@ -116,6 +117,7 @@
     "artifacts/provenance/regime_interactions.json",
     "artifacts/provenance/regime_panel.json",
     "artifacts/provenance/regime_power_analysis.json",
+    "artifacts/provenance/regime_short_sample_sensitivity.json",
     "artifacts/provenance/short_rate/DFF_2026-08-01.json",
     "artifacts/provenance/short_rate/DTB3_2026-08-01.json",
     "artifacts/provenance/short_rate/FEDFUNDS_2026-08-01.json",
@@ -129,6 +131,7 @@
     "artifacts/tables/cross_section/baseline_risk_prices.csv",
     "artifacts/tables/extension/.gitkeep",
     "artifacts/tables/extension/fitted_premium_spreads.csv",
+    "artifacts/tables/extension/h2_temporal_inference.csv",
     "artifacts/tables/extension/temporal_evaluation.csv",
     "artifacts/tables/extension/vintage_decomposition.csv",
     "artifacts/tables/factors/.gitkeep",
@@ -145,6 +148,7 @@
     "artifacts/tables/regimes/regime_fitted_premia.csv",
     "artifacts/tables/regimes/regime_monthly_series.csv",
     "artifacts/tables/regimes/regime_second_pass.csv",
+    "artifacts/tables/regimes/regime_second_pass_short_sample_sensitivity.csv",
     "artifacts/tables/robustness/.gitkeep",
     "artifacts/tables/robustness/dfbeta_influence.csv",
     "artifacts/tables/robustness/h1_primary_comparison.csv",
@@ -286,6 +290,7 @@
     "src/short_rate_anomaly_regimes/data/french_freeze.py",
     "src/short_rate_anomaly_regimes/data/short_rate_freeze.py",
     "src/short_rate_anomaly_regimes/data/validation.py",
+    "src/short_rate_anomaly_regimes/data/vintage.py",
     "src/short_rate_anomaly_regimes/environment.py",
     "src/short_rate_anomaly_regimes/evidence.py",
     "src/short_rate_anomaly_regimes/exceptions.py",
@@ -355,6 +360,7 @@
     "tests/test_time_series.py",
     "tests/test_validation.py",
     "tests/test_verify_title.py",
+    "tests/test_vintage.py",
     "tests/test_weak_factor_gates.py"
   ]
 }

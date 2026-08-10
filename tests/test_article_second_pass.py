@@ -230,6 +230,18 @@ class TestGuards:
         with pytest.raises(ValueError, match="n_months must be positive"):
             _estimate(_system(), n_months=0)
 
+    def test_fewer_months_than_priced_factors_is_rejected(self) -> None:
+        """Rank deficiency is admitted; a window shorter than the design is not."""
+        with pytest.raises(ValueError, match="exceed the number of priced factors"):
+            _estimate(_system(), n_months=2)
+
+    def test_a_non_finite_residual_covariance_is_rejected(self) -> None:
+        parts = _system()
+        covariance = parts.residual_covariance.copy()
+        covariance.iloc[0, 0] = np.nan
+        with pytest.raises(ValueError, match="non-finite"):
+            _estimate(parts, residual_covariance=covariance)
+
 
 class TestResidualCovariance:
     """The residual covariance feeding Shanken must be complete and well posed."""
@@ -248,7 +260,64 @@ class TestResidualCovariance:
         with pytest.raises(ValueError, match="must be complete"):
             residual_covariance_from_first_pass(residuals)
 
-    def test_a_singular_short_panel_is_rejected(self) -> None:
+    def test_a_short_panel_yields_a_rank_deficient_covariance_rather_than_an_error(self) -> None:
+        """A covariance from fewer months than assets exists and is accepted.
+
+        Correction 9 in ``reports/design_correction_changelog.md`` justified
+        refusing this case by asserting the covariance does not exist. It does;
+        it is rank deficient. The constructor now returns it and the rank is
+        recorded, because nothing in the estimator inverts it.
+        """
         parts = _system(n_assets=25, n_months=20)
-        with pytest.raises(ValueError, match="more months than assets"):
-            residual_covariance_from_first_pass(parts.residuals)
+        covariance = residual_covariance_from_first_pass(parts.residuals)
+        assert covariance.shape == (25, 25)
+        assert np.linalg.matrix_rank(covariance.to_numpy(dtype=float)) == 19
+        assert bool(np.isfinite(covariance.to_numpy(dtype=float)).all())
+
+    def test_a_panel_shorter_than_the_requested_minimum_is_rejected(self) -> None:
+        parts = _system(n_assets=25, n_months=20)
+        with pytest.raises(ValueError, match="at least the requested months"):
+            residual_covariance_from_first_pass(parts.residuals, minimum_months=21)
+
+    def test_a_minimum_below_two_is_rejected(self) -> None:
+        parts = _system(n_assets=25, n_months=20)
+        with pytest.raises(ValueError, match="at least two"):
+            residual_covariance_from_first_pass(parts.residuals, minimum_months=1)
+
+    def test_an_asset_without_residual_variation_is_rejected(self) -> None:
+        parts = _system(n_assets=25, n_months=20)
+        residuals = parts.residuals.copy()
+        residuals.iloc[:, 3] = 0.0
+        with pytest.raises(ValueError, match="zero variance"):
+            residual_covariance_from_first_pass(residuals)
+
+
+class TestRankDeficientResidualCovariance:
+    """A ``T < N`` residual covariance must estimate rather than raise."""
+
+    def test_it_yields_finite_risk_prices_a_usable_chi_square_and_a_recorded_rank(self) -> None:
+        parts = _system(n_assets=25, n_months=20, residual_sd=0.30, seed=11)
+        covariance = residual_covariance_from_first_pass(parts.residuals)
+        result = _estimate(parts, residual_covariance=covariance, n_months=20)
+
+        assert bool(np.isfinite(result.risk_prices.to_numpy(dtype=float)).all())
+        assert bool(np.isfinite(result.shanken_standard_errors.to_numpy(dtype=float)).all())
+        assert bool((result.shanken_standard_errors > 0.0).all())
+        assert bool(np.isfinite(result.shanken_t_statistics.to_numpy(dtype=float)).all())
+        # The pseudo-inverse of a singular pricing-error covariance still
+        # produces a finite, strictly positive, referable statistic.
+        assert np.isfinite(result.chi_square_statistic)
+        assert result.chi_square_statistic > 0.0
+        assert result.chi_square_degrees_of_freedom == 23
+        assert 0.0 <= result.chi_square_asymptotic_p_value <= 1.0
+
+        assert result.diagnostics["residual_covariance_rank"] == 19.0
+        assert result.diagnostics["residual_covariance_rank_deficient"] == 1.0
+        assert result.diagnostics["months_minus_assets"] == -5.0
+
+    def test_a_full_rank_covariance_is_reported_as_such(self) -> None:
+        parts = _system(n_assets=25, n_months=504, residual_sd=0.30, seed=11)
+        result = _estimate(parts)
+        assert result.diagnostics["residual_covariance_rank"] == 25.0
+        assert result.diagnostics["residual_covariance_rank_deficient"] == 0.0
+        assert result.diagnostics["months_minus_assets"] == 479.0

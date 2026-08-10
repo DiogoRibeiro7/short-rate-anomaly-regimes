@@ -23,14 +23,16 @@ Three implementation choices are declared rather than hidden.
   is the full project estimator, :func:`estimate_time_series_betas`.
 - The Shanken covariance is reported twice. The **feasible** version uses the
   simulated sample residual covariance built by
-  :func:`residual_covariance_from_first_pass`, which refuses to build a
-  covariance from no more months than assets. On the confirmatory 70-portfolio
-  system that constructor is therefore unavailable below 71 months, which is
-  itself a finding and is recorded rather than worked around. The **oracle**
-  version substitutes the calibrated population residual covariance, is available
-  at every window length, and is infeasible in practice; it isolates how much of
-  the short-window problem is the risk price itself rather than the covariance
-  estimate.
+  :func:`residual_covariance_from_first_pass`. That covariance exists at every
+  window length, but below ``T = N + 1`` months it is rank deficient, so on the
+  confirmatory 70-portfolio system it is of full rank only from 71 months. This
+  sweep reports the feasible interval only where the covariance is of full rank,
+  which is a declared reporting choice, not a statement that it cannot be
+  computed below that point: the estimator never inverts the residual covariance
+  and tolerates rank deficiency throughout. The **oracle** version substitutes
+  the calibrated population residual covariance, is available at every window
+  length, and is infeasible in practice; it isolates how much of the short-window
+  problem is the risk price itself rather than the covariance estimate.
 - The calibration treats the full-sample estimated betas as the true betas, which
   is what a calibration to the actual estimated system means. It follows that the
   simulated data-generating process is **not a fixed point** of the two-pass
@@ -39,11 +41,11 @@ Three implementation choices are declared rather than hidden.
   therefore attenuates the risk price toward zero at every window length,
   including the calibration length itself. The calibration-length row is carried
   in the sweep so that attenuation can be read off directly, and
-  :func:`first_pass_beta_noise_shares` records how much of the observed
-  cross-sectional beta dispersion is first-pass sampling noise. Because the real
-  betas are themselves noisy estimates, the simulated cross-section is better
-  identified than the real one, so every precision number reported here is, if
-  anything, optimistic.
+  :func:`first_pass_beta_reliability` records what fraction of the observed
+  cross-sectional beta dispersion is genuine exposure dispersion rather than
+  first-pass sampling noise. Because the real betas are themselves noisy
+  estimates, the simulated cross-section is better identified than the real one,
+  so every precision number reported here is, if anything, optimistic.
 """
 
 from __future__ import annotations
@@ -94,9 +96,9 @@ HIGH_DECILE = DECILE_LABELS[-1]
 
 #: Window sweep. The required grid {12, 18, 24, 30, 36, 48, 60, 84, 120, 240} is
 #: extended with the observed length of every registered regime (15, 51, 444),
-#: with 72 months, the shortest window on the grid at which the design's own
-#: residual-covariance constructor accepts the 70-portfolio system, and with 648
-#: months, the calibration length, which serves as the reference row.
+#: with 72 months, the shortest window on the grid at which the sample residual
+#: covariance of the 70-portfolio system is of full rank, and with 648 months,
+#: the calibration length, which serves as the reference row.
 WINDOW_LENGTHS: tuple[int, ...] = (
     12,
     15,
@@ -204,9 +206,10 @@ class WindowDraws:
 
     Every array carries a leading replication axis of length
     ``replications_used``. ``*_feasible_*`` arrays are all-``nan`` when the
-    design's own residual-covariance constructor refuses the window, which
-    happens whenever the window has no more months than the system has test
-    assets.
+    window has no more months than the system has test assets, so that the
+    simulated sample residual covariance would be rank deficient. This sweep
+    declines to report a feasible interval there; it is not a case the estimator
+    refuses.
     """
 
     window_months: int
@@ -217,12 +220,12 @@ class WindowDraws:
     joint_risk_prices: FloatArray
     joint_oracle_standard_errors: FloatArray
     joint_feasible_standard_errors: FloatArray
-    joint_feasible_estimable: bool
+    joint_feasible_full_rank: bool
     joint_spreads: FloatArray
     family_risk_prices: FloatArray
     family_oracle_standard_errors: FloatArray
     family_feasible_standard_errors: FloatArray
-    family_feasible_estimable: bool
+    family_feasible_full_rank: bool
     family_spreads: FloatArray
 
 
@@ -346,16 +349,122 @@ def calibrate_power_dgp(
     )
 
 
-def first_pass_beta_noise_shares(dgp: PowerDgp, *, window_months: int | None = None) -> pd.Series:
-    """Estimate what share of the observed beta dispersion is first-pass noise.
+def cross_sectional_residual_dispersion(residual_covariance: FloatArray) -> float:
+    """Return ``tr(M_N Sigma_eps) / (N - 1)`` for a first-pass residual covariance.
 
-    For asset ``i`` the first-pass sampling covariance of the factor loadings is
-    approximately ``sigma_ii * Sigma_f^-1 / T``. Averaging its diagonal across
-    assets and dividing by the observed cross-sectional variance of the estimated
-    loadings gives, per factor, the share of the cross-section that is estimation
-    error rather than genuine exposure dispersion. That share drives the
-    errors-in-variables attenuation of the second pass, so it is recorded with
-    every run.
+    ``M_N = I_N - 11'/N`` is the cross-sectional centring projector, so this is
+    the expected cross-sectional variance of a mean-zero disturbance vector whose
+    covariance is ``Sigma_eps``. Expanding the trace gives the form that makes the
+    correlation correction legible::
+
+        tr(M_N Sigma_eps) / (N - 1)
+            = sum_i sigma_ii / N - sum_{i != j} sigma_ij / (N (N - 1))
+            = mean(diagonal) - mean(off-diagonal)
+
+    A cross-section whose residuals are on average positively correlated
+    therefore disperses *less* than its individual variances suggest, because the
+    common component shifts the whole cross-section together and ``M_N`` removes
+    exactly that shift.
+
+    Args:
+        residual_covariance: Symmetric ``N`` by ``N`` first-pass residual
+            covariance matrix.
+
+    Returns:
+        The expected cross-sectional variance, with the ``ddof=1`` convention.
+
+    Raises:
+        ValueError: If the matrix is not square or has fewer than two assets.
+    """
+    if (
+        residual_covariance.ndim != 2
+        or residual_covariance.shape[0] != residual_covariance.shape[1]
+    ):
+        raise ValueError("The residual covariance must be a square matrix")
+    n_assets = residual_covariance.shape[0]
+    if n_assets < 2:
+        raise ValueError("A cross-sectional dispersion needs at least two assets")
+    mean_diagonal = float(np.mean(np.diag(residual_covariance)))
+    off_diagonal_total = float(residual_covariance.sum() - np.trace(residual_covariance))
+    mean_off_diagonal = off_diagonal_total / (n_assets * (n_assets - 1))
+    return mean_diagonal - mean_off_diagonal
+
+
+def first_pass_beta_reliability(dgp: PowerDgp, *, window_months: int | None = None) -> pd.DataFrame:
+    """Decompose the observed cross-sectional beta dispersion into signal and noise.
+
+    **Derivation.** The first pass regresses asset ``i`` on a constant and the
+    factors, ``r_it = a_i + beta_i' f_t + e_it``, so its slope error is
+
+    .. code-block:: text
+
+        beta_hat_i - beta_i = Sigma_f^-1 (1/T) sum_t (f_t - fbar) e_it
+
+    Conditioning on the factors, the errors of two assets covary through their
+    contemporaneous residual covariance ``sigma_ij = Cov(e_it, e_jt)``:
+
+    .. code-block:: text
+
+        Cov(beta_hat_i - beta_i, beta_hat_j - beta_j) = sigma_ij Sigma_f^-1 / T
+
+    Fix factor ``k`` and collect the ``N`` loading errors into the vector ``u``
+    with ``u_i = (beta_hat_i - beta_i)_k``. Taking the ``(k, k)`` element of the
+    display above gives the *full* error covariance of that vector,
+
+    .. code-block:: text
+
+        Cov(u) = [Sigma_f^-1]_kk / T * Sigma_eps
+
+    which is emphatically not diagonal. The quantity of interest is how much
+    ``u`` contributes to the **cross-sectional** variance of the estimated
+    loadings. With the ``ddof=1`` convention that variance is the quadratic form
+    ``u' M_N u / (N - 1)`` in the centring projector ``M_N = I_N - 11'/N``, and
+    because ``E[u] = 0``,
+
+    .. code-block:: text
+
+        E[u' M_N u / (N - 1)] = tr(M_N Cov(u)) / (N - 1)
+                              = [Sigma_f^-1]_kk / (T (N - 1)) * tr(M_N Sigma_eps)
+
+    That is the ``noise_cross_sectional_variance`` reported here, evaluated by
+    :func:`cross_sectional_residual_dispersion`.
+
+    The one approximation in that chain is substituting the population factor
+    covariance for the drawn one, which leaves an ``O(1/T)`` discrepancy of order
+    ``T / (T - K - 2)``. It is under one percent at the calibration length and is
+    the residual gap the accompanying Monte Carlo test tolerates; it is far
+    smaller than the correction made here.
+
+    **Why the diagonal-only version overstates the share.** Replacing
+    ``tr(M_N Sigma_eps) / (N - 1)`` with the average individual residual variance
+    ``mean_i sigma_ii`` drops every off-diagonal term. Since
+
+    .. code-block:: text
+
+        tr(M_N Sigma_eps) / (N - 1) = mean_i sigma_ii - mean_{i != j} sigma_ij
+
+    the two agree only when residuals are cross-sectionally uncorrelated on
+    average. Whenever the average off-diagonal residual covariance is positive --
+    as it is for these seventy anomaly portfolios, which share a large common
+    component -- estimation error moves many loadings in the same direction. A
+    common shift changes the cross-sectional *mean* of the estimated loadings,
+    not their *spread*, and ``M_N`` annihilates it. The diagonal-only figure
+    therefore attributes to dispersion an error that never reached dispersion,
+    and overstates the noise share.
+
+    **Reporting.** The headline is the ``reliability_ratio``, signal over
+    observed, in the sense of classical test theory: the fraction of the observed
+    cross-sectional variance of the estimated loadings that is genuine exposure
+    dispersion. ``noise_share_of_cross_sectional_variance`` is its complement and
+    is reported alongside so neither can be mistaken for the other. Both are
+    unclipped: at short windows the noise term can exceed the observed variance,
+    which drives the reliability ratio below zero and is itself the finding.
+
+    ``mean_individual_beta_sampling_variance`` is retained because it is
+    independently informative -- it is the precision of a *single* portfolio's
+    loading, which is what a reader asking "how well is one beta estimated"
+    wants -- but it is a variance in squared-loading units, not a share of any
+    dispersion, and is named so it cannot be read as one.
 
     Args:
         dgp: Calibrated data-generating process.
@@ -363,7 +472,9 @@ def first_pass_beta_noise_shares(dgp: PowerDgp, *, window_months: int | None = N
             when omitted.
 
     Returns:
-        The noise share per factor, which may exceed one at short windows.
+        One row per factor, indexed in factor order, with the observed, noise,
+        and signal cross-sectional variances, the reliability ratio, its
+        complementary noise share, and the mean individual sampling variance.
 
     Raises:
         ValueError: If the window length is not positive.
@@ -371,16 +482,25 @@ def first_pass_beta_noise_shares(dgp: PowerDgp, *, window_months: int | None = N
     months = dgp.calibration_months if window_months is None else window_months
     if months <= 0:
         raise ValueError("window_months must be positive")
-    residual_variances = np.diag(dgp.residual_covariance.to_numpy(dtype=float))
-    inverse_factor_covariance = np.linalg.pinv(dgp.factor_covariance.to_numpy(dtype=float))
-    sampling_variances = (
-        float(np.mean(residual_variances)) * np.diag(inverse_factor_covariance) / (months)
-    )
+
+    residual_covariance = dgp.residual_covariance.to_numpy(dtype=float)
+    inverse_factor_covariance = np.diag(np.linalg.pinv(dgp.factor_covariance.to_numpy(dtype=float)))
+    dispersion = cross_sectional_residual_dispersion(residual_covariance)
+    mean_residual_variance = float(np.mean(np.diag(residual_covariance)))
+
+    noise_variances = inverse_factor_covariance * dispersion / months
+    individual_variances = inverse_factor_covariance * mean_residual_variance / months
     observed_variances = dgp.betas.var(ddof=1).to_numpy(dtype=float)
-    return pd.Series(
-        sampling_variances / observed_variances,
-        index=list(dgp.factors),
-        name="first_pass_beta_noise_share",
+    return pd.DataFrame(
+        {
+            "observed_cross_sectional_variance": observed_variances,
+            "signal_cross_sectional_variance": observed_variances - noise_variances,
+            "noise_cross_sectional_variance": noise_variances,
+            "reliability_ratio": 1.0 - noise_variances / observed_variances,
+            "noise_share_of_cross_sectional_variance": noise_variances / observed_variances,
+            "mean_individual_beta_sampling_variance": individual_variances,
+        },
+        index=pd.Index(list(dgp.factors), name="factor"),
     )
 
 
@@ -506,8 +626,10 @@ def simulate_window(
     Each replication draws a window from the calibrated system, refits the first
     pass by plain least squares, then refits the design's own no-intercept second
     pass on the joint system and on each complete ten-decile family system. The
-    feasible Shanken covariance is attempted only where the design's own residual
-    covariance constructor permits it.
+    feasible Shanken covariance is computed only where the simulated sample
+    residual covariance is of full rank, which requires more months than test
+    assets. The estimator itself accepts a rank-deficient covariance; declining
+    to report one is this sweep's choice.
 
     Args:
         dgp: Calibrated data-generating process.
@@ -551,8 +673,8 @@ def simulate_window(
     }
     family_asset_count = len(DECILE_LABELS)
 
-    joint_feasible_estimable = window_months > n_assets
-    family_feasible_estimable = window_months > family_asset_count
+    joint_feasible_full_rank = window_months > n_assets
+    family_feasible_full_rank = window_months > family_asset_count
 
     joint_prices = np.full((replications, n_factors), np.nan)
     joint_oracle = np.full((replications, n_factors), np.nan)
@@ -596,7 +718,7 @@ def simulate_window(
                 model=MODEL,
             )
             joint_feasible_errors: FloatArray | None = None
-            if joint_feasible_estimable:
+            if joint_feasible_full_rank:
                 joint_feasible_errors = (
                     estimate_article_second_pass(
                         mean_excess_returns=mean_frame,
@@ -631,7 +753,7 @@ def simulate_window(
                 family_oracle_draw[family_index, :] = sub_oracle.shanken_standard_errors.to_numpy(
                     dtype=float
                 )
-                if family_feasible_estimable:
+                if family_feasible_full_rank:
                     sub_feasible = estimate_article_second_pass(
                         mean_excess_returns=sub_mean,
                         betas=sub_betas,
@@ -678,12 +800,12 @@ def simulate_window(
         joint_risk_prices=joint_prices[:used],
         joint_oracle_standard_errors=joint_oracle[:used],
         joint_feasible_standard_errors=joint_feasible[:used],
-        joint_feasible_estimable=joint_feasible_estimable,
+        joint_feasible_full_rank=joint_feasible_full_rank,
         joint_spreads=joint_spreads[:used],
         family_risk_prices=family_prices[:used],
         family_oracle_standard_errors=family_oracle[:used],
         family_feasible_standard_errors=family_feasible[:used],
-        family_feasible_estimable=family_feasible_estimable,
+        family_feasible_full_rank=family_feasible_full_rank,
         family_spreads=family_spreads[:used],
     )
 
@@ -703,8 +825,9 @@ def summarise_estimates(
         oracle_standard_errors: Shanken standard errors computed with the
             population residual covariance, or ``None`` when not applicable.
         feasible_standard_errors: Shanken standard errors computed with the
-            simulated sample residual covariance, or ``None`` when the design's
-            own constructor refuses the window.
+            simulated sample residual covariance, or ``None`` at window lengths
+            where that covariance would be rank deficient and this sweep declines
+            to report it.
 
     Returns:
         A mapping of summary statistic names to values, with ``None`` wherever a
@@ -804,14 +927,14 @@ def build_curve_rows(
                 "estimand": estimand,
                 "economic_bound": None,
                 "standard_deviation_below_economic_bound": None,
-                "feasible_shanken_estimable": draws.joint_feasible_estimable,
+                "feasible_shanken_full_rank": draws.joint_feasible_full_rank,
                 **summarise_estimates(
                     draws.joint_risk_prices[:, position],
                     true_value=float(dgp.true_risk_prices[factor_name]),
                     oracle_standard_errors=draws.joint_oracle_standard_errors[:, position],
                     feasible_standard_errors=(
                         draws.joint_feasible_standard_errors[:, position]
-                        if draws.joint_feasible_estimable
+                        if draws.joint_feasible_full_rank
                         else None
                     ),
                 ),
@@ -833,7 +956,7 @@ def build_curve_rows(
                 "estimand": "fitted_premium_spread",
                 "economic_bound": ECONOMIC_BOUND,
                 "standard_deviation_below_economic_bound": _below_economic_bound(spread_summary),
-                "feasible_shanken_estimable": None,
+                "feasible_shanken_full_rank": None,
                 **spread_summary,
             }
         )
@@ -847,7 +970,7 @@ def build_curve_rows(
                 "estimand": "lambda_rate",
                 "economic_bound": None,
                 "standard_deviation_below_economic_bound": None,
-                "feasible_shanken_estimable": draws.family_feasible_estimable,
+                "feasible_shanken_full_rank": draws.family_feasible_full_rank,
                 **summarise_estimates(
                     draws.family_risk_prices[:, family_index, rate_position],
                     true_value=float(dgp.true_risk_prices[RATE_FACTOR]),
@@ -856,7 +979,7 @@ def build_curve_rows(
                     ],
                     feasible_standard_errors=(
                         draws.family_feasible_standard_errors[:, family_index, rate_position]
-                        if draws.family_feasible_estimable
+                        if draws.family_feasible_full_rank
                         else None
                     ),
                 ),
@@ -877,7 +1000,7 @@ def build_curve_rows(
                 "standard_deviation_below_economic_bound": _below_economic_bound(
                     family_spread_summary
                 ),
-                "feasible_shanken_estimable": None,
+                "feasible_shanken_full_rank": None,
                 **family_spread_summary,
             }
         )
@@ -1041,10 +1164,10 @@ def reading_criteria(curve: pd.DataFrame, windows: Sequence[int]) -> dict[str, A
         },
     }
 
-    estimable = curve.loc[
+    full_rank_windows = curve.loc[
         (curve["system"] == JOINT_SYSTEM)
         & (curve["estimand"] == "lambda_rate")
-        & (curve["feasible_shanken_estimable"]),
+        & (curve["feasible_shanken_full_rank"]),
         "window_months",
     ]
     return {
@@ -1094,12 +1217,16 @@ def reading_criteria(curve: pd.DataFrame, windows: Sequence[int]) -> dict[str, A
                 for level in ATTENUATION_READING_LEVELS
             },
         },
-        "feasible_shanken_covariance_estimable": {
+        "feasible_shanken_covariance_full_rank": {
             "description": (
-                "The design's own residual-covariance constructor accepts the window, "
-                "which requires more months than test assets."
+                "The simulated sample residual covariance is of full rank, which requires "
+                "more months than test assets. Below this the covariance still exists and "
+                "the estimator still runs: it is rank deficient, and no step of the second "
+                "pass inverts it. This sweep declines to report a feasible interval there, "
+                "which is a reporting choice and not a statement that the covariance, the "
+                "Shanken standard errors, or the chi-square cannot be computed."
             ),
-            JOINT_SYSTEM: (None if estimable.empty else int(estimable.min())),
+            JOINT_SYSTEM: (None if full_rank_windows.empty else int(full_rank_windows.min())),
             "joint_exact_minimum_months": len(FAMILIES) * len(DECILE_LABELS) + 1,
             FAMILY_SYSTEM: len(DECILE_LABELS) + 1,
         },
@@ -1151,11 +1278,12 @@ def main() -> None:
 
     dgp = calibrate_power_dgp(excess_returns, factors)
     true_spreads = true_fitted_premium_spreads(dgp)
-    noise_shares = first_pass_beta_noise_shares(dgp)
+    reliability = first_pass_beta_reliability(dgp)
     print(f"calibrated on {dgp.calibration_months} months, {len(dgp.assets)} test assets")
     print(f"true risk prices: {dgp.true_risk_prices.round(4).to_dict()}")
     print(f"true fitted-premium spreads: {true_spreads.round(4).to_dict()}")
-    print(f"first-pass beta noise shares: {noise_shares.round(4).to_dict()}")
+    print("first-pass beta reliability (signal / observed cross-sectional variance):")
+    print(reliability.round(6).to_string())
     print(f"replications per window: {REPLICATIONS}, seed: {SEED}")
 
     rows: list[dict[str, Any]] = []
@@ -1192,7 +1320,7 @@ def main() -> None:
         "oracle_coverage_95",
         "oracle_coverage_95_mcse",
         "oracle_detection_probability",
-        "feasible_shanken_estimable",
+        "feasible_shanken_full_rank",
         "feasible_mean_shanken_standard_error",
         "feasible_coverage_95",
         "feasible_coverage_95_mcse",
@@ -1243,8 +1371,24 @@ def main() -> None:
             },
             "factor_means": {str(key): float(value) for key, value in dgp.factor_means.items()},
             "rate_beta_dispersion": float(dgp.betas[RATE_FACTOR].std(ddof=1)),
-            "first_pass_beta_noise_share_at_calibration_length": {
-                str(key): float(value) for key, value in noise_shares.items()
+            "first_pass_beta_reliability_at_calibration_length": {
+                "description": (
+                    "Decomposition of the observed cross-sectional variance of the "
+                    "calibration first-pass loadings into genuine exposure dispersion "
+                    "and first-pass estimation error, per factor. The error term is "
+                    "[Sigma_f^-1]_kk / (T (N - 1)) * tr(M_N Sigma_eps) with "
+                    "M_N = I - 11'/N, which uses the full residual covariance and so "
+                    "credits the common component of the estimation error to the "
+                    "cross-sectional mean rather than to the spread. reliability_ratio "
+                    "is signal over observed; noise_share_of_cross_sectional_variance "
+                    "is its complement. mean_individual_beta_sampling_variance is the "
+                    "sampling variance of a single portfolio's loading, in squared "
+                    "loading units, and is not a share of anything."
+                ),
+                "per_factor": {
+                    str(factor): {str(field): float(value) for field, value in row.items()}
+                    for factor, row in reliability.iterrows()
+                },
             },
             "fixed_point_caveat": (
                 "The calibration treats the full-sample estimated betas as true, so the "
