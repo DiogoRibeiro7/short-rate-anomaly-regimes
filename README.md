@@ -183,7 +183,7 @@ The baseline paper is
 
 Maio, Paulo F., and Pedro Santa-Clara. 2017. Short-Term Interest Rates and Stock Market Anomalies. *Journal of Financial and Quantitative Analysis* 52(3), 927-961. DOI 10.1017/S002210901700028X.
 
-This compendium is archived on Zenodo. Cite the concept DOI, [10.5281/zenodo.21860679](https://doi.org/10.5281/zenodo.21860679), which resolves to the newest version, unless you need to pin the exact one you ran against; the `v1.0.0-source` deposit is [10.5281/zenodo.21860680](https://doi.org/10.5281/zenodo.21860680).
+This compendium is archived on Zenodo. Cite the concept DOI, [10.5281/zenodo.21860679](https://doi.org/10.5281/zenodo.21860679), which resolves to the newest version, unless you need to pin the exact one you ran against. The version DOIs are [10.5281/zenodo.21879209](https://doi.org/10.5281/zenodo.21879209) for `v1.1.0-source` and [10.5281/zenodo.21860680](https://doi.org/10.5281/zenodo.21860680) for `v1.0.0-source`.
 
 See [`CITATION.cff`](CITATION.cff) for repository citation metadata.
 
