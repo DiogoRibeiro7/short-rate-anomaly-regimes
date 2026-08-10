@@ -325,7 +325,7 @@ def bootstrap_fitted_premium_spreads(
     Raises:
         ValueError: If the inputs disagree on the number of months.
     """
-    n_months, n_assets = excess_returns.shape
+    n_months, _n_assets = excess_returns.shape
     if not (rate_level.size == lagged_rate_level.size == market.size == n_months):
         raise ValueError("All bootstrap inputs must cover the same months")
     if draws < 1:

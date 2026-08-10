@@ -23,7 +23,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Final
+from typing import Any, Final, cast
 
 import numpy as np
 import pandas as pd
@@ -739,7 +739,7 @@ def _dfbeta_payload(influence: pd.DataFrame) -> dict[str, Any]:
         "n_assets": int(influence["n_assets"].iloc[0]),
         "lambda_rate_full": float(influence["lambda_rate_full"].iloc[0]),
         "shanken_se_lambda_rate_full": float(influence["shanken_se_lambda_rate_full"].iloc[0]),
-        "max_abs_standardized_dfbeta": float(peak["abs_standardized_dfbeta"]),
+        "max_abs_standardized_dfbeta": float(cast(float, peak["abs_standardized_dfbeta"])),
         "max_abs_standardized_dfbeta_asset": str(peak["asset"]),
         "n_assets_reaching_threshold": int(influence["reaches_threshold"].sum()),
         "passes": dfbeta_gate_passes(influence),

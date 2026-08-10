@@ -25,7 +25,7 @@ import hashlib
 import json
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 
 from short_rate_anomaly_regimes.exceptions import FrozenVintageError
@@ -39,7 +39,7 @@ UPDATE_VINTAGE_FLAG = "--update-vintage"
 RAW_SHA256_FIELD = "raw_sha256"
 
 
-class VintageMode(str, Enum):
+class VintageMode(StrEnum):
     """Whether an acquisition run verifies the frozen vintage or replaces it."""
 
     #: Download, compare against the recorded expected hash, abort on mismatch,

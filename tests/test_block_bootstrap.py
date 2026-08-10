@@ -243,7 +243,7 @@ class TestLaggedLevelRecovery:
         return level, lagged, innovation
 
     def test_it_recovers_the_interior_lags_to_machine_precision(self) -> None:
-        level, lagged, innovation = self._series()
+        level, _lagged, innovation = self._series()
         recovered = recover_lagged_level(level, innovation)
         np.testing.assert_allclose(recovered[1:], level[:-1], atol=1e-10)
 
