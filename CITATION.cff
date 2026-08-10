@@ -18,7 +18,9 @@ year: 2026
 version: 1.1.0
 license: MIT
 # The concept DOI. It resolves to the newest version, so a citation written
-# against it does not go stale; the v1.0.0 deposit is 10.5281/zenodo.21860680.
+# against it does not go stale. Version DOIs, for pinning an exact deposit:
+# v1.1.0-source is 10.5281/zenodo.21879209, v1.0.0-source is
+# 10.5281/zenodo.21860680.
 doi: 10.5281/zenodo.21860679
 repository-code: https://github.com/DiogoRibeiro7/short-rate-anomaly-regimes
 keywords:
