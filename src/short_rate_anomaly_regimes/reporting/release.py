@@ -590,8 +590,10 @@ def render_release_notes(issues: list[ReleaseIssue]) -> str:
         "",
         "- Reproduction from this archive alone. The generated data panels and estimate stores "
         f"are not distributed; regenerate them with `{REBUILD_ENTRY_POINT}`.",
-        "- Table 5 and the appendix tables are outside the scope of the current audit pass, "
-        "which is a scope decision rather than a missing input.",
+        "- Table 5, Tables 7 to 9, and the appendix tables are not generated in this pass. "
+        "The per-table status is recorded in `artifacts/audit/table_replication.csv`, which "
+        "ships with the archive; these notes do not restate a cause for them, because that "
+        "artifact and `docs/REPLICATION_STATUS.md` do not currently agree on one.",
         "- Equal-weighted results and security-level reconstruction remain blocked by inputs "
         "this repository cannot obtain.",
         "- The high-frequency shock decomposition and the out-of-sample falsification are not "
