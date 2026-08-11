@@ -50,7 +50,12 @@ nominally significant under the article's Shanken correction, and it cuts cross-
 errors against the market model by roughly a half. Recovery of the published
 cells at printed precision is much weaker, particularly for pricing-error and fit
 statistics, so the exercise supports statements about patterns and not about
-arithmetic.
+arithmetic. Implementing the article's own useless-factor bootstrap sharpens that
+distinction rather than softening it: the reconstructed empirical p-values agree
+with all forty-five published risk-price significance verdicts while matching far % artifact: artifacts/audit/published_target_audit.csv
+fewer printed digits, because a five-thousand-replication p-value carries more % artifact: artifacts/diagnostics/useless_factor_bootstrap.json
+Monte Carlo noise than three printed decimals can resolve. What reconstructs is
+the inference, not the arithmetic.
 That pattern proves markedly less robust once economic materiality, alternative
 factor models, later data, beta-estimation error, and regime dependence are
 considered. The incremental-pricing standard registered in advance is not met on
@@ -65,6 +70,11 @@ underlying pricing relation changed, and four of the five reversals are of signs
 the baseline never established. Rate exposures are
 regime dependent under a pooled interaction test, while regime-specific
 differences in the price of risk cannot be identified at feasible regime lengths.
+A registered out-of-sample falsification, refitting annually from a frozen
+1999-12 training endpoint, returns a cross-sectional out-of-sample $R^2$ of % artifact: artifacts/tables/out_of_sample/forecast_metrics.csv
+0.0039 against a historical-mean benchmark: the model beats a zero-return rule % artifact: artifacts/tables/out_of_sample/forecast_metrics.csv
+comfortably and the historical mean by a margin too small to be economically
+interesting.
 A calibrated simulation points to what these share: estimated rate betas have a
 reliability ratio of 0.386 even in the full sample, so most of their % artifact: artifacts/diagnostics/regime_eligibility_power.json
 cross-sectional dispersion is estimation error, and the nominal Shanken interval
@@ -1343,6 +1353,17 @@ full. Nothing here should be read as a check on the article's arithmetic; the
 inputs differ, and where a cell falls outside the published rounding we cannot
 say which of the two is responsible.
 
+Implementing the article's own useless-factor bootstrap turns that caveat into a
+measurement. Its empirical p-values agree with all forty-five published % artifact: artifacts/audit/published_target_audit.csv
+risk-price significance verdicts and with 27 of 29 each for the specification % artifact: artifacts/audit/published_target_audit.csv
+test and the cross-sectional fit, while landing inside the printed rounding far % artifact: artifacts/audit/published_target_audit.csv
+less often, because a five-thousand-replication p-value carries more Monte Carlo % artifact: artifacts/diagnostics/useless_factor_bootstrap.json
+noise across most of its range than three printed decimals can resolve. The same
+holds for the risk-premium decomposition of the article's Table 5, whose 84 cells % artifact: artifacts/audit/published_target_audit.csv
+agree in sign without agreeing in digits. Inference reconstructs where arithmetic % artifact: artifacts/audit/published_target_audit.csv
+does not, which is the sharpest statement this design supports and a better one
+than a recovery rate alone.
+
 The extensions are where the paper contributes, and both are negative. The
 short-rate factor does not meet the incremental-pricing standard we registered in
 advance, and every registered traded multi-factor comparator attains a smaller
@@ -1357,6 +1378,15 @@ rate price carries a nominal Shanken $t$ of $-1.49$, and four of the five sign r
 are of signs the baseline never established. The registered criterion fails; the
 underlying economic change is not thereby demonstrated.
 
+A registered out-of-sample falsification puts the same fragility in forecasting
+terms. Refitting annually from a frozen 1999-12 endpoint and evaluating through % artifact: artifacts/tables/out_of_sample/design.json
+2025-12, the two-factor system attains a cross-sectional out-of-sample $R^2$ of % artifact: artifacts/tables/out_of_sample/forecast_metrics.csv
+0.0039 against a historical-mean benchmark, against $-0.1882$ for a zero-return % artifact: artifacts/tables/out_of_sample/forecast_metrics.csv
+rule. The model is clearly better than assuming no risk premium and barely better
+than assuming the historical average, which is what a factor whose betas are
+mostly estimation error should be expected to deliver when it has to forecast
+rather than fit.
+
 Across monetary regimes the evidence is asymmetric by construction. Exposures are
 demonstrably regime dependent under the pooled test, while the size of the change
 in fitted premia cannot be certified at feasible regime lengths in either
@@ -1369,9 +1399,10 @@ The short-rate pricing pattern reconstructs qualitatively, and it is fragile as
 a general asset-pricing proposition: its incremental economic performance is
 threshold-sensitive, richer factor specifications fit the historical
 cross-section better in sample, its post-publication behaviour changes
-substantially, estimated rate exposures are regime dependent, and the data are
-insufficient to estimate regime-specific pricing differences with the precision
-that strong economic conclusions would require.
+substantially, it improves on a historical-mean forecast by an economically
+negligible margin out of sample, estimated rate exposures are regime dependent,
+and the data are insufficient to estimate regime-specific pricing differences
+with the precision that strong economic conclusions would require.
 
 We stop short of three stronger claims that the evidence does not carry. We do
 not say the factor ceased to be priced, because the post-2013 window is too % artifact: configs/extensions.yaml
