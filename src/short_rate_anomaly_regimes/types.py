@@ -18,6 +18,12 @@ class ReplicationStatus(StrEnum):
 
     REPRODUCED = "reproduced"
     APPROXIMATELY_REPRODUCED = "approximately_reproduced"
+    #: Some of a target's statistics land inside the published rounding and
+    #: others do not. The layer classification has always reported this state
+    #: as `partially_recovered_under_documented_reconstruction`; the enum did
+    #: not carry it, which forced the table-level audit to choose between
+    #: overstating and understating. Added 2026-08-11, design correction 14.
+    PARTIALLY_RECOVERED = "partially_recovered"
     NOT_REPRODUCIBLE_MISSING_INPUT = "not_reproducible_missing_input"
     CONTRADICTED = "contradicted"
     NOT_ATTEMPTED = "not_attempted"

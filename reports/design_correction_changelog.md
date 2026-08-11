@@ -432,3 +432,46 @@ Date: 2026-08-10. Applied after estimation. No estimate changes.
   source bytes with the archival release is the fix that would upgrade the
   precondition; where they do not, `docs/DATA_ACQUISITION.md` names the most
   immutable identifier available for each source.
+
+## 14. The table-level audit was never written after the estimates existed
+
+Date: 2026-08-11. Applied after estimation. No estimate changes.
+
+- What it claimed: `artifacts/audit/table_replication.csv` shipped in the
+  archive labelling all twenty-three published tables `not_generated` and
+  `not_reproducible_missing_input`, including Tables 3, 4, 6 and A.1, whose
+  cells `artifacts/audit/published_target_audit.csv` compares across 212
+  targets. A recipient reading the table-level record would conclude that
+  nothing had been reproduced.
+- Why it was wrong: `srar audit-replication` had no non-blocked branch. It wrote
+  the audit only when the generated artifacts were missing; once they existed it
+  raised `"statistic-level published targets are not linked to generated cells
+  yet"` and wrote nothing. That message stopped being true when
+  `scripts/audit_published_targets.py` began linking them, and because the only
+  writing path was the blocked one, the committed artifact stayed frozen at its
+  pre-estimate state indefinitely. The failure was silent: the command exits
+  non-zero by design in `make reproduce-reports`, so a stale artifact and a
+  correctly blocked one looked identical.
+- What changed: the command now builds the table-level record from the
+  cell-level audit. A table the cell audit covers is labelled by its recovery,
+  with the per-table counts in `notes`. A table the cell audit does not cover is
+  `not_attempted`, which is what being outside the current pass means, rather
+  than `not_reproducible_missing_input`, which asserts a cause this audit never
+  established. The `-` prefix is removed from `audit-replication` in
+  `make reproduce-reports`, so a future failure is no longer silent.
+- New label: `partially_recovered`, added to `ReplicationStatus` and to the base
+  labels in `research/replication_protocol.md`. A published table carries
+  several statistics and rarely recovers or fails as a whole: Table 4's market
+  risk prices land inside the published rounding 20 times of 29 while its
+  specification statistic does so in none of 29. The available labels forced a
+  choice between overstating that as `approximately_reproduced` and understating
+  it as `not_attempted`. The repository already reported exactly this state as
+  `partially_recovered_under_documented_reconstruction` in
+  `artifacts/audit/replication_layer_classification.csv`, so the enum was
+  inconsistent with what the compendium published; this makes the two agree
+  rather than introducing a new claim.
+- Resulting record: four tables `partially_recovered`, nineteen
+  `not_attempted`, replacing twenty-three `not_reproducible_missing_input`.
+- What it now forbids: a generated artifact whose only writing path is its
+  blocked branch, and a table-level label that rounds a mixed cell-level result
+  to a clean verdict in either direction.

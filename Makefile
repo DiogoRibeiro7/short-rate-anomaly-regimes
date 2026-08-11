@@ -136,13 +136,15 @@ reproduce-regimes:
 	poetry run python scripts/run_regime_interactions.py
 	poetry run python scripts/analyse_regime_power.py
 
-# Offline. Rewrites reports/generated/ from the rebuilt artifacts. The three
+# Offline. Rewrites reports/generated/ from the rebuilt artifacts. The two
 # `-` prefixed commands exit non-zero by design: their gates are blocked by
 # inputs this repository cannot obtain, and they write a blocked report saying
 # so. The `-` keeps the rebuild going; it does not suppress a passing gate.
+# audit-replication no longer needs one: it now writes the table-level audit
+# from the cell-level comparison instead of raising once the estimates exist.
 # build-report reads the other generated reports, so it runs last.
 reproduce-reports:
-	-poetry run srar audit-replication
+	poetry run srar audit-replication
 	poetry run srar robustness-diagnostics
 	poetry run srar temporal-extension
 	poetry run srar run-regimes --config configs/regimes.yaml
