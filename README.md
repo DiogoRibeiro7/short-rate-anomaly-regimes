@@ -174,7 +174,7 @@ Then the milestone reports: [`robustness_and_weak_factor_report.md`](reports/rob
 
 - No input is an exact article input, so no layer earns an exact-replication label. The cell-level audit classifies each layer as partially recovered rather than reproduced or contradicted.
 - The registered materiality standard mixes two relative gates at 10 percent with an absolute gate of `0.25` monthly percentage points, which on these test assets is the stricter bar by a factor of about five. It was frozen before any estimate existed and is applied as frozen; a future design should express the three gates on a common scale.
-- The article's useless-factor bootstrap is not implemented, so its published empirical p-values are recorded as not attempted rather than compared against a different object.
+- The article's useless-factor bootstrap is implemented, so all 118 published empirical p-values are compared rather than skipped. Because a 5,000-replication p-value has a Monte Carlo standard error wider than the tolerance implied by three printed decimals across most of the range, 74 of those cells are reported as not resolvable at the published precision rather than as not recovered; 36 are recovered and 8 are not. The verdicts agree far better than the digits: 45 of 45 risk-price cells agree with the article on significance at 5 percent, and 27 of 29 for each of the specification test and the cross-sectional fit.
 - The high-frequency policy-information decomposition and the out-of-sample falsification are not run. Both are scoped as appendix designs and their generated reports say so.
 
 ## Citation

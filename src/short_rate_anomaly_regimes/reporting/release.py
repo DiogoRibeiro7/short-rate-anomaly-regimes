@@ -71,6 +71,7 @@ REQUIRED_EMPIRICAL_REBUILD_INPUTS: tuple[str, ...] = (
     "scripts/build_extension_panels.py",
     "scripts/build_regime_panel.py",
     "scripts/run_baseline_replication.py",
+    "scripts/run_useless_factor_bootstrap.py",
     "scripts/run_temporal_extension.py",
     "scripts/run_regime_equivalence.py",
     "scripts/run_regime_interactions.py",
@@ -589,8 +590,15 @@ def render_release_notes(issues: list[ReleaseIssue]) -> str:
         "",
         "- Reproduction from this archive alone. The generated data panels and estimate stores "
         f"are not distributed; regenerate them with `{REBUILD_ENTRY_POINT}`.",
-        "- The article's useless-factor bootstrap, Table 5 and the appendix tables, "
-        "equal-weighted results, and security-level reconstruction remain blocked by inputs "
+        "- Table 5, Tables 7 to 9, and the appendix tables beyond A.1 are not generated in "
+        "this pass. The tables that are generated are audited cell by cell in "
+        "`artifacts/audit/published_target_audit.csv`, which is the current record.",
+        "- `artifacts/audit/table_replication.csv` is stale and should not be read as the "
+        "table-level status. It still records all twenty-three tables as `not_generated` and "
+        "`not_reproducible_missing_input`, including Tables 3, 4, 6 and A.1, whose cells the "
+        "cell-level audit does compare. It predates the estimates and was never regenerated. "
+        "Regenerating it is an open item.",
+        "- Equal-weighted results and security-level reconstruction remain blocked by inputs "
         "this repository cannot obtain.",
         "- The high-frequency shock decomposition and the out-of-sample falsification are not "
         "run; their generated reports record `blocked_missing_input` with the inputs named.",

@@ -39,7 +39,9 @@ These describe three different properties, and only the first two are supported.
 ## Blocked Results
 
 - Reproduction from this archive alone. The generated data panels and estimate stores are not distributed; regenerate them with `make reproduce`.
-- The article's useless-factor bootstrap, Table 5 and the appendix tables, equal-weighted results, and security-level reconstruction remain blocked by inputs this repository cannot obtain.
+- Table 5, Tables 7 to 9, and the appendix tables beyond A.1 are not generated in this pass. The tables that are generated are audited cell by cell in `artifacts/audit/published_target_audit.csv`, which is the current record.
+- `artifacts/audit/table_replication.csv` is stale and should not be read as the table-level status. It still records all twenty-three tables as `not_generated` and `not_reproducible_missing_input`, including Tables 3, 4, 6 and A.1, whose cells the cell-level audit does compare. It predates the estimates and was never regenerated. Regenerating it is an open item.
+- Equal-weighted results and security-level reconstruction remain blocked by inputs this repository cannot obtain.
 - The high-frequency shock decomposition and the out-of-sample falsification are not run; their generated reports record `blocked_missing_input` with the inputs named.
 
 ## Contradicted Results

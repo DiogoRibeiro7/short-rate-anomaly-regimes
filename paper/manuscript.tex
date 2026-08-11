@@ -397,6 +397,7 @@ betas, cross-sectional risk prices, pricing errors and fit, comparator-model
 results, and supplementary robustness targets. % artifact: research/hypothesis_registry.csv
 
 \section{Econometric methods}
+\label{sec:methods}
 
 The baseline empirical design starts with the article's first-order
 short-rate innovation equations. Alternative autoregressive orders, alternative
@@ -701,6 +702,47 @@ estimator discrepancy, and we do not claim otherwise. Accordingly the layers are
 classified as partially recovered under documented reconstruction rather than as
 reproduced or contradicted; a contradiction label would require a completed
 attempt on source-compatible inputs, which these are not. % artifact: artifacts/audit/replication_layer_classification.csv
+
+\subsection{The article's empirical p-values}
+
+Every p-value the article prints comes from the 5,000-replication useless-factor % artifact: artifacts/diagnostics/useless_factor_bootstrap.json
+bootstrap of its Internet Appendix Section 4, in which the factors are resampled % artifact: artifacts/diagnostics/useless_factor_bootstrap.json
+on a time sequence drawn independently of the return residuals so that they
+cannot explain returns by construction. Earlier drafts of this audit left those
+118 cells uncompared, because the only alternative was to hold a simulated % artifact: artifacts/audit/published_target_audit.csv
+p-value against an asymptotic one, which is a different object. The procedure is
+now implemented and run for all 29 systems the article prints a p-value for, at % artifact: artifacts/diagnostics/useless_factor_bootstrap.json
+the published replication count, with no degenerate draws. % artifact: artifacts/diagnostics/useless_factor_bootstrap.json
+
+One adjustment separates this comparison from the others. A bootstrap p-value is
+a Monte Carlo quantity whose own standard error is $\sqrt{p(1-p)/B}$, about % artifact: artifacts/diagnostics/useless_factor_bootstrap.json
+0.007 near $p=0.5$ at $B=5{,}000$, while a p-value printed to three decimals % artifact: artifacts/diagnostics/useless_factor_bootstrap.json
+carries a rounding tolerance of 0.0005. Across most of the range the procedure's % artifact: artifacts/diagnostics/useless_factor_bootstrap.json
+sampling noise is an order of magnitude wider than the band a cell would have to
+land in, so a miss carries no information about the reconstruction: the article's
+own bootstrap, rerun on the article's own data under a different seed, would miss
+its published value just as often. We therefore report those cells as not
+resolvable at the published precision rather than as not recovered, the same
+distinction drawn in Section~\ref{sec:regimes} between an inconclusive result and
+a demonstrated difference.
+
+On that reading, 36 of the 118 cells land inside the published rounding, 8 miss % artifact: artifacts/audit/published_target_audit.csv
+it where the tolerance is attainable, and 74 are not resolvable. Of the 37 cells % artifact: artifacts/audit/published_target_audit.csv
+whose tolerance is attainable at all, 29 are recovered. % artifact: artifacts/audit/published_target_audit.csv
+
+The digits agree less than the verdicts do, and the verdicts are what the
+p-values were printed to support. All 45 risk-price cells agree with the article % artifact: artifacts/audit/published_target_audit.csv
+on significance at the 5 percent level, and 27 of 29 agree for each of the % artifact: artifacts/audit/published_target_audit.csv
+specification test and the cross-sectional fit. This is the strongest % artifact: artifacts/audit/published_target_audit.csv
+correspondence anywhere in the audit, and it is a correspondence of inference
+rather than of arithmetic.
+
+Two limits belong with that result. The bootstrap tests a useless-factor null
+rather than a zero risk price under a correctly specified model, so a small
+p-value says the factor is not behaving like noise, not that the model is right.
+And the procedure is an audit instrument: it enters no registered gate, and the
+confirmatory inference throughout this paper remains the moving-block bootstrap
+of Section~\ref{sec:methods}. % artifact: research/bootstrap_contract.md
 
 The baseline analysis uses the strict monthly panel, the registered baseline and
 comparator system, the article's two-pass estimator with the Shanken correction,

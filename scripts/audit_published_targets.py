@@ -19,6 +19,13 @@ import pandas as pd
 
 PUBLISHED_CSV = Path("research/published_target_values.csv")
 GENERATED_CSV = Path("artifacts/tables/cross_section/baseline_risk_prices.csv")
+#: Empirical p-values from the article's useless-factor bootstrap. Optional: the
+#: audit runs without it and records the affected cells as not attempted, which
+#: is what it did before the bootstrap existed.
+BOOTSTRAP_CSV = Path("artifacts/tables/cross_section/useless_factor_bootstrap_p_values.csv")
+#: Carries the replication count, which sets how precisely a bootstrap
+#: p-value can be compared with a published one at all.
+BOOTSTRAP_DIAGNOSTICS_JSON = Path("artifacts/diagnostics/useless_factor_bootstrap.json")
 
 AUDIT_CSV = Path("artifacts/audit/published_target_audit.csv")
 LAYER_CSV = Path("artifacts/audit/replication_layer_classification.csv")
@@ -56,8 +63,11 @@ FACTOR_COLUMN = {
 
 #: Uncertainty measures this pass can generate. The article's empirical p-values
 #: come from its 5,000-replication useless-factor bootstrap (Internet Appendix
-#: Section 4), which is not implemented here, so those cells are recorded as not
-#: attempted rather than compared against something else.
+#: Section 4). That procedure is now implemented, in
+#: ``scripts/run_useless_factor_bootstrap.py``, and its output is read from
+#: ``BOOTSTRAP_CSV``. When that artifact is absent the affected cells fall back
+#: to not attempted rather than being compared against an asymptotic p-value,
+#: which would be a different object.
 UNCERTAINTY_COLUMN = {
     "asymptotic_p_value": "chi_square_asymptotic_p_value",
     "shanken_t_statistic": None,  # resolved per row from the factor
@@ -65,7 +75,15 @@ UNCERTAINTY_COLUMN = {
 
 
 def _decimals_of(value: object) -> int:
-    """Count the decimals printed for an uncertainty value."""
+    """Count the decimals printed for an uncertainty value.
+
+    The count has to come from the string the article printed, which is why
+    ``uncertainty_value`` is read as text. Letting pandas parse it turned
+    ``0.000`` into ``0.0`` and so into a tolerance of 0.05 rather than 0.0005,
+    a hundredfold loosening that reported materially different values as
+    recovered. Twenty-eight of the registry's cells were affected, and the
+    asymptotic p-values were affected the same way.
+    """
     text = str(value)
     return len(text.split(".")[1]) if "." in text else 0
 
@@ -98,11 +116,103 @@ def _uncertainty_column(row: Mapping[Hashable, Any], value_column: str | None) -
     return None
 
 
+def _load_bootstrap_p_values() -> dict[tuple[str, str, str], float] | None:
+    """Load the article-bootstrap p-values, or ``None`` when they were not generated."""
+    if not BOOTSTRAP_CSV.is_file():
+        return None
+    frame = pd.read_csv(BOOTSTRAP_CSV)
+    return {
+        (str(row.model), str(row.portfolio_set), str(row.statistic)): float(
+            cast("float", row.empirical_p_value)
+        )
+        for row in frame.itertuples()
+    }
+
+
+def _load_bootstrap_replications() -> int | None:
+    """Read the replication count the bootstrap actually ran, or ``None``."""
+    if not BOOTSTRAP_DIAGNOSTICS_JSON.is_file():
+        return None
+    payload = json.loads(BOOTSTRAP_DIAGNOSTICS_JSON.read_text(encoding="utf-8"))
+    completed = [int(system["replications_completed"]) for system in payload["per_system"]]
+    return min(completed) if completed else None
+
+
+def _bootstrap_uncertainty(
+    *,
+    bootstrap: dict[tuple[str, str, str], float] | None,
+    replications: int | None,
+    model: str,
+    portfolio_set: str,
+    statistic: str,
+    published_uncertainty: Any,
+) -> dict[str, object]:
+    """Compare one published empirical p-value with its generated counterpart.
+
+    The rounding rule every other cell is judged by cannot simply be carried
+    over here, because a bootstrap p-value is a Monte Carlo quantity. Its own
+    standard error is ``sqrt(p (1 - p) / B)``, which at ``B = 5000`` is about
+    0.007 near ``p = 0.5``, while a p-value printed to three decimals has a
+    tolerance of 0.0005. For most of the range the sampling noise of the
+    procedure is an order of magnitude wider than the band the cell would have
+    to land in, so a disagreement carries no information about whether the
+    reconstruction is faithful: the article's own bootstrap, rerun on the
+    article's own data under a different seed, would miss its published value
+    just as often.
+
+    Cells in that position are therefore reported as not resolvable at the
+    published precision rather than as not recovered. This is the same
+    distinction the regime analysis draws between an inconclusive result and a
+    demonstrated difference, and it is drawn from the published value and the
+    replication count alone, both of which are fixed before any comparison.
+    """
+    if bootstrap is None:
+        return {
+            "generated_uncertainty": np.nan,
+            "uncertainty_status": "not_attempted_bootstrap_not_generated",
+        }
+    key = (model, portfolio_set, statistic)
+    if key not in bootstrap:
+        return {
+            "generated_uncertainty": np.nan,
+            "uncertainty_status": "not_attempted_no_bootstrap_cell",
+        }
+    generated = bootstrap[key]
+    published = float(published_uncertainty)
+    tolerance = 0.5 * 10.0 ** -_decimals_of(published_uncertainty)
+    within = bool(abs(generated - published) <= tolerance)
+
+    standard_error = (
+        float(np.sqrt(published * (1.0 - published) / replications))
+        if replications
+        else float("nan")
+    )
+    attainable = bool(standard_error <= tolerance) if replications else True
+    if within:
+        status = "recovered_within_published_rounding"
+    elif attainable:
+        status = "not_recovered_within_published_rounding"
+    else:
+        status = "not_resolvable_monte_carlo_error_exceeds_published_rounding"
+    return {
+        "generated_uncertainty": generated,
+        "uncertainty_difference": generated - published,
+        "uncertainty_within_published_rounding": within,
+        "uncertainty_monte_carlo_standard_error": standard_error,
+        "uncertainty_tolerance_attainable": attainable,
+        "uncertainty_status": status,
+    }
+
+
 def main() -> None:
     """Build the cell-level audit and the layer-level classification."""
-    published = pd.read_csv(PUBLISHED_CSV)
+    # ``uncertainty_value`` stays text so its printed precision survives; see
+    # ``_decimals_of``.
+    published = pd.read_csv(PUBLISHED_CSV, dtype={"uncertainty_value": str})
     generated = pd.read_csv(GENERATED_CSV)
     lookup = generated.set_index(["model", "portfolio_set"])
+    bootstrap = _load_bootstrap_p_values()
+    bootstrap_replications = _load_bootstrap_replications()
 
     records: list[dict[str, object]] = []
     for row in published.to_dict("records"):
@@ -173,8 +283,16 @@ def main() -> None:
         )
         record["published_uncertainty"] = row["uncertainty_value"]
         if str(row["uncertainty_type"]) == "empirical_bootstrap_p_value":
-            record["generated_uncertainty"] = np.nan
-            record["uncertainty_status"] = "not_attempted_bootstrap_not_implemented"
+            record.update(
+                _bootstrap_uncertainty(
+                    bootstrap=bootstrap,
+                    replications=bootstrap_replications,
+                    model=model,
+                    portfolio_set=str(row["portfolio_set"]),
+                    statistic=str(row["statistic"]),
+                    published_uncertainty=row["uncertainty_value"],
+                )
+            )
         elif uncertainty_column and uncertainty_column in row_generated.index:
             uncertainty_generated = float(row_generated[uncertainty_column])
             uncertainty_published = float(row["uncertainty_value"])
@@ -208,9 +326,23 @@ def main() -> None:
                 "script": "scripts/audit_published_targets.py",
                 "replication_mode": "documented_reconstruction",
                 "exact_input_available": False,
+                "bootstrap_p_values_available": BOOTSTRAP_CSV.is_file(),
                 "inputs": {
                     PUBLISHED_CSV.as_posix(): _sha256(PUBLISHED_CSV),
                     GENERATED_CSV.as_posix(): _sha256(GENERATED_CSV),
+                    **(
+                        {BOOTSTRAP_CSV.as_posix(): _sha256(BOOTSTRAP_CSV)}
+                        if BOOTSTRAP_CSV.is_file()
+                        else {}
+                    ),
+                    # The replication count lives here, and it decides which
+                    # cells are resolvable at all, so the classification is not
+                    # reproducible without it.
+                    **(
+                        {BOOTSTRAP_DIAGNOSTICS_JSON.as_posix(): _sha256(BOOTSTRAP_DIAGNOSTICS_JSON)}
+                        if BOOTSTRAP_DIAGNOSTICS_JSON.is_file()
+                        else {}
+                    ),
                 },
                 "outputs": {
                     AUDIT_CSV.as_posix(): _sha256(AUDIT_CSV),
