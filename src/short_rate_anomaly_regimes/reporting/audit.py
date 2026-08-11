@@ -213,6 +213,116 @@ def build_missing_input_audit(
     ]
 
 
+def published_table_name(source_location: str) -> str:
+    """Return the published table a manifest target refers to.
+
+    Manifest locations are colon separated and end with the table, so
+    ``article_pdf:p.937:Table 4`` and
+    ``supplement_zip:appendix_pdf:p.20:Table A.1`` both yield the name the
+    cell-level audit records in its ``source_table`` column.
+    """
+    return source_location.rsplit(":", 1)[-1].strip()
+
+
+def build_table_audit_from_cells(
+    targets: tuple[TableTarget, ...],
+    *,
+    cell_audit: pd.DataFrame,
+    outside_scope_reason: str,
+) -> list[TableAuditRecord]:
+    """Summarise the cell-level audit to one row per published table.
+
+    Before this existed the command had no non-blocked branch: it wrote the
+    audit only when the generated artifacts were missing, and once they existed
+    it raised without writing. The committed artifact therefore stayed frozen at
+    its pre-estimate state, labelling every table
+    ``not_reproducible_missing_input`` including the four whose cells the
+    cell-level audit compares. A recipient reading it would conclude that
+    nothing had been reproduced.
+
+    A table carrying several statistics rarely recovers or fails as a whole, so
+    a table with some cells inside the published rounding and some outside is
+    labelled ``partially_recovered`` rather than being rounded up to a recovery
+    or down to a failure. A table the cell-level audit does not cover is
+    ``not_attempted``, which is what being outside the current pass means, and
+    not ``not_reproducible_missing_input``, which asserts a cause this audit has
+    not established.
+
+    Args:
+        targets: The frozen manifest targets, one per published table.
+        cell_audit: The cell-level audit, one row per published statistic.
+        outside_scope_reason: Note recorded on tables the cell audit omits.
+
+    Returns:
+        One record per manifest target, in manifest order.
+    """
+    records: list[TableAuditRecord] = []
+    for target in targets:
+        table = published_table_name(target.source_location)
+        cells = cell_audit.loc[cell_audit["source_table"].astype(str) == table]
+        if cells.empty:
+            records.append(
+                TableAuditRecord(
+                    target_id=target.target_id,
+                    source_location=target.source_location,
+                    generated_artifact="not_generated",
+                    status=ReplicationStatus.NOT_ATTEMPTED,
+                    statistic=target.description,
+                    published_value=None,
+                    replicated_value=None,
+                    absolute_difference=None,
+                    relative_difference=None,
+                    tolerance_rule=target.tolerance_rule,
+                    tolerance_value=None,
+                    discrepancy_stage=None,
+                    independent_check="not_run_outside_current_audit_pass",
+                    notes=outside_scope_reason,
+                )
+            )
+            continue
+
+        recovered = int((cells["status"] == "recovered_within_published_rounding").sum())
+        total = len(cells)
+        if recovered == total:
+            status = ReplicationStatus.APPROXIMATELY_REPRODUCED
+        elif recovered == 0:
+            # No cell recovered. The protocol's designated label for a completed
+            # reconstruction that recovers nothing is the missing-input one,
+            # refined by ``not_reproduced_under_documented_reconstruction_exact_input_missing``.
+            # It is emphatically not ``contradicted``, which requires a completed
+            # attempt on source-compatible inputs; these are reconstructions, so
+            # no recovery rate can earn that label. No table currently reaches
+            # this branch, and it exists so that one silently cannot be labelled
+            # partially recovered.
+            status = ReplicationStatus.NOT_REPRODUCIBLE_MISSING_INPUT
+        else:
+            status = ReplicationStatus.PARTIALLY_RECOVERED
+        records.append(
+            TableAuditRecord(
+                target_id=target.target_id,
+                source_location=target.source_location,
+                generated_artifact="artifacts/audit/published_target_audit.csv",
+                status=status,
+                statistic=target.description,
+                published_value=None,
+                replicated_value=None,
+                absolute_difference=None,
+                relative_difference=None,
+                tolerance_rule=target.tolerance_rule,
+                tolerance_value=None,
+                discrepancy_stage=None,
+                independent_check="cell_level_comparison_against_published_rounding",
+                notes=(
+                    f"{recovered} of {total} published cells fall inside the published "
+                    "rounding under documented reconstruction. No exact-replication label "
+                    "is available at any recovery rate, because the article names providers "
+                    "and people rather than files."
+                ),
+            )
+        )
+    return records
+
+
 def write_audit(records: list[TableAuditRecord], path: Path) -> None:
     """Write an auditable CSV with one row per target statistic."""
     path.parent.mkdir(parents=True, exist_ok=True)

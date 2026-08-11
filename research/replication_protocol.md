@@ -6,6 +6,7 @@ Every article statistic receives exactly one label.
 
 - `reproduced` when the same definition and estimator fall within a predeclared numerical tolerance;
 - `approximately_reproduced` when the original input or software is unavailable but a close documented reconstruction produces a similar result;
+- `partially_recovered` when a target carries several statistics and some land inside the published rounding while others do not, so neither a recovery nor a failure label describes the target as a whole;
 - `not_reproducible_missing_input` when an essential article input cannot be obtained;
 - `contradicted` when the same definition and estimator yield a materially different result after independent checks;
 - `not_attempted` when an earlier dependency has not passed.

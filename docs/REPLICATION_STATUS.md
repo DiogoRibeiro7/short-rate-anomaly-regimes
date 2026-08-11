@@ -79,6 +79,7 @@ Base labels:
 
 - `reproduced`;
 - `approximately_reproduced`;
+- `partially_recovered`;
 - `not_reproducible_missing_input`;
 - `contradicted`;
 - `not_attempted`.

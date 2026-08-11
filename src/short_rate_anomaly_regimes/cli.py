@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Annotated
 
+import pandas as pd
 import typer
 from rich.console import Console
 from rich.table import Table
@@ -44,6 +45,7 @@ from short_rate_anomaly_regimes.regimes.stability import (
 from short_rate_anomaly_regimes.reporting.artifact_evidence import missing_inputs
 from short_rate_anomaly_regimes.reporting.audit import (
     build_missing_input_audit,
+    build_table_audit_from_cells,
     load_table_targets,
     write_audit,
     write_audit_json,
@@ -424,9 +426,33 @@ def audit_replication(
             "Wrote missing-input audit; empirical replication verdict is blocked by: "
             f"{', '.join(missing_paths)}"
         )
-    raise ReplicationBlockError(
-        "Baseline artifacts exist, but statistic-level published targets are not linked to "
-        "generated cells yet"
+
+    # The command used to stop here, raising that published targets were "not
+    # linked to generated cells yet" and writing nothing. That became false once
+    # scripts/audit_published_targets.py started linking them, and because the
+    # only writing branch was the blocked one above, the committed artifact
+    # stayed frozen at its pre-estimate state: every table labelled
+    # not_reproducible_missing_input, including the four whose cells are
+    # compared. It shipped in the archive saying nothing had been reproduced.
+    cell_audit_path = Path("artifacts/audit/published_target_audit.csv")
+    if not cell_audit_path.is_file():
+        raise ReplicationBlockError(
+            "Baseline artifacts exist, but the cell-level audit has not been generated; "
+            f"run scripts/audit_published_targets.py to write {cell_audit_path.as_posix()}"
+        )
+    records = build_table_audit_from_cells(
+        loaded_targets,
+        cell_audit=pd.read_csv(cell_audit_path),
+        outside_scope_reason=(
+            "Outside the current audit pass. The cell-level audit does not compare this "
+            "table, which is a scope decision rather than an established missing input."
+        ),
+    )
+    write_audit(records, output)
+    write_audit_json(records, json_output)
+    write_replication_report(records, report)
+    typer.echo(
+        f"Wrote table-level audit for {len(records)} published tables to {output.as_posix()}"
     )
 
 

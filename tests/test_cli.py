@@ -2,6 +2,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
+import pandas as pd
 import pytest
 from typer.testing import CliRunner
 
@@ -605,3 +606,118 @@ def test_milestone_gated_cli_commands_report_not_implemented() -> None:
 
         assert result.exit_code == 1
         assert isinstance(result.exception, NotImplementedError)
+
+
+def _write_table_manifest(path: Path) -> None:
+    path.write_text(
+        "target_id,source_location,description,portfolio_set,model,estimator,"
+        "tolerance_rule,status\n"
+        "TBL_004,article_pdf:p.940:Table 4,ICAPM risk premia,joint,icapm,two_pass,"
+        "published_rounding,article_extracted\n"
+        "TBL_005,article_pdf:p.944:Table 5,Premium decomposition,joint,icapm,two_pass,"
+        "published_rounding,article_extracted\n",
+        encoding="utf-8",
+    )
+
+
+def test_audit_replication_writes_the_table_audit_once_the_estimates_exist(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The command must write on the unblocked path, not only when blocked.
+
+    It previously raised "published targets are not linked to generated cells
+    yet" and wrote nothing once the artifacts existed, so its only writing path
+    was the blocked one. The committed artifact stayed frozen at its pre-estimate
+    state, labelling every table not_reproducible_missing_input including those
+    the cell-level audit compares.
+    """
+    monkeypatch.chdir(tmp_path)
+    for directory in ("artifacts/estimates/time_series", "artifacts/estimates/cross_section"):
+        (tmp_path / directory).mkdir(parents=True)
+    innovations = tmp_path / "data/processed/factors/short_rate_innovations_baseline.parquet"
+    innovations.parent.mkdir(parents=True)
+    innovations.write_bytes(b"")
+
+    cell_audit = tmp_path / "artifacts/audit/published_target_audit.csv"
+    cell_audit.parent.mkdir(parents=True, exist_ok=True)
+    cell_audit.write_text(
+        "source_table,status\n"
+        "Table 4,recovered_within_published_rounding\n"
+        "Table 4,not_recovered_within_published_rounding\n",
+        encoding="utf-8",
+    )
+    target_path = tmp_path / "targets.csv"
+    _write_table_manifest(target_path)
+    audit_path = tmp_path / "audit.csv"
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "audit-replication",
+            "--targets",
+            str(target_path),
+            "--output",
+            str(audit_path),
+            "--json-output",
+            str(tmp_path / "audit.json"),
+            "--report",
+            str(tmp_path / "report.md"),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    written = pd.read_csv(audit_path).set_index("target_id")
+    # Covered by the cell audit, and mixed, so neither a recovery nor a failure.
+    assert written.loc["TBL_004", "status"] == "partially_recovered"
+    assert "1 of 2" in str(written.loc["TBL_004", "notes"])
+    # Not covered. Outside the pass is not the same claim as a missing input.
+    assert written.loc["TBL_005", "status"] == "not_attempted"
+
+
+def test_audit_replication_blocks_when_the_cell_audit_is_absent(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Silence is what let the artifact go stale, so the gap must be loud."""
+    monkeypatch.chdir(tmp_path)
+    for directory in ("artifacts/estimates/time_series", "artifacts/estimates/cross_section"):
+        (tmp_path / directory).mkdir(parents=True)
+    innovations = tmp_path / "data/processed/factors/short_rate_innovations_baseline.parquet"
+    innovations.parent.mkdir(parents=True)
+    innovations.write_bytes(b"")
+    target_path = tmp_path / "targets.csv"
+    _write_table_manifest(target_path)
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "audit-replication",
+            "--targets",
+            str(target_path),
+            "--output",
+            str(tmp_path / "audit.csv"),
+            "--json-output",
+            str(tmp_path / "audit.json"),
+            "--report",
+            str(tmp_path / "report.md"),
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "cell-level audit has not been generated" in str(result.exception)
+
+
+def test_the_committed_table_audit_agrees_with_the_cell_audit() -> None:
+    """The shipped table-level record must not drift from the cells again."""
+    tables = pd.read_csv(Path("artifacts/audit/table_replication.csv"))
+    cells = pd.read_csv(Path("artifacts/audit/published_target_audit.csv"))
+    covered = set(cells["source_table"].astype(str))
+
+    assert not (tables["status"] == "not_reproducible_missing_input").any()
+    for row in tables.itertuples():
+        table = str(row.source_location).rsplit(":", 1)[-1].strip()
+        if table in covered:
+            assert row.status == "partially_recovered", table
+        else:
+            assert row.status == "not_attempted", table
