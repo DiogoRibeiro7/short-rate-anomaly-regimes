@@ -1458,10 +1458,32 @@ resolve, and we prefer to state that limitation in text than to draw it. % artif
 \label{sec:oos}
 
 The out-of-sample design freezes an initial training endpoint at 1999-12 and uses a predeclared annual refit schedule. % artifact: configs/extensions.yaml
-Forecast records must store model vintage, training dates, factor definition,
-asset universe, benchmark model, and loss function. Results from this design will
-be interpreted as evidence about stability of pricing errors, not as a substitute
-for the baseline replication audit.
+Forecast records store model vintage, training dates, factor definition, asset
+universe, benchmark model, and loss function. Results are evidence about the
+stability of pricing errors, not a substitute for the baseline replication audit.
+
+The design has now been run. The two-factor system is refitted annually from the
+frozen endpoint and evaluated on the seventy anomaly portfolios across 26 windows % artifact: artifacts/tables/out_of_sample/forecast_metrics.csv
+through 2025-12. The evaluation uses the vintage-consistent panel rather than a % artifact: artifacts/tables/out_of_sample/design.json
+splice of the baseline and extension panels, because the window crosses the
+2013-12 vintage boundary and a splice would let a data revision enter as an % artifact: artifacts/tables/out_of_sample/design.json
+apparent forecasting result.
+
+The model attains an out-of-sample $R^2$ of 0.0039 against the historical-mean % artifact: artifacts/tables/out_of_sample/forecast_metrics.csv
+benchmark, and the zero-return benchmark attains $-0.1882$ against the same % artifact: artifacts/tables/out_of_sample/forecast_metrics.csv
+reference. The reading is that the factor model beats a zero-return rule
+comfortably and beats the historical mean by a margin too small to be
+economically interesting, which is consistent with the in-sample picture in
+Section~
+ef{sec:identification}: a factor whose betas are mostly estimation
+error prices poorly where it has to forecast rather than fit.
+
+The shipped table marks which models fall inside a fixed band of the lowest
+observed loss. That column is a descriptive screen and not the model confidence
+set of \citet{hansen2011model}: it involves no resampling, no
+equal-predictive-ability statistic, and no coverage guarantee, so a model inside
+the band has not been shown to be equivalent to the leader. The selection rule
+travels in the table so the two cannot be conflated. % artifact: artifacts/tables/out_of_sample/model_confidence_set.csv
 
 \section{Optional policy-information decomposition}
 

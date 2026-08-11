@@ -217,3 +217,58 @@ def test_build_out_of_sample_evaluation_and_output_writer(tmp_path: Path) -> Non
     assert "Negative out-of-sample performance" in (tmp_path / "report.md").read_text(
         encoding="utf-8"
     )
+
+
+def test_the_loss_band_does_not_claim_to_be_a_model_confidence_set() -> None:
+    """The column name will be read as Hansen, Lunde and Nason; the object is not that.
+
+    A model confidence set eliminates models by a bootstrapped
+    equal-predictive-ability test and carries a coverage guarantee at a stated
+    level. This is a deterministic band around the lowest observed loss, with no
+    resampling and no test statistic, so the rule has to travel in the artifact
+    rather than only in a docstring a reader of the CSV never sees.
+    """
+    metrics = pd.DataFrame(
+        {
+            "model": ["a", "b", "c"],
+            "mean_squared_error": [1.0, 1.05, 2.0],
+        }
+    )
+
+    table = model_confidence_set(metrics, tolerance=0.10)
+
+    rule = set(table["selection_rule"])
+    assert len(rule) == 1
+    recorded = rule.pop()
+    assert "not_hansen_lunde_nason" in recorded
+    assert "no_coverage_guarantee" in recorded
+    assert "10%" in recorded
+    # The band itself: within ten percent of 1.0 keeps a and b, drops c.
+    assert list(table["included_in_confidence_set"]) == [True, True, False]
+
+
+def test_the_recorded_rule_follows_the_tolerance_it_was_given() -> None:
+    """A stale rule string would misdescribe the very screen it labels."""
+    metrics = pd.DataFrame({"model": ["a", "b"], "mean_squared_error": [1.0, 1.4]})
+
+    assert "50%" in set(model_confidence_set(metrics, tolerance=0.5)["selection_rule"]).pop()
+    assert list(model_confidence_set(metrics, tolerance=0.5)["included_in_confidence_set"]) == [
+        True,
+        True,
+    ]
+    assert list(model_confidence_set(metrics, tolerance=0.1)["included_in_confidence_set"]) == [
+        True,
+        False,
+    ]
+
+
+def test_the_committed_out_of_sample_report_states_what_the_band_is_not() -> None:
+    """The shipped report must carry the caveat, not just the source."""
+    report = Path("reports/generated/out_of_sample_report.md").read_text(encoding="utf-8")
+
+    assert "Verdict: `generated_from_frozen_design`" in report
+    assert "not** the Hansen, Lunde and Nason (2011) model" in report
+    assert "no coverage guarantee at any level" in report
+    # The benchmark the out-of-sample R2 is measured against reads zero by
+    # construction, which a reader comparing columns would otherwise misread.
+    assert "reads 0 by construction" in report

@@ -1,6 +1,6 @@
 {
   "archive_path": "artifacts/release/source_release.zip",
-  "archive_sha256": "095fc0533228dfe5a584a3bd78bdd11dcc917facf6a3180784b0f17dcc3e1e6c",
+  "archive_sha256": "21462a1c992218ce3e6bd46f12616003ecef38250aaf219d51980c04bca13f0b",
   "excluded": [
     "prompts/",
     "references/private/",
@@ -9,7 +9,7 @@
     "artifacts/environment/manifest.json",
     "data/catalog.duckdb"
   ],
-  "file_count": 358,
+  "file_count": 363,
   "members": [
     ".editorconfig",
     ".env.example",
@@ -101,6 +101,7 @@
     "artifacts/provenance/kenneth_french/F-F_Research_Data_Factors_publication_era_20170709.json",
     "artifacts/provenance/manuscript_figures.json",
     "artifacts/provenance/manuscript_tables.json",
+    "artifacts/provenance/out_of_sample.json",
     "artifacts/provenance/portfolio_compatibility_audit.json",
     "artifacts/provenance/portfolios/families/book_to_market_global_q_2025_retrieved_20260802.json",
     "artifacts/provenance/portfolios/families/cash_flow_to_price_global_q_2025_retrieved_20260802.json",
@@ -140,6 +141,9 @@
     "artifacts/tables/factors/.gitkeep",
     "artifacts/tables/factors/ar1_published_target_comparison.csv",
     "artifacts/tables/out_of_sample/.gitkeep",
+    "artifacts/tables/out_of_sample/design.json",
+    "artifacts/tables/out_of_sample/forecast_metrics.csv",
+    "artifacts/tables/out_of_sample/model_confidence_set.csv",
     "artifacts/tables/portfolio_descriptives/.gitkeep",
     "artifacts/tables/regimes/.gitkeep",
     "artifacts/tables/regimes/boundary_sensitivity.csv",
@@ -276,6 +280,7 @@
     "scripts/run_baseline_replication.py",
     "scripts/run_h1_materiality.py",
     "scripts/run_h4c_precision.py",
+    "scripts/run_out_of_sample.py",
     "scripts/run_regime_equivalence.py",
     "scripts/run_regime_interactions.py",
     "scripts/run_temporal_extension.py",

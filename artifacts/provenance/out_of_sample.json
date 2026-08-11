@@ -1,0 +1,26 @@
+{
+  "design_source": "configs/extensions.yaml",
+  "evaluation_end_rule": "the last month the panel carries. The frozen config fixes when evaluation starts, not when the data run out",
+  "factor_columns": {
+    "mkt": "market_excess_return",
+    "rate": "short_rate_innovation__fedfunds"
+  },
+  "inputs": {
+    "configs/extensions.yaml": "fe84c1b4a94412e8add2b63c852528b828968fd7b264a6f27dd9be5cca70d7a8",
+    "data/processed/regimes/monthly_regimes.parquet": "8d82c850712c8503633dd59b38b170edd6c788ca7039baa6ee6e68fa33c468d6"
+  },
+  "outputs": {
+    "artifacts/tables/out_of_sample/design.json": "e2517298861aa331c5e7edc9e2eefd0690df8a8b87bc8f20bc982ea74c320198",
+    "artifacts/tables/out_of_sample/forecast_metrics.csv": "3ba92330928e7af03e6328669312a05bf2e51af39311144454e321dcbc638b3e",
+    "artifacts/tables/out_of_sample/model_confidence_set.csv": "2e2da7b814ea269fdf2836664943ae129dea11fede576b9420d9ee695394eca7"
+  },
+  "panel_rationale": "the vintage-consistent 648-month regime panel, because the evaluation window crosses the 2013-12 vintage boundary and a spliced panel would let a data revision enter as an apparent forecasting result",
+  "replication_status": "documented_reconstruction",
+  "script": "scripts/run_out_of_sample.py",
+  "window": {
+    "end": "2025-12",
+    "months": 648,
+    "start": "1972-01",
+    "test_assets": 70
+  }
+}

@@ -587,9 +587,19 @@ def out_of_sample(
             "Wrote blocked out-of-sample report; the registered falsification run has not "
             f"produced its evaluation artifacts: {_format_paths(missing_paths)}"
         )
-    raise ReplicationBlockError(
-        "Out-of-sample evaluation artifacts exist, but panel-specific forecast assembly is "
-        f"not frozen for {validated.out_of_sample.confirmatory_model}"
+    # This branch used to raise that "panel-specific forecast assembly is not
+    # frozen", which stopped being true once scripts/run_out_of_sample.py ran the
+    # frozen design. The report is written by that script alongside the tables it
+    # summarises, so the gate here verifies the pair rather than rewriting one
+    # from the other and risking the two drifting apart.
+    if not output.is_file():
+        raise ReplicationBlockError(
+            "Out-of-sample evaluation artifacts exist but the report does not; run "
+            "scripts/run_out_of_sample.py, which writes both together"
+        )
+    typer.echo(
+        "Out-of-sample falsification is generated from the frozen design for "
+        f"{validated.out_of_sample.confirmatory_model}; see {output.as_posix()}"
     )
 
 

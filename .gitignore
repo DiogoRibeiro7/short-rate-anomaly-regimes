@@ -115,6 +115,13 @@ artifacts/**
 !artifacts/tables/cross_section/
 !artifacts/tables/cross_section/.gitkeep
 !artifacts/tables/cross_section/baseline_risk_prices.csv
+# The registered out-of-sample falsification outputs. The generated report
+# cites them, and the release gate names them as required inputs.
+!artifacts/tables/out_of_sample/
+!artifacts/tables/out_of_sample/forecast_metrics.csv
+!artifacts/tables/out_of_sample/model_confidence_set.csv
+!artifacts/tables/out_of_sample/design.json
+!artifacts/provenance/out_of_sample.json
 # The article's bootstrap p-values, which the published-target audit reads.
 # Shipping them means a recipient can re-run the audit without first
 # re-running 29 systems of 5,000 replications.

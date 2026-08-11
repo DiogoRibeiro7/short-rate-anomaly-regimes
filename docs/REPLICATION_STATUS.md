@@ -69,7 +69,7 @@ The p-value tests a useless-factor null: the factors are resampled on a time seq
 - **Table 5, Tables 7 to 9, and Appendix Tables A.2 to A.14.** Outside the scope of the current audit pass.
 - **Equal-weighted results.** Blocked at the current sources.
 - **Security-level reconstruction.** Not attempted; CRSP and Compustat access is not confirmed. See [`reports/data_access_feasibility.md`](../reports/data_access_feasibility.md).
-- **The high-frequency policy-information decomposition and the out-of-sample falsification.** Not run. Both remain appendix designs, and their generated reports report `blocked_missing_input` with the specific inputs named.
+- **The high-frequency policy-information decomposition.** Not run. It remains an appendix design, and its generated report reports `blocked_missing_input` with the specific inputs named. The out-of-sample falsification is run: the two-factor system is refitted annually from a frozen 1999-12 training endpoint and evaluated on 70 portfolios across 26 windows through 2025-12, on the vintage-consistent panel so the evaluation does not cross a data-revision boundary. It attains an out-of-sample R2 of 0.0039 against the historical-mean benchmark and 0.1882 above a zero-return benchmark, so it improves on the historical mean by an economically negligible margin while clearly beating zero. Both sit inside the reported loss band, which is a descriptive screen and not a Hansen-Lunde-Nason confidence set.
 
 ## Status Labels
 
@@ -97,4 +97,3 @@ Any result that uses substituted data, reconstructed portfolios, revised series,
 
 1. Extend the cell-level audit to Table 5 and the remaining appendix tables.
 2. Acquire event-level data for the policy-information decomposition, or retire it from the design.
-3. Run the out-of-sample falsification against the frozen 1999-12 training endpoint and annual refit schedule.

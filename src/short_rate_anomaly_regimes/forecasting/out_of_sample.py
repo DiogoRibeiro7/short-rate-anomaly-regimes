@@ -250,12 +250,32 @@ def top_minus_bottom_rank_accuracy(frame: pd.DataFrame) -> float:
     return float(np.mean(outcomes)) if outcomes else float("nan")
 
 
+#: What the confidence-set column actually is. The name ``model_confidence_set``
+#: will be read as Hansen, Lunde and Nason (2011), which eliminates models by a
+#: bootstrapped equal-predictive-ability test and carries a coverage guarantee at
+#: a stated level. This is a deterministic band around the lowest observed loss,
+#: with no resampling, no test statistic and no coverage guarantee. The rule
+#: travels in the artifact so the two cannot be confused by a reader who sees
+#: only the file.
+CONFIDENCE_SET_RULE = (
+    "deterministic_band_within_{tolerance:.0%}_of_lowest_mean_squared_error_"
+    "not_hansen_lunde_nason_no_coverage_guarantee"
+)
+
+
 def model_confidence_set(
     metrics: pd.DataFrame,
     *,
     tolerance: float = 0.10,
 ) -> pd.DataFrame:
-    """Create a transparent loss-based model confidence set."""
+    """Flag models whose loss lies within a fixed band of the lowest observed loss.
+
+    This is a descriptive screen, not an inferential one. It answers "which
+    models are close to the best on this sample" and does not answer "which
+    models can be distinguished from the best". A model inside the band has not
+    been shown to be equivalent to the leader, and a model outside it has not
+    been shown to be worse at any confidence level.
+    """
     if "mean_squared_error" not in metrics.columns:
         raise ValueError("Metrics table is missing mean_squared_error")
     if tolerance < 0:
@@ -265,6 +285,7 @@ def model_confidence_set(
     threshold = best_loss * (1.0 + tolerance)
     table["loss_gap_to_best"] = table["mean_squared_error"].astype(float) - best_loss
     table["included_in_confidence_set"] = table["mean_squared_error"].astype(float) <= threshold
+    table["selection_rule"] = CONFIDENCE_SET_RULE.format(tolerance=tolerance)
     return table
 
 
@@ -324,7 +345,10 @@ def write_out_of_sample_outputs(
         encoding="utf-8",
         newline="\n",
     )
-    best = build.metrics.sort_values("mean_squared_error").iloc[0]
+    ranked = build.metrics.sort_values("mean_squared_error")
+    best = ranked.iloc[0]
+    confirmatory = build.metrics.loc[build.metrics["model"] == design.confirmatory_model]
+    included = build.confidence_set.loc[build.confidence_set["included_in_confidence_set"]]
     report_path.write_text(
         "\n".join(
             [
@@ -334,10 +358,52 @@ def write_out_of_sample_outputs(
                 "",
                 f"Initial training endpoint: `{design.initial_train_end}`",
                 f"Refit frequency months: `{design.refit_frequency_months}`",
+                f"Evaluation end: `{design.evaluation_end}`",
+                f"Confirmatory model: `{design.confirmatory_model}`",
                 f"Lowest-loss model: `{best['model']}`",
                 "",
-                "Negative out-of-sample performance must be preserved and investigated "
-                "without changing the confirmatory specification.",
+                "## Losses",
+                "",
+                "| Model | RMSE | MAE | Out-of-sample R2 | Within loss band |",
+                "|---|---|---|---|---|",
+                *[
+                    f"| `{row['model']}` | {row['rmse']:.4f} | {row['mae']:.4f} "
+                    f"| {row['out_of_sample_r2']:.4f} "
+                    f"| {'yes' if row['model'] in set(included['model']) else 'no'} |"
+                    for _, row in ranked.iterrows()
+                ],
+                "",
+                "The out-of-sample R2 is measured against the first registered benchmark, "
+                f"`{design.benchmarks[0]}`, so that benchmark reads 0 by construction.",
+                "",
+                "## What the loss band is, and is not",
+                "",
+                "The `included_in_confidence_set` column marks models whose mean squared "
+                "error lies within a fixed band of the lowest observed loss. It is a "
+                "descriptive screen. It is **not** the Hansen, Lunde and Nason (2011) model "
+                "confidence set: there is no resampling, no equal-predictive-ability "
+                "statistic, and no coverage guarantee at any level. A model inside the band "
+                "has not been shown to be equivalent to the leader, and a model outside it "
+                "has not been shown to be worse. The rule is recorded in the "
+                "`selection_rule` column of the shipped table.",
+                "",
+                "## Interpretation",
+                "",
+                "Results from this design are evidence about the stability of pricing "
+                "errors, not a substitute for the baseline replication audit. Negative "
+                "out-of-sample performance must be preserved and investigated without "
+                "changing the confirmatory specification, which is frozen in the "
+                "configuration and was not revised after these errors were seen."
+                + (
+                    ""
+                    if confirmatory.empty
+                    else (
+                        f" The confirmatory model attains an out-of-sample R2 of "
+                        f"{float(confirmatory['out_of_sample_r2'].iloc[0]):.4f} against "
+                        f"`{design.benchmarks[0]}`."
+                    )
+                ),
+                "",
             ]
         ),
         encoding="utf-8",

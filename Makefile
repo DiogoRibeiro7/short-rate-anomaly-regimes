@@ -122,9 +122,11 @@ reproduce-estimates:
 	poetry run python scripts/run_weak_factor_diagnostics.py
 	poetry run python scripts/run_h4c_precision.py
 
-# Offline. Minutes.
+# Offline. Minutes. The out-of-sample falsification refits the two-pass system
+# annually from 1999-12 and evaluates through the end of the panel.
 reproduce-extension:
 	poetry run python scripts/run_temporal_extension.py
+	poetry run python scripts/run_out_of_sample.py
 
 # Offline. SLOWEST stage: run_regime_equivalence.py bootstraps 10,000 draws per
 # eligible regime, run_regime_interactions.py runs an exhaustive Bai-Perron
@@ -136,8 +138,8 @@ reproduce-regimes:
 	poetry run python scripts/run_regime_interactions.py
 	poetry run python scripts/analyse_regime_power.py
 
-# Offline. Rewrites reports/generated/ from the rebuilt artifacts. The two
-# `-` prefixed commands exit non-zero by design: their gates are blocked by
+# Offline. Rewrites reports/generated/ from the rebuilt artifacts. The one
+# `-` prefixed command exits non-zero by design: their gates are blocked by
 # inputs this repository cannot obtain, and they write a blocked report saying
 # so. The `-` keeps the rebuild going; it does not suppress a passing gate.
 # audit-replication no longer needs one: it now writes the table-level audit
@@ -149,7 +151,7 @@ reproduce-reports:
 	poetry run srar temporal-extension
 	poetry run srar run-regimes --config configs/regimes.yaml
 	-poetry run srar shock-decomposition
-	-poetry run srar out-of-sample
+	poetry run srar out-of-sample
 	poetry run srar build-report --config configs/reporting.yaml
 
 # ---------------------------------------------------------------------------

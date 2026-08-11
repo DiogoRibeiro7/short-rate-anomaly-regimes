@@ -81,3 +81,6 @@ vintage_decomposition,artifacts/tables/extension/vintage_decomposition.csv,Vinta
 h2_temporal_inference,artifacts/tables/extension/h2_temporal_inference.csv,Joint moving block bootstrap intervals and three way decisions for the temporal fitted premium and RMSE change
 regime_short_sample_sensitivity,artifacts/tables/regimes/regime_second_pass_short_sample_sensitivity.csv,Non-confirmatory second pass for the short-sample normalisation regime
 useless_factor_bootstrap,artifacts/diagnostics/useless_factor_bootstrap.json,Article useless-factor bootstrap run metadata with seeds and replication counts
+out_of_sample_forecast_metrics,artifacts/tables/out_of_sample/forecast_metrics.csv,Out-of-sample loss and skill metrics per model under the frozen design
+out_of_sample_confidence_set,artifacts/tables/out_of_sample/model_confidence_set.csv,Descriptive loss band around the lowest observed out-of-sample loss
+out_of_sample_design,artifacts/tables/out_of_sample/design.json,Frozen out-of-sample training endpoint refit schedule and benchmarks
