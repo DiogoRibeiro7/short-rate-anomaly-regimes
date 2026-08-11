@@ -55,11 +55,11 @@ because the article does not state one.
 
 ## 2. What could be audited
 
-`research/published_target_values.csv` holds 212 registry rows transcribed from
-Tables 3, 4, 6, and A.1 and independently re-verified cell by cell against the
+`research/published_target_values.csv` holds 296 registry rows transcribed from
+Tables 3, 4, 5, 6, and A.1 and independently re-verified cell by cell against the
 source text. After collapsing rows that repeat a point estimate under two
-printed uncertainty measures, that is **123 unique published cells**, of which
-**123 were compared**.
+printed uncertainty measures, that is **207 unique published cells**, of which
+**207 were compared** and **50 fall inside the published rounding**.
 
 A cell counts as recovered when it agrees with the article to the precision the
 article prints, that is within half of the last printed increment.
@@ -78,16 +78,19 @@ article prints, that is within half of the last printed increment.
 | Layer | Cells | Recovered | Classification |
 |---|---|---|---|
 | **R1a** short-rate innovations | 10 per rate | 9/10 and 10/10 | `approximately_reproduced_under_documented_reconstruction` |
-| **R1b** first-pass betas | 0 | — | `no_published_statistic_level_target` |
+| **R1b** first-pass betas, via the Table 5 premium decomposition | 42 | 14 | `partially_recovered_under_documented_reconstruction` |
 | **R1c** risk prices | 45 | 23 | `partially_recovered_under_documented_reconstruction` |
-| **R1d** pricing errors and fit | 58 | 3 | `partially_recovered_under_documented_reconstruction` |
+| **R1d** pricing errors and fit | 79 | 7 | `partially_recovered_under_documented_reconstruction` |
 | **R1e** comparator models | 20 | 3 | `partially_recovered_under_documented_reconstruction` |
 
-**R1b has no statistic-level target.** The article plots first-pass betas in
-Figure 3 and reports beta-times-lambda decompositions for the extreme deciles in
-Table 5, but tabulates no beta. There is nothing to compare cell by cell, so the
-layer is evidenced only through the layers that consume it. This is a property
-of what the article published, not a gap in this reconstruction.
+**R1b is evidenced indirectly.** The article plots first-pass betas in Figure 3
+and tabulates no beta, so no cell compares a loading directly. Table 5 does
+tabulate beta times lambda for the extreme deciles, and with the risk prices
+audited separately under R1c a recovered premium is evidence about the loading
+behind it, so those 42 cells are classified here rather than left outside every
+layer. The average-return column of the same table is a property of the test
+assets rather than of an estimated layer; it is compared cell by cell and
+belongs to no layer.
 
 ## 4. Reading the numbers honestly
 

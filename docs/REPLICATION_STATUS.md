@@ -27,12 +27,12 @@ Estimated: eight models on eight asset sets, 64 systems, over the 504 baseline m
 | Layer | Recovered | Classification |
 |---|---|---|
 | R1a short-rate innovations | 9/10 and 10/10 per series | `approximately_reproduced_under_documented_reconstruction` |
-| R1b first-pass betas | no published statistic-level target | `no_published_statistic_level_target` |
+| R1b first-pass betas, through the Table 5 premium decomposition | 14 of 42 | `partially_recovered_under_documented_reconstruction` |
 | R1c risk prices | 23 of 45 | `partially_recovered_under_documented_reconstruction` |
-| R1d pricing errors and fit | 3 of 58 | `partially_recovered_under_documented_reconstruction` |
+| R1d pricing errors and fit | 7 of 79 | `partially_recovered_under_documented_reconstruction` |
 | R1e comparator models | 3 of 20 | `partially_recovered_under_documented_reconstruction` |
 
-Of 123 unique published cells, all 123 were compared. Recovery varies by statistic in a way the estimator predicts: market risk prices land inside the published rounding 20 times of 29 and agree in sign 29 times of 29; rate risk prices agree in sign 16 of 16 but reach printed precision less often; the specification statistic, which inverts a seventy-by-seventy pricing-error covariance through a pseudo-inverse, reaches it in none of 29. See [`reports/baseline_replication_audit.md`](../reports/baseline_replication_audit.md).
+Of 207 unique published cells, all 207 were compared, and 50 fall inside the published rounding. Recovery varies by statistic in a way the estimator predicts: market risk prices land inside the published rounding 20 times of 29 and agree in sign 29 times of 29; rate risk prices agree in sign 16 of 16 but reach printed precision less often; the specification statistic, which inverts a seventy-by-seventy pricing-error covariance through a pseudo-inverse, reaches it in none of 29. See [`reports/baseline_replication_audit.md`](../reports/baseline_replication_audit.md).
 
 Registered hypothesis outcomes are recorded in `artifacts/diagnostics/` and summarised in the repository README. H4a, H4b and H4c pass; H1, H2 and H3 are unsupported against their predeclared standards.
 
