@@ -1,6 +1,6 @@
 {
   "archive_path": "artifacts/release/source_release.zip",
-  "archive_sha256": "3d1c31dfb4e96bd07b1ec1693d671ec116ca222e0a750dd351a665a977549a82",
+  "archive_sha256": "914edbe0e43e87ae7d2042ad81e2d7f47b12ec593bc9da988040000d741fdede",
   "excluded": [
     "prompts/",
     "references/private/",
@@ -9,7 +9,7 @@
     "artifacts/environment/manifest.json",
     "data/catalog.duckdb"
   ],
-  "file_count": 367,
+  "file_count": 368,
   "members": [
     ".editorconfig",
     ".env.example",
@@ -357,6 +357,7 @@
     "tests/test_h1_materiality.py",
     "tests/test_input_acquisition.py",
     "tests/test_manuscript.py",
+    "tests/test_manuscript_numbers.py",
     "tests/test_manuscript_tables.py",
     "tests/test_milestone_gates.py",
     "tests/test_out_of_sample.py",
