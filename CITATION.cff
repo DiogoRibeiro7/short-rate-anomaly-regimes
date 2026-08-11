@@ -15,12 +15,14 @@ authors:
     affiliation: School of Media Arts and Design, Polytechnic of Porto, Portugal
     email: dfr@esmad.ipp.pt
 year: 2026
-version: 1.1.0
+version: 1.2.0
 license: MIT
 # The concept DOI. It resolves to the newest version, so a citation written
-# against it does not go stale. Version DOIs, for pinning an exact deposit:
-# v1.1.0-source is 10.5281/zenodo.21879209, v1.0.0-source is
-# 10.5281/zenodo.21860680.
+# against it does not go stale, and it needs no edit on a release. Each release
+# also receives its own version DOI, minted by Zenodo when the release is
+# published; the Zenodo record lists them all. They are deliberately not
+# enumerated here, because a list written before publication is stale the moment
+# the next version DOI is minted.
 doi: 10.5281/zenodo.21860679
 repository-code: https://github.com/DiogoRibeiro7/short-rate-anomaly-regimes
 keywords:
