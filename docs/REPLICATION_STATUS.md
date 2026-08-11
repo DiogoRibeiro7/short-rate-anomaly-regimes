@@ -66,7 +66,7 @@ What the cells agree on is the inference they were printed to support:
 | Cross-sectional fit significance | 27 of 29 |
 
 The p-value tests a useless-factor null: the factors are resampled on a time sequence independent of the residuals, so they cannot explain returns by construction. It answers how often a factor known to be useless produces a t-ratio this extreme, which is the Kan and Zhang (1999) concern the article guards against. It is not the p-value of a zero risk price in a correctly specified model. The procedure is an audit instrument and enters no registered gate; the repository's own confirmatory inference remains the moving-block bootstrap frozen in `research/bootstrap_contract.md`.
-- **Table 5, Tables 7 to 9, and Appendix Tables A.2 to A.14.** Outside the scope of the current audit pass.
+- **Tables 7 to 9 and Appendix Tables A.2 to A.14.** Outside the scope of the current audit pass. Most report objects this repository does not generate, including the GMM system, the Hansen-Jagannathan distance, and the Kan-Robotti-Shanken metrics, so extending the audit to them requires those estimators first rather than more transcription. Table 5 is now audited: its 84 published cells are compared, and 21 fall inside the published rounding.
 - **Equal-weighted results.** Blocked at the current sources.
 - **Security-level reconstruction.** Not attempted; CRSP and Compustat access is not confirmed. See [`reports/data_access_feasibility.md`](../reports/data_access_feasibility.md).
 - **The high-frequency policy-information decomposition.** Not run. It remains an appendix design, and its generated report reports `blocked_missing_input` with the specific inputs named. The out-of-sample falsification is run: the two-factor system is refitted annually from a frozen 1999-12 training endpoint and evaluated on 70 portfolios across 26 windows through 2025-12, on the vintage-consistent panel so the evaluation does not cross a data-revision boundary. It attains an out-of-sample R2 of 0.0039 against the historical-mean benchmark and 0.1882 above a zero-return benchmark, so it improves on the historical mean by an economically negligible margin while clearly beating zero. Both sit inside the reported loss band, which is a descriptive screen and not a Hansen-Lunde-Nason confidence set.
@@ -95,5 +95,5 @@ Any result that uses substituted data, reconstructed portfolios, revised series,
 
 ## Next Evidence Gates
 
-1. Extend the cell-level audit to Table 5 and the remaining appendix tables.
+1. Implement the GMM, Hansen-Jagannathan and Kan-Robotti-Shanken estimators the remaining appendix tables report, then extend the cell-level audit to them.
 2. Acquire event-level data for the policy-information decomposition, or retire it from the design.

@@ -67,10 +67,10 @@ This report distinguishes inaccessible inputs from empirical contradiction.
 
 - `reproduced`: 0
 - `approximately_reproduced`: 0
-- `partially_recovered`: 4
+- `partially_recovered`: 5
 - `not_reproducible_missing_input`: 0
 - `contradicted`: 0
-- `not_attempted`: 19
+- `not_attempted`: 18
 
 ## Exact And Reconstructed Datasets
 
@@ -131,7 +131,7 @@ No successful baseline replication conclusion is available yet.
 | `TBL_002` | `article_pdf:p.937:Table 2` | `not_attempted` | High-minus-low spread descriptive statistics | `not_generated` | Outside the current audit pass. The cell-level audit does not compare this table, which is a scope decision rather than an established missing input. |
 | `TBL_003` | `article_pdf:p.938:Table 3` | `partially_recovered` | CAPM risk premia and model-fit results | `artifacts/audit/published_target_audit.csv` | 14 of 40 published cells fall inside the published rounding under documented reconstruction. No exact-replication label is available at any recovery rate, because the article names providers and people rather than files. |
 | `TBL_004` | `article_pdf:p.939-p.942:Table 4` | `partially_recovered` | Two-factor ICAPM risk premia using federal funds innovations | `artifacts/audit/published_target_audit.csv` | 14 of 56 published cells fall inside the published rounding under documented reconstruction. No exact-replication label is available at any recovery rate, because the article names providers and people rather than files. |
-| `TBL_005` | `article_pdf:p.944-p.948:Table 5` | `not_attempted` | Factor risk-premium decomposition for first and last anomaly deciles | `not_generated` | Outside the current audit pass. The cell-level audit does not compare this table, which is a scope decision rather than an established missing input. |
+| `TBL_005` | `article_pdf:p.944-p.948:Table 5` | `partially_recovered` | Factor risk-premium decomposition for first and last anomaly deciles | `artifacts/audit/published_target_audit.csv` | 21 of 84 published cells fall inside the published rounding under documented reconstruction. No exact-replication label is available at any recovery rate, because the article names providers and people rather than files. |
 | `TBL_006` | `article_pdf:p.949:Table 6` | `partially_recovered` | Alternative multifactor model risk premia and fit | `artifacts/audit/published_target_audit.csv` | 10 of 60 published cells fall inside the published rounding under documented reconstruction. No exact-replication label is available at any recovery rate, because the article names providers and people rather than files. |
 | `TBL_007` | `article_pdf:p.950-p.951:Table 7` | `not_attempted` | Two-factor ICAPM risk premia using equal-weighted portfolios | `not_generated` | Outside the current audit pass. The cell-level audit does not compare this table, which is a scope decision rather than an established missing input. |
 | `TBL_008` | `article_pdf:p.954:Table 8` | `not_attempted` | Long-horizon predictive regressions for excess market return and output growth | `not_generated` | Outside the current audit pass. The cell-level audit does not compare this table, which is a scope decision rather than an established missing input. |

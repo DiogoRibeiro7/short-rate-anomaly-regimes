@@ -39,7 +39,7 @@ These describe three different properties, and only the first two are supported.
 ## Blocked Results
 
 - Reproduction from this archive alone. The generated data panels and estimate stores are not distributed; regenerate them with `make reproduce`.
-- Table 5, Tables 7 to 9, and the appendix tables beyond A.1 are outside the current audit pass and are recorded as `not_attempted`. The four tables that are audited are recorded as `partially_recovered`, with per-table cell counts in `artifacts/audit/table_replication.csv` and the cell-level comparison in `artifacts/audit/published_target_audit.csv`.
+- Tables 7 to 9 and the appendix tables beyond A.1 are outside the current audit pass and are recorded as `not_attempted`. The four tables that are audited are recorded as `partially_recovered`, with per-table cell counts in `artifacts/audit/table_replication.csv` and the cell-level comparison in `artifacts/audit/published_target_audit.csv`.
 - Equal-weighted results and security-level reconstruction remain blocked by inputs this repository cannot obtain.
 - The high-frequency shock decomposition and the out-of-sample falsification are not run; their generated reports record `blocked_missing_input` with the inputs named.
 

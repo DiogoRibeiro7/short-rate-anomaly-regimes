@@ -26,6 +26,10 @@ BOOTSTRAP_CSV = Path("artifacts/tables/cross_section/useless_factor_bootstrap_p_
 #: Carries the replication count, which sets how precisely a bootstrap
 #: p-value can be compared with a published one at all.
 BOOTSTRAP_DIAGNOSTICS_JSON = Path("artifacts/diagnostics/useless_factor_bootstrap.json")
+#: The article's Table 5 decomposition, one row per anomaly family. Optional in
+#: the same way the bootstrap table is: without it those cells record no
+#: generated counterpart rather than being compared against something else.
+DECOMPOSITION_CSV = Path("artifacts/tables/cross_section/risk_premium_decomposition.csv")
 
 AUDIT_CSV = Path("artifacts/audit/published_target_audit.csv")
 LAYER_CSV = Path("artifacts/audit/replication_layer_classification.csv")
@@ -47,6 +51,19 @@ STATISTIC_COLUMN = {
     "r2_constrained": "article_constrained_fit",
     "lambda_market": "lambda_RM",
 }
+
+#: Table 5 reports four quantities for the low decile, the high decile, and their
+#: difference. The generated decomposition names its columns identically, so a
+#: Table 5 statistic resolves to the column of the same name.
+DECOMPOSITION_STEMS = (
+    "mean_excess_return",
+    "risk_premium_market",
+    "risk_premium_rate",
+    "pricing_error",
+)
+DECOMPOSITION_STATISTICS = frozenset(
+    f"{stem}_{row}" for stem in DECOMPOSITION_STEMS for row in ("d1", "d10", "dif")
+)
 
 #: Published factor label to the generated factor column suffix.
 FACTOR_COLUMN = {
@@ -95,6 +112,8 @@ def _sha256(path: Path) -> str:
 def _generated_column(row: Mapping[Hashable, Any], model: str) -> str | None:
     """Resolve the generated column holding the published statistic on this row."""
     statistic = str(row["statistic"])
+    if statistic in DECOMPOSITION_STATISTICS:
+        return statistic
     if statistic == "lambda_rate":
         if model == "market_plus_fedfunds_innovation":
             return "lambda_FFR_innovation"
@@ -211,6 +230,12 @@ def main() -> None:
     published = pd.read_csv(PUBLISHED_CSV, dtype={"uncertainty_value": str})
     generated = pd.read_csv(GENERATED_CSV)
     lookup = generated.set_index(["model", "portfolio_set"])
+    if DECOMPOSITION_CSV.is_file():
+        # The decomposition is keyed the same way, so joining it makes every
+        # Table 5 column reachable through the existing per-row lookup.
+        decomposition = pd.read_csv(DECOMPOSITION_CSV).set_index(["model", "portfolio_set"])
+        shared = [c for c in decomposition.columns if c in lookup.columns]
+        lookup = lookup.join(decomposition.drop(columns=shared), how="outer")
     bootstrap = _load_bootstrap_p_values()
     bootstrap_replications = _load_bootstrap_replications()
 
@@ -333,6 +358,11 @@ def main() -> None:
                     **(
                         {BOOTSTRAP_CSV.as_posix(): _sha256(BOOTSTRAP_CSV)}
                         if BOOTSTRAP_CSV.is_file()
+                        else {}
+                    ),
+                    **(
+                        {DECOMPOSITION_CSV.as_posix(): _sha256(DECOMPOSITION_CSV)}
+                        if DECOMPOSITION_CSV.is_file()
                         else {}
                     ),
                     # The replication count lives here, and it decides which

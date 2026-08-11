@@ -679,8 +679,8 @@ errors, which is why the comparison above rests on RMSE rather than on $\chi^2$.
 \subsection{What the cell-level audit recovers}
 
 Comparing the reconstruction against the published cells gives a recovery rate
-that varies sharply and informatively by statistic. Of 123 unique published cells, % artifact: artifacts/audit/published_target_audit.csv
-all 123 were compared. % artifact: artifacts/audit/published_target_audit.csv
+that varies sharply and informatively by statistic. Of 296 unique published cells, % artifact: artifacts/audit/published_target_audit.csv
+all 296 were compared, and 75 fall inside the published rounding. % artifact: artifacts/audit/published_target_audit.csv
 Market risk prices recover well, with 20 of 29 cells inside the published % artifact: artifacts/audit/published_target_audit.csv
 rounding and all 29 agreeing in sign. Rate risk prices recover in sign and % artifact: artifacts/audit/published_target_audit.csv
 magnitude but less often at printed precision, with all 16 cells negative as % artifact: artifacts/audit/published_target_audit.csv
@@ -692,6 +692,18 @@ That ordering is what the estimator predicts. The specification statistic invert
 a seventy-by-seventy pricing-error covariance through a pseudo-inverse, which
 amplifies small differences in the residual covariance, so a portfolio difference
 that moves a risk price by 0.003 can move the statistic by a whole unit. % artifact: artifacts/audit/published_target_audit.csv
+
+The article's Table 5 decomposition is audited on the same terms. It reports, % artifact: artifacts/audit/published_target_audit.csv
+for the extreme decile of each anomaly, the average excess return, the premium
+attributable to each factor as the loading times that factor's estimated price of
+risk, and the pricing error left over. Reconstructing it needs no new estimation:
+the loadings, the risk prices and the pricing errors are already stored, and the
+decomposition is arithmetic on them. Of its 84 published cells, 21 fall inside % artifact: artifacts/audit/published_target_audit.csv
+the published rounding and all 84 agree with the article in sign. That is the % artifact: artifacts/audit/published_target_audit.csv
+highest sign agreement of any table audited here, and it is the level at which
+the article's own argument is conducted: the economic reading it draws from that
+table, that the rate factor rather than the market factor accounts for the decile
+spreads, reconstructs on every one of the seven families.
 
 The common source is the portfolio vintage. The anomaly decile panels come from
 the original author's source but in a later rebuild, and none of the seven

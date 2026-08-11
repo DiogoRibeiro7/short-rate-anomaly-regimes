@@ -117,6 +117,7 @@ reproduce-panels:
 reproduce-estimates:
 	poetry run python scripts/run_baseline_replication.py
 	poetry run python scripts/run_useless_factor_bootstrap.py
+	poetry run python scripts/run_risk_premium_decomposition.py
 	poetry run python scripts/audit_published_targets.py
 	poetry run python scripts/run_h1_materiality.py
 	poetry run python scripts/run_weak_factor_diagnostics.py
