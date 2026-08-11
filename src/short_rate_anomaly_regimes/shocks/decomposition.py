@@ -341,6 +341,51 @@ def write_shock_outputs(
     )
 
 
+def write_unfrozen_targets_shock_report(
+    *,
+    output_path: Path,
+    selected_dataset: str,
+    present_inputs: tuple[Path, ...],
+) -> None:
+    """Write a report for the state where the event data exist but targets do not.
+
+    The gate has two distinct blocked states and they must not share a report.
+    Until the event file arrives the blocker is the data. Once it arrives the
+    blocker is that no source-study reproduction target has been frozen, so the
+    decomposition still cannot be run and the AR residual still must not be
+    relabelled a policy shock.
+
+    Without this writer the second state left the first state's report on disk,
+    which would have told a reader the event data were missing while they sat in
+    the tree. That is the failure that let the table-level audit ship a stale
+    verdict, and it is prevented here rather than discovered later.
+    """
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        "\n".join(
+            [
+                "# Shock Decomposition Report",
+                "",
+                "Verdict: `blocked_targets_not_frozen`",
+                "",
+                f"Selected dataset: `{selected_dataset}`",
+                "",
+                "The selected event-level inputs are present:",
+                *[f"- `{path.as_posix()}`" for path in present_inputs],
+                "",
+                "What blocks the gate is no longer the data. No source-study reproduction "
+                "target has been frozen for this dataset, so there is nothing to audit the "
+                "decomposition against, and freezing one after inspecting the data would "
+                "defeat the purpose. The AR residual must remain labelled a rate "
+                "innovation, not a policy shock, until that target exists.",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+
+
 def write_blocked_shock_report(
     *,
     output_path: Path,

@@ -4,6 +4,7 @@ from typing import Any
 
 import pandas as pd
 import pytest
+import yaml
 from typer.testing import CliRunner
 
 from short_rate_anomaly_regimes.cli import app
@@ -517,12 +518,24 @@ def test_run_regimes_reports_registered_h3_outcomes(tmp_path: Path) -> None:
     assert "documented_reconstruction" in report
 
 
-def test_shock_decomposition_writes_blocked_report(tmp_path: Path) -> None:
+def test_shock_decomposition_writes_blocked_report(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Exercise the blocked branch by making its inputs genuinely absent.
+
+    Run from the repository root this passes only while the event data are
+    absent, which is the third time that pattern has appeared here. Working from
+    an empty tree makes the condition real instead of incidental.
+    """
+    monkeypatch.chdir(tmp_path)
+    config = tmp_path / "extensions.yaml"
+    config.write_bytes(Path(_REPO_ROOT / "configs/extensions.yaml").read_bytes())
     report_path = tmp_path / "shock_decomposition_report.md"
 
     result = CliRunner().invoke(
         app,
-        ["shock-decomposition", "--output", str(report_path)],
+        ["shock-decomposition", "--config", str(config), "--output", str(report_path)],
     )
 
     assert result.exit_code == 1
@@ -750,3 +763,93 @@ def test_out_of_sample_reports_the_generated_run_once_it_exists() -> None:
 
     assert result.exit_code == 0, result.output
     assert "generated from the frozen design" in result.output
+
+
+def test_shock_decomposition_reports_targets_not_frozen_when_the_data_arrive(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The second blocked state must write its own report, not inherit the first.
+
+    Raising without writing would leave the missing-input report on disk saying
+    the event data are absent while they sit in the tree. That is precisely how
+    the table-level audit came to ship a verdict that had stopped being true, so
+    the gate is closed here before the data ever arrive rather than after.
+    """
+    monkeypatch.chdir(tmp_path)
+    config_path = tmp_path / "extensions.yaml"
+    config_text = Path(_REPO_ROOT / "configs/extensions.yaml").read_text(encoding="utf-8")
+    config_path.write_text(config_text, encoding="utf-8")
+
+    selection = tmp_path / "research" / "shock_dataset_selection.csv"
+    selection.parent.mkdir(parents=True)
+    selection.write_text("dataset_id\nplaceholder\n", encoding="utf-8")
+    raw_event = tmp_path / _shock_raw_event_path(config_text)
+    raw_event.parent.mkdir(parents=True, exist_ok=True)
+    raw_event.write_text("date,surprise\n2020-01-01,0.0\n", encoding="utf-8")
+
+    report_path = tmp_path / "shock_decomposition_report.md"
+    result = CliRunner().invoke(
+        app,
+        ["shock-decomposition", "--config", str(config_path), "--output", str(report_path)],
+    )
+
+    assert result.exit_code == 1
+    assert report_path.is_file()
+    report = report_path.read_text(encoding="utf-8")
+    assert "Verdict: `blocked_targets_not_frozen`" in report
+    # The report must not claim the data are missing when they are present.
+    assert "blocked_missing_input" not in report
+    assert "no longer the data" in report
+    assert "must remain labelled a rate" in report
+
+
+def _shock_raw_event_path(config_text: str) -> str:
+    """Read the configured event path out of the frozen extension config."""
+    config = yaml.safe_load(config_text)
+    return str(config["shock_decomposition"]["raw_event_path"])
+
+
+def test_no_report_command_blocks_without_rewriting_its_report() -> None:
+    """A command that owns a report must never raise while leaving it stale.
+
+    This pattern has cost three separate defects. `audit-replication` and
+    `out-of-sample` each raised a message that had stopped being true and wrote
+    nothing, so their committed artifacts froze at a state that no longer held,
+    and a stale artifact was indistinguishable from a correctly blocked one.
+    `shock-decomposition` had the same shape and escaped only because its
+    precondition has never been met.
+
+    The invariant applies to commands that own a generated report, because the
+    artifact left on disk is what a reader believes. Commands that write no
+    report, such as the pipeline stage guards, may refuse freely: there is
+    nothing on disk to go stale. Guarding the shape rather than the three known
+    cases is what stops a fourth.
+    """
+    source = Path(_REPO_ROOT / "src/short_rate_anomaly_regimes/cli.py").read_text(encoding="utf-8")
+    bodies = source.split("@app.command(")[1:]
+
+    offenders: list[str] = []
+    for body in bodies:
+        name = body.split('"', 2)[1] if '"' in body else "<unknown>"
+        owns_report = 'Path("reports/generated/' in body
+        if not owns_report or "ReplicationBlockError" not in body:
+            continue
+        # Count the writes and the terminal raises. Every raise on a path that
+        # owns a report must be preceded by a write on that same path.
+        raises = body.count("raise ReplicationBlockError")
+        writes = sum(body.count(marker) for marker in ("write_blocked", "write_unfrozen"))
+        writes += body.count("write_audit(")
+        # A raise guarded by the report being absent is exempt: the defect is a
+        # report that contradicts reality, and a report that does not exist
+        # cannot. `out-of-sample` uses this to refuse an inconsistent state, in
+        # which the evaluation tables exist but the report the driver writes
+        # beside them does not, rather than papering over it with a placeholder.
+        raises -= body.count("if not output.is_file():")
+        if writes < raises:
+            offenders.append(f"{name} ({raises} raises, {writes} report writes)")
+
+    assert not offenders, (
+        "these commands own a generated report and can raise without rewriting it, so a "
+        f"stale verdict would survive the failure: {offenders}"
+    )
