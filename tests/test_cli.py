@@ -8,6 +8,8 @@ from typer.testing import CliRunner
 
 from short_rate_anomaly_regimes.cli import app
 
+_REPO_ROOT = Path.cwd()
+
 
 def test_validate_config_command_succeeds() -> None:
     runner = CliRunner()
@@ -531,12 +533,25 @@ def test_shock_decomposition_writes_blocked_report(tmp_path: Path) -> None:
     assert "AR residual must remain labelled a rate innovation" in report
 
 
-def test_out_of_sample_writes_blocked_report(tmp_path: Path) -> None:
+def test_out_of_sample_writes_blocked_report(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Exercise the blocked branch by making its inputs genuinely absent.
+
+    Run from the repository root this passed only while the falsification had
+    never been executed, so it stopped exercising the blocked path the moment
+    the artifacts existed. Working from an empty tree makes the condition real,
+    which is the same correction the audit-replication test already carries.
+    """
+    monkeypatch.chdir(tmp_path)
+    config = tmp_path / "extensions.yaml"
+    config.write_bytes(Path(_REPO_ROOT / "configs/extensions.yaml").read_bytes())
     report_path = tmp_path / "out_of_sample_report.md"
 
     result = CliRunner().invoke(
         app,
-        ["out-of-sample", "--output", str(report_path)],
+        ["out-of-sample", "--config", str(config), "--output", str(report_path)],
     )
 
     assert result.exit_code == 1
@@ -721,3 +736,17 @@ def test_the_committed_table_audit_agrees_with_the_cell_audit() -> None:
             assert row.status == "partially_recovered", table
         else:
             assert row.status == "not_attempted", table
+
+
+def test_out_of_sample_reports_the_generated_run_once_it_exists() -> None:
+    """The unblocked branch used to raise and write nothing.
+
+    It claimed "panel-specific forecast assembly is not frozen", which stopped
+    being true once scripts/run_out_of_sample.py ran the frozen design. The gate
+    now verifies that the tables and the report were written together rather
+    than rewriting one from the other.
+    """
+    result = CliRunner().invoke(app, ["out-of-sample"])
+
+    assert result.exit_code == 0, result.output
+    assert "generated from the frozen design" in result.output

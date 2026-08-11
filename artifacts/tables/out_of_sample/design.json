@@ -1,0 +1,11 @@
+{
+  "benchmarks": [
+    "historical_mean",
+    "zero_excess_return"
+  ],
+  "confirmatory_model": "two_factor_market_rate",
+  "evaluation_end": "2025-12",
+  "factor_definition": "mkt,rate",
+  "initial_train_end": "1999-12",
+  "refit_frequency_months": 12
+}

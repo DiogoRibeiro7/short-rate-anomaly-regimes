@@ -73,6 +73,7 @@ REQUIRED_EMPIRICAL_REBUILD_INPUTS: tuple[str, ...] = (
     "scripts/run_baseline_replication.py",
     "scripts/run_useless_factor_bootstrap.py",
     "scripts/run_temporal_extension.py",
+    "scripts/run_out_of_sample.py",
     "scripts/run_regime_equivalence.py",
     "scripts/run_regime_interactions.py",
     "scripts/analyse_regime_power.py",
