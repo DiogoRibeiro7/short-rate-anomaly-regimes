@@ -1,0 +1,16 @@
+{
+  "definition": "the premium attributable to factor k is beta_i,k times lambda_k, the first-pass loading times the second-pass price of that factor's risk",
+  "difference_convention": "d1 minus d10, the article's low-minus-high spread",
+  "inputs": {
+    "artifacts/estimates/cross_section/baseline_pricing_errors.parquet": "c0587e7baf221c302f93bf4296f29df68550c09a6a8a1ab133725459bf0f88e3",
+    "artifacts/estimates/time_series/baseline_first_pass_betas.parquet": "ef1ee06ceba52d49d95d27f6c34d3ab177dce1ba7a06abe0a4092ef80a36f4b7",
+    "artifacts/tables/cross_section/baseline_risk_prices.csv": "2751383f466740daa9a67b4c796cdb356d139a7ce1339b4c6bf8b6fe329d995c"
+  },
+  "model": "market_plus_fedfunds_innovation",
+  "outputs": {
+    "artifacts/tables/cross_section/risk_premium_decomposition.csv": "a0b61f561c833f3e314c8b4b5446e6d72af8bcd57bb6d27e1aa0032ed3170a70"
+  },
+  "reestimated": false,
+  "replication_status": "documented_reconstruction",
+  "script": "scripts/run_risk_premium_decomposition.py"
+}

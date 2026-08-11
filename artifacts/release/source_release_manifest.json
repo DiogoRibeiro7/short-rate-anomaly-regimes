@@ -1,6 +1,6 @@
 {
   "archive_path": "artifacts/release/source_release.zip",
-  "archive_sha256": "21462a1c992218ce3e6bd46f12616003ecef38250aaf219d51980c04bca13f0b",
+  "archive_sha256": "1e88a02388244b06905881d5cce1b1328fd03c4a2e6c59b0edb389f3b8da406f",
   "excluded": [
     "prompts/",
     "references/private/",
@@ -9,7 +9,7 @@
     "artifacts/environment/manifest.json",
     "data/catalog.duckdb"
   ],
-  "file_count": 363,
+  "file_count": 367,
   "members": [
     ".editorconfig",
     ".env.example",
@@ -120,6 +120,7 @@
     "artifacts/provenance/regime_panel.json",
     "artifacts/provenance/regime_power_analysis.json",
     "artifacts/provenance/regime_short_sample_sensitivity.json",
+    "artifacts/provenance/risk_premium_decomposition.json",
     "artifacts/provenance/short_rate/DFF_2026-08-01.json",
     "artifacts/provenance/short_rate/DTB3_2026-08-01.json",
     "artifacts/provenance/short_rate/FEDFUNDS_2026-08-01.json",
@@ -132,6 +133,7 @@
     "artifacts/tables/.gitkeep",
     "artifacts/tables/cross_section/.gitkeep",
     "artifacts/tables/cross_section/baseline_risk_prices.csv",
+    "artifacts/tables/cross_section/risk_premium_decomposition.csv",
     "artifacts/tables/cross_section/useless_factor_bootstrap_p_values.csv",
     "artifacts/tables/extension/.gitkeep",
     "artifacts/tables/extension/fitted_premium_spreads.csv",
@@ -283,6 +285,7 @@
     "scripts/run_out_of_sample.py",
     "scripts/run_regime_equivalence.py",
     "scripts/run_regime_interactions.py",
+    "scripts/run_risk_premium_decomposition.py",
     "scripts/run_temporal_extension.py",
     "scripts/run_useless_factor_bootstrap.py",
     "scripts/run_weak_factor_diagnostics.py",
@@ -366,6 +369,7 @@
     "tests/test_regimes.py",
     "tests/test_release.py",
     "tests/test_reporting.py",
+    "tests/test_risk_premium_decomposition.py",
     "tests/test_shocks.py",
     "tests/test_temporal_extension.py",
     "tests/test_time_series.py",

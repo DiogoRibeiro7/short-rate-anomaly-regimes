@@ -72,6 +72,7 @@ REQUIRED_EMPIRICAL_REBUILD_INPUTS: tuple[str, ...] = (
     "scripts/build_regime_panel.py",
     "scripts/run_baseline_replication.py",
     "scripts/run_useless_factor_bootstrap.py",
+    "scripts/run_risk_premium_decomposition.py",
     "scripts/run_temporal_extension.py",
     "scripts/run_out_of_sample.py",
     "scripts/run_regime_equivalence.py",
@@ -591,7 +592,7 @@ def render_release_notes(issues: list[ReleaseIssue]) -> str:
         "",
         "- Reproduction from this archive alone. The generated data panels and estimate stores "
         f"are not distributed; regenerate them with `{REBUILD_ENTRY_POINT}`.",
-        "- Table 5, Tables 7 to 9, and the appendix tables beyond A.1 are outside the "
+        "- Tables 7 to 9 and the appendix tables beyond A.1 are outside the "
         "current audit pass and are recorded as `not_attempted`. The four tables that "
         "are audited are recorded as `partially_recovered`, with per-table cell counts "
         "in `artifacts/audit/table_replication.csv` and the cell-level comparison in "
