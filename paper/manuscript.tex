@@ -689,8 +689,8 @@ errors, which is why the comparison above rests on RMSE rather than on $\chi^2$.
 \subsection{What the cell-level audit recovers}
 
 Comparing the reconstruction against the published cells gives a recovery rate
-that varies sharply and informatively by statistic. Of 296 unique published cells, % artifact: artifacts/audit/published_target_audit.csv
-all 296 were compared, and 75 fall inside the published rounding. % artifact: artifacts/audit/published_target_audit.csv
+that varies sharply and informatively by statistic. Of 207 unique published cells, % artifact: artifacts/audit/published_target_audit.csv
+all 207 were compared, and 50 fall inside the published rounding. % artifact: artifacts/audit/published_target_audit.csv
 Market risk prices recover well, with 20 of 29 cells inside the published % artifact: artifacts/audit/published_target_audit.csv
 rounding and all 29 agreeing in sign. Rate risk prices recover in sign and % artifact: artifacts/audit/published_target_audit.csv
 magnitude but less often at printed precision, with all 16 cells negative as % artifact: artifacts/audit/published_target_audit.csv
@@ -1421,25 +1421,29 @@ The table-level audit maps the article and supplement targets to replication
 statuses. It covers the article tables and the supplement appendix tables through
 Table A.14. % artifact: research/table_target_manifest.csv
 Cell-level comparison was run against the statistics transcribed from Tables 3, % artifact: artifacts/audit/published_target_audit.csv
-4, 6 and A.1, which after collapsing rows that repeat a point estimate under two % artifact: artifacts/audit/published_target_audit.csv
-printed uncertainty measures give 123 unique published cells. All 123 were % artifact: artifacts/audit/published_target_audit.csv
+4, 5, 6 and A.1, which after collapsing rows that repeat a point estimate under % artifact: artifacts/audit/published_target_audit.csv
+two printed uncertainty measures give 207 unique published cells. All 207 were % artifact: artifacts/audit/published_target_audit.csv
 compared. % artifact: artifacts/audit/published_target_audit.csv
 
 \input{tables/recovery}
 
 \input{tables/layers}
 
-R1b carries no statistic-level target. The article plots first-pass betas and
-reports beta-times-lambda decompositions for the extreme deciles, but tabulates
-no beta, so there is nothing to compare cell by cell and the layer is evidenced
-only through the layers that consume it. This is a property of what the article
-published, not a gap in the reconstruction.
+R1b is evidenced indirectly. The article tabulates no beta, so no cell compares
+a loading directly, but Table 5 tabulates beta times lambda for the extreme % artifact: artifacts/audit/published_target_audit.csv
+deciles. With the risk prices audited separately under R1c, a recovered premium
+is evidence about the loading behind it, and those 42 cells are classified here % artifact: artifacts/audit/published_target_audit.csv
+rather than left outside every layer. The average-return column of the same
+table is a property of the test assets rather than of an estimated layer, so it
+is compared cell by cell and belongs to no layer.
 
-Three groups of targets were not attempted and are recorded as such rather than
-being compared against a different object. Every bootstrap $p$-value in the
-published tables comes from the article's own useless-factor bootstrap, which is
-not implemented here. Table 5, Tables 7 to 9 and Appendix Tables A.2 to A.14 lie % artifact: artifacts/audit/replication_layer_classification.csv
-outside this pass. Equal-weighted results are blocked at the current sources. % artifact: artifacts/audit/replication_layer_classification.csv
+One group of targets remains outside this pass. Tables 7 to 9 and Appendix % artifact: artifacts/audit/replication_layer_classification.csv
+Tables A.2 to A.14 report objects this reconstruction does not generate, % artifact: artifacts/audit/replication_layer_classification.csv
+including the GMM system, the Hansen-Jagannathan distance and the
+Kan-Robotti-Shanken metrics, so reaching them needs those estimators rather than
+further transcription. Equal-weighted results are blocked at the current
+sources. The two groups that were previously listed here are no longer: the
+article's useless-factor bootstrap is implemented, and Table 5 is audited. % artifact: artifacts/audit/replication_layer_classification.csv
 
 \begin{table}[htbp]
 \centering

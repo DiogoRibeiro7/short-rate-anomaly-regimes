@@ -10,7 +10,7 @@
   },
   "outputs": {
     "artifacts/audit/published_target_audit.csv": "a9a7f4a78b8b072ee3dd4720c21927e4d0f1bb657c5a2a45d5b81dd9ea793dc6",
-    "artifacts/audit/replication_layer_classification.csv": "922ae48fb8c5c3bb2f193fa1a0adb6e7d3f15706bd673597f5b67593e633b57b"
+    "artifacts/audit/replication_layer_classification.csv": "8228deb7d840477c9b8e37d657e7d94d1d9fbd564fb814446ee5924f83d3faa0"
   },
   "replication_mode": "documented_reconstruction",
   "script": "scripts/audit_published_targets.py",

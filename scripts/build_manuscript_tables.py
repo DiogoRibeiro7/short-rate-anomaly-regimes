@@ -59,6 +59,18 @@ RECOVERY_STATISTICS: tuple[tuple[str, str], ...] = (
     ("r2_constrained", "Constrained fit"),
 )
 
+#: Table 5 reports each quantity three times, for the low decile, the high
+#: decile, and their difference. The recovery table groups the three rather than
+#: printing twelve near-identical lines, because the article's own reading of
+#: that table is per quantity rather than per decile row. Grouping keeps the
+#: table's cell counts summing to the total the text states.
+DECOMPOSITION_GROUPS: tuple[tuple[str, str], ...] = (
+    ("risk_premium_market", "Decile premium, market factor"),
+    ("risk_premium_rate", "Decile premium, rate factor"),
+    ("pricing_error", "Decile pricing error"),
+    ("mean_excess_return", "Decile average return"),
+)
+
 TEMPORAL_ROWS: tuple[tuple[str, str], ...] = (
     ("locked_baseline_1972_2013", "Locked baseline, 1972--2013"),
     ("revised_history_1972_2013", "Revised history, same months"),
@@ -399,6 +411,18 @@ def build_recovery_table() -> Path:
     rows: list[str] = []
     for statistic, label in RECOVERY_STATISTICS:
         subset = unique[unique["statistic"] == statistic]
+        if subset.empty:
+            continue
+        recovered = int(subset["within_published_rounding"].sum())
+        difference = subset["difference"].abs()
+        rows.append(
+            f"{label} & {len(subset)} & {recovered} & "
+            f"{recovered / len(subset):.3f} & {difference.median():.4f} & "
+            f"{difference.max():.4f} \\\\ {tag}"
+        )
+
+    for stem, label in DECOMPOSITION_GROUPS:
+        subset = unique[unique["statistic"].str.fullmatch(rf"{stem}_(d1|d10|dif)")]
         if subset.empty:
             continue
         recovered = int(subset["within_published_rounding"].sum())

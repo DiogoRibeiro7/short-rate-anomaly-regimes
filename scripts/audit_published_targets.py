@@ -401,10 +401,30 @@ def main() -> None:
 
 def _classify_layers(audit: pd.DataFrame) -> pd.DataFrame:
     """Assign a classification to each replication layer from its cell outcomes."""
+    # Table 5's decomposition is the article's only statistic-level evidence that
+    # bears on the first-pass betas. It tabulates no beta, but it tabulates
+    # beta times lambda, and with the risk prices audited separately in R1c a
+    # recovered premium is evidence about the loading behind it. Its pricing
+    # errors join the pricing-error layer. Its average-return column is a
+    # property of the test assets rather than of any estimated layer, so it is
+    # audited cell by cell and belongs to no layer.
     layer_statistics = {
-        "R1b": (),  # betas are not tabulated by the article
+        "R1b": (
+            "risk_premium_market_d1",
+            "risk_premium_market_d10",
+            "risk_premium_market_dif",
+            "risk_premium_rate_d1",
+            "risk_premium_rate_d10",
+            "risk_premium_rate_dif",
+        ),
         "R1c": ("lambda_market", "lambda_rate"),
-        "R1d": ("chi_square", "r2_ols"),
+        "R1d": (
+            "chi_square",
+            "r2_ols",
+            "pricing_error_d1",
+            "pricing_error_d10",
+            "pricing_error_dif",
+        ),
         "R1e": (
             "lambda_smb",
             "lambda_hml",
@@ -429,12 +449,7 @@ def _classify_layers(audit: pd.DataFrame) -> pd.DataFrame:
                     "cells_recovered": 0,
                     "share_recovered": float("nan"),
                     "classification": "no_published_statistic_level_target",
-                    "note": (
-                        "The article plots first-pass betas in Figure 3 and reports "
-                        "beta-times-lambda decompositions in Table 5, but tabulates no "
-                        "beta. There is no statistic-level cell to audit, so this layer "
-                        "is evidenced only through the layers that consume it."
-                    ),
+                    "note": ("No published statistic-level target for this layer."),
                 }
             )
             continue
