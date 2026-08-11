@@ -66,7 +66,10 @@ from short_rate_anomaly_regimes.reporting.release import (
     write_source_archive,
     write_source_archive_manifest,
 )
-from short_rate_anomaly_regimes.shocks.decomposition import write_blocked_shock_report
+from short_rate_anomaly_regimes.shocks.decomposition import (
+    write_blocked_shock_report,
+    write_unfrozen_targets_shock_report,
+)
 
 app = typer.Typer(no_args_is_help=True)
 console = Console()
@@ -568,8 +571,18 @@ def shock_decomposition(
             "Wrote blocked shock decomposition report; event-level high-frequency "
             f"shock inputs are missing: {', '.join(str(path) for path in missing_paths)}"
         )
+    # Two distinct blocked states, and they must not share a report. Raising here
+    # without writing would leave the missing-input report on disk claiming the
+    # event data are absent while they sit in the tree, which is the failure that
+    # let the table-level audit ship a stale verdict for months.
+    write_unfrozen_targets_shock_report(
+        output_path=output,
+        selected_dataset=shock_config.selected_dataset_id,
+        present_inputs=tuple(required_paths),
+    )
     raise ReplicationBlockError(
-        "Selected shock event data exist, but source-study reproduction targets are not frozen"
+        "Wrote targets-not-frozen shock decomposition report; the selected event data "
+        "exist, but no source-study reproduction target is frozen for them"
     )
 
 

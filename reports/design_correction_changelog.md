@@ -475,3 +475,39 @@ Date: 2026-08-11. Applied after estimation. No estimate changes.
 - What it now forbids: a generated artifact whose only writing path is its
   blocked branch, and a table-level label that rounds a mixed cell-level result
   to a clean verdict in either direction.
+
+## 15. A blocked command that writes nothing leaves a lie on disk
+
+Date: 2026-08-11. Applied after estimation. No estimate changes.
+
+- The pattern: a CLI gate refuses to proceed and raises, without rewriting the
+  report it owns. The report left behind then describes a state that no longer
+  holds, and because the command exits non-zero either way, a stale artifact and
+  a correctly blocked one are indistinguishable from outside.
+- Where it has already cost something. `audit-replication` raised that published
+  targets were "not linked to generated cells yet" long after they were linked,
+  and shipped a table-level record labelling every table
+  `not_reproducible_missing_input`, including four whose cells were being
+  compared. `out-of-sample` raised that "panel-specific forecast assembly is not
+  frozen" when the design had been frozen in the configuration all along, so the
+  falsification was reported blocked against inputs the repository could always
+  produce. Both are corrections 14 and the out-of-sample work respectively.
+- The third instance, found before it cost anything. `shock-decomposition` has
+  the same shape: once the event data arrive it raises that no reproduction
+  target is frozen and writes nothing, which would leave the missing-input
+  report on disk claiming the data are absent while they sit in the tree. It has
+  a second report writer now, `write_unfrozen_targets_shock_report`, with its own
+  verdict `blocked_targets_not_frozen` that states what is present and what is
+  still missing.
+- What it now forbids, structurally rather than case by case. A test walks every
+  command in the CLI, and any command that owns a report under
+  `reports/generated/` must write that report on every path that raises. Commands
+  that own no report, such as the pipeline stage guards, may refuse freely: there
+  is nothing on disk to go stale. One exemption is allowed and documented, a
+  raise guarded by the report being absent, because a report that does not exist
+  cannot contradict anything. The guard was verified by reintroducing the defect
+  and confirming it fails.
+- Also fixed: `test_shock_decomposition_writes_blocked_report` ran from the
+  repository root, so it exercised the blocked branch only while the event data
+  were absent. That is the third test found with this flaw, after the
+  audit-replication and out-of-sample ones. It now works from an empty tree.
