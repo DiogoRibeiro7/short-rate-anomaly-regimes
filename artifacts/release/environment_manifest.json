@@ -2,7 +2,7 @@
   "config_hashes": {
     "configs/baseline.yaml": "86052796e8b470a595bc846fb3fd5cf1937117c69d24681f35ab659fdb059433",
     "configs/data_sources.yaml": "c6ee2e79bd5f024cdd826643ae61b3cfa8cf7c45d12d2dac390fd69311935226",
-    "configs/extensions.yaml": "fe84c1b4a94412e8add2b63c852528b828968fd7b264a6f27dd9be5cca70d7a8",
+    "configs/extensions.yaml": "66b8d956d761b92ed50747b5528916ff3f6833ad465337be4ece7c900d9797fc",
     "configs/regimes.yaml": "46d60dff8053e8671c2eaab358e868b1ed3ece074e2119469af5cdc964d94b7b",
     "configs/reporting.yaml": "1daa94b7f6a0a7edd83f93b97b64548074e7a216bee506bad57d530e93dd0c64"
   },

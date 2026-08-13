@@ -1,6 +1,6 @@
 {
   "archive_path": "artifacts/release/source_release.zip",
-  "archive_sha256": "914edbe0e43e87ae7d2042ad81e2d7f47b12ec593bc9da988040000d741fdede",
+  "archive_sha256": "d199e0303923f32207bb350bcd512c63558ff28f571fc4190f7093632aefefa4",
   "excluded": [
     "prompts/",
     "references/private/",
@@ -9,7 +9,7 @@
     "artifacts/environment/manifest.json",
     "data/catalog.duckdb"
   ],
-  "file_count": 368,
+  "file_count": 369,
   "members": [
     ".editorconfig",
     ".env.example",
@@ -222,6 +222,7 @@
     "reports/monetary_regime_report.md",
     "reports/regime_eligibility_power_analysis.md",
     "reports/robustness_and_weak_factor_report.md",
+    "reports/shock_decomposition_feasibility.md",
     "reports/short_rate_source_report.md",
     "reports/temporal_extension_report.md",
     "research/annotated_literature_review.md",

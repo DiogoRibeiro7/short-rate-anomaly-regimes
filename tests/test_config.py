@@ -40,7 +40,12 @@ def test_all_project_configs_load() -> None:
 
     assert extension_config.data_freeze.latest_common_month == "2025-12"
     assert extension_config.data_freeze.revision_policy == "audit_separately"
-    assert extension_config.shock_decomposition.enabled is True
+    # Retired 2026-08-11 on the pre-registered factor-strength condition. The
+    # two flags are distinct: a disabled gate might be switched back on, a
+    # retired one carries the reason it was withdrawn.
+    assert extension_config.shock_decomposition.enabled is False
+    assert extension_config.shock_decomposition.retired is True
+    assert extension_config.shock_decomposition.retirement_reason
     assert (
         extension_config.shock_decomposition.selected_dataset_id
         == "jarocinski_karadi_fed_shocks_update_202401"

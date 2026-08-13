@@ -84,3 +84,4 @@ useless_factor_bootstrap,artifacts/diagnostics/useless_factor_bootstrap.json,Art
 out_of_sample_forecast_metrics,artifacts/tables/out_of_sample/forecast_metrics.csv,Out-of-sample loss and skill metrics per model under the frozen design
 out_of_sample_confidence_set,artifacts/tables/out_of_sample/model_confidence_set.csv,Descriptive loss band around the lowest observed out-of-sample loss
 out_of_sample_design,artifacts/tables/out_of_sample/design.json,Frozen out-of-sample training endpoint refit schedule and benchmarks
+shock_decomposition_feasibility,reports/shock_decomposition_feasibility.md,Coverage and component-sparsity evidence retiring the policy-information decomposition

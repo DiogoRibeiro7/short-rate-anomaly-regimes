@@ -341,6 +341,57 @@ def write_shock_outputs(
     )
 
 
+def write_retired_shock_report(
+    *,
+    output_path: Path,
+    selected_dataset: str,
+    reason: str,
+) -> None:
+    """Write the report for a design that has been withdrawn rather than blocked.
+
+    Blocked and retired are different claims and must not share a verdict. A
+    blocked gate is waiting for something; a retired one has been withdrawn and
+    is not waiting. Reporting a withdrawn design as blocked would leave a reader
+    expecting a result that will never arrive.
+    """
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        "\n".join(
+            [
+                "# Shock Decomposition Report",
+                "",
+                "Verdict: `retired_from_design`",
+                "",
+                f"Selected dataset: `{selected_dataset}`",
+                f"Reason: `{reason}`",
+                "",
+                "The policy-information decomposition has been withdrawn from the design. It "
+                "is not blocked and is not awaiting data: the selected source was obtained "
+                "and examined, and it cannot support the question the design was written to "
+                "ask. Coverage begins in 1990, so the source reaches 287 of the 504 baseline "
+                "months and cannot speak to the period that supplies most of the short-rate "
+                "variation being priced. Under the primary identification its "
+                "central-bank-information component is nonzero in 99 of 408 months, and the "
+                "design states in advance that a sparse monthly factor must not enter the "
+                "pricing argument.",
+                "",
+                "Both facts are properties of the source rather than of any estimate, and "
+                "both were read before any pricing regression used these data. Nothing was "
+                "tried and found wanting; the design is withdrawn because the data cannot "
+                "answer it. The AR residual remains labelled a rate innovation, not a policy "
+                "shock, which is the labelling this decomposition would have been needed to "
+                "revise.",
+                "",
+                "See `reports/shock_decomposition_feasibility.md` for the counts and "
+                "`reports/design_correction_changelog.md` correction 16 for the record.",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+
+
 def write_unfrozen_targets_shock_report(
     *,
     output_path: Path,

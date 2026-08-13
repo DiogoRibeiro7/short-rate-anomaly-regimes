@@ -27,6 +27,6 @@ The archive ships the result tables and diagnostics the manuscript cites. It doe
 ### MAJOR: Out-of-sample and shock-decomposition claims remain blocked
 
 - Claim threatened: forecast falsification and the policy-information split of the aggregate innovation.
-- Econometric reason: the frozen training vintages and the event-level high-frequency inputs do not exist in this repository at all, so there is no valid holdout comparison and no decomposed shock series. This is a missing-input blocker, not a redistribution one, and the rebuild path does not resolve it.
+- Econometric reason: the decomposed shock series does not exist, because the only source separating the components begins in 1990 and reaches 287 of the 504 baseline months, so the decomposition was retired rather than run. The out-of-sample comparison no longer belongs in this paragraph: it is run.
 - Decisive diagnostic: rerun the shock and out-of-sample gates once compatible event-level and forecast inputs exist.
 - Repair: acquire the event-level data or retire the design, and preserve null or unstable results in the reports.

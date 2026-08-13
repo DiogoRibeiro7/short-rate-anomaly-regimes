@@ -193,6 +193,11 @@ class ShockDecompositionConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     enabled: bool
+    #: Set when the design is withdrawn rather than merely switched off. A
+    #: disabled gate might be re-enabled; a retired one has a recorded reason
+    #: that must travel with it, so the two states are not the same field.
+    retired: bool = False
+    retirement_reason: str | None = None
     selected_dataset_id: str
     selected_dataset_source: str
     raw_event_path: str

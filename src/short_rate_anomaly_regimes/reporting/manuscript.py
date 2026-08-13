@@ -34,6 +34,12 @@ APPROVED_LANGUAGE_SECTIONS = {
     "Policy and Information Shocks",
     "Policy and information shock decomposition",
     "Optional policy-information decomposition",
+    # The section that retires the decomposition needs the vocabulary for the
+    # same reason the section that proposed it did: it has to say which label
+    # the AR residual keeps, and "not a policy shock" cannot be written without
+    # naming the term. Renaming a section silently revokes its permission, which
+    # is what happened here.
+    "Retired policy-information decomposition",
 }
 REQUIRED_EMPIRICAL_CONTEXT_FIELDS = frozenset(
     {
