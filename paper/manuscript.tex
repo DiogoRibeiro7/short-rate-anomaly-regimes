@@ -103,8 +103,9 @@ distinguishes exact replication from documented reconstruction. Second, it asks
 whether the short-rate factor is stable after the publication sample and across
 monetary regimes. Third, it evaluates whether any short-rate pricing evidence is
 robust to weak-factor diagnostics and comparator-model discipline. The
-high-frequency policy-information decomposition is kept as an appendix design
-until usable event data and monthly component artifacts exist.
+high-frequency policy-information decomposition has been withdrawn from the
+design, because the only source that separates the components begins in 1990 and % artifact: reports/shock_decomposition_feasibility.md
+cannot reach the period supplying most of the variation being priced. % artifact: reports/shock_decomposition_feasibility.md
 
 Four findings follow. On the baseline window the reconstruction recovers the
 published qualitative result: the short-rate innovation earns a negative price of
@@ -1334,9 +1335,11 @@ The fifth limitation is interpretive. A priced covariance with a rate innovation
 would not by itself establish a narrow monetary transmission mechanism. Our
 regime evidence sharpens the point in an unwelcome direction: the exploratory
 break tests locate their breaks at dates that are not policy dates. We therefore
-separate pricing evidence from identification evidence throughout and keep the
-high-frequency policy-information decomposition as an appendix design until
-usable event data exist.
+separate pricing evidence from identification evidence throughout. The
+high-frequency policy-information decomposition, which was carried as an appendix
+design for exactly this purpose, has been withdrawn: the source was obtained and
+cannot answer the question, for the reasons in
+Appendix~\ref{sec:decomposition}.
 
 \section{Conclusion}
 
@@ -1532,17 +1535,31 @@ equal-predictive-ability statistic, and no coverage guarantee, so a model inside
 the band has not been shown to be equivalent to the leader. The selection rule
 travels in the table so the two cannot be conflated. % artifact: artifacts/tables/out_of_sample/model_confidence_set.csv
 
-\section{Optional policy-information decomposition}
+\section{Retired policy-information decomposition}
+\label{sec:decomposition}
 
-The policy-information decomposition is not part of the main contribution until
-legally usable event data, component labels, monthly aggregation artifacts, and
-component-level weak-factor diagnostics are available. If included, the
-components are high-frequency components constructed under an explicit
-announcement-based identification design, not automatically identified objects.
-The monthly aggregation can create sparse factors with many no-event months, so
-the decomposition must pass factor-strength diagnostics before entering the main
-pricing argument. % empirical-paragraph
-% empirical-context: sample=event_level_announcements_aggregated_to_months; model=policy_information_ambiguous_decomposition; estimator=aggregation_spanning_pricing_and_component_strength_checks; test_assets=compatible_anomaly_portfolios; uncertainty=shock_decomposition_and_weak_factor_diagnostics; economic_magnitude=blocked_missing_event_data
+This decomposition was carried as an appendix design on the condition, fixed in
+advance, that the monthly aggregation must pass factor-strength diagnostics
+before entering the pricing argument, because aggregating announcement windows
+to months can leave a factor that is zero in most of them. It is now withdrawn,
+and the condition that withdraws it is that one.
+
+The registered source was obtained and examined rather than assumed unavailable.
+It covers 1990-02 onward, so it reaches 287 of the 504 baseline months and does % artifact: reports/shock_decomposition_feasibility.md
+not see the first eighteen years, which contain the Volcker disinflation and the % artifact: reports/shock_decomposition_feasibility.md
+largest short-rate movements in the sample. A decomposition estimated on what
+remains cannot be a check on the baseline pricing result. Under the primary
+identification its central-bank-information component is nonzero in 99 of 408 % artifact: reports/shock_decomposition_feasibility.md
+months. Set against a rate factor whose betas already carry a reliability ratio % artifact: reports/shock_decomposition_feasibility.md
+of 0.386 over 648 dense months, a component populated in a quarter of them would % artifact: reports/shock_decomposition_feasibility.md
+be identified from far less.
+
+Both facts are properties of the source, not of an estimate, and both were read
+before any pricing regression used these data. The design is therefore not
+reported as tried and failed. It is withdrawn because the data cannot answer the
+question it was written to ask, and the AR residual keeps the label it has
+carried throughout: a rate innovation, not a policy shock. % empirical-paragraph
+% empirical-context: sample=fomc_announcement_windows_aggregated_to_months_1990_2024; model=policy_information_decomposition_withdrawn; estimator=source_coverage_and_component_sparsity_screen; test_assets=not_applicable_no_pricing_estimate_run; uncertainty=not_applicable_design_withdrawn_before_estimation; economic_magnitude=retired_source_covers_287_of_504_baseline_months_and_component_nonzero_in_99_of_408
 
 \section{Additional diagnostics}
 

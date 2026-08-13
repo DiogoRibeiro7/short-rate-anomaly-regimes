@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -518,6 +519,21 @@ def test_run_regimes_reports_registered_h3_outcomes(tmp_path: Path) -> None:
     assert "documented_reconstruction" in report
 
 
+def _unretired_shock_config() -> str:
+    """Return the frozen extension config with the shock gate switched back on.
+
+    The decomposition is retired, so the live config short-circuits before the
+    missing-input and unfrozen-target branches. Those branches still exist and
+    still matter: retirement is a decision about this source, and a future one
+    would meet them again. The tests therefore exercise the configuration as it
+    stood rather than deleting the coverage along with the design.
+    """
+    text = Path(_REPO_ROOT / "configs/extensions.yaml").read_text(encoding="utf-8")
+    return text.replace(
+        "  enabled: false\n  retired: true\n", "  enabled: true\n  retired: false\n"
+    )
+
+
 def test_shock_decomposition_writes_blocked_report(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -530,7 +546,7 @@ def test_shock_decomposition_writes_blocked_report(
     """
     monkeypatch.chdir(tmp_path)
     config = tmp_path / "extensions.yaml"
-    config.write_bytes(Path(_REPO_ROOT / "configs/extensions.yaml").read_bytes())
+    config.write_text(_unretired_shock_config(), encoding="utf-8")
     report_path = tmp_path / "shock_decomposition_report.md"
 
     result = CliRunner().invoke(
@@ -778,7 +794,7 @@ def test_shock_decomposition_reports_targets_not_frozen_when_the_data_arrive(
     """
     monkeypatch.chdir(tmp_path)
     config_path = tmp_path / "extensions.yaml"
-    config_text = Path(_REPO_ROOT / "configs/extensions.yaml").read_text(encoding="utf-8")
+    config_text = _unretired_shock_config()
     config_path.write_text(config_text, encoding="utf-8")
 
     selection = tmp_path / "research" / "shock_dataset_selection.csv"
@@ -838,7 +854,10 @@ def test_no_report_command_blocks_without_rewriting_its_report() -> None:
         # Count the writes and the terminal raises. Every raise on a path that
         # owns a report must be preceded by a write on that same path.
         raises = body.count("raise ReplicationBlockError")
-        writes = sum(body.count(marker) for marker in ("write_blocked", "write_unfrozen"))
+        # Any report writer counts. Listing writer names by prefix meant adding a
+        # new one silently weakened the guard, which is how it first missed
+        # `write_retired_shock_report`.
+        writes = len(re.findall(r"write_[a-z_]*report\(", body))
         writes += body.count("write_audit(")
         # A raise guarded by the report being absent is exempt: the defect is a
         # report that contradicts reality, and a report that does not exist

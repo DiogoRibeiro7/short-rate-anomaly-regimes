@@ -599,8 +599,10 @@ def render_release_notes(issues: list[ReleaseIssue]) -> str:
         "`artifacts/audit/published_target_audit.csv`.",
         "- Equal-weighted results and security-level reconstruction remain blocked by inputs "
         "this repository cannot obtain.",
-        "- The high-frequency shock decomposition and the out-of-sample falsification are not "
-        "run; their generated reports record `blocked_missing_input` with the inputs named.",
+        "- The out-of-sample falsification is run under its frozen design. The "
+        "high-frequency shock decomposition is retired: its source was obtained and "
+        "cannot cover the baseline, so its report records `retired_from_design` rather "
+        "than a missing input.",
         "",
         "## Contradicted Results",
         "",
@@ -611,8 +613,9 @@ def render_release_notes(issues: list[ReleaseIssue]) -> str:
         "",
         "- The temporal extension and the monetary-regime analysis are run, and both are "
         "unsupported against their predeclared standards.",
-        "- The shock decomposition and the out-of-sample falsification remain predeclared "
-        "appendix designs and are blocked by missing event-level and forecast inputs.",
+        "- The out-of-sample falsification has been run; the shock decomposition is "
+        "retired on the pre-registered factor-strength condition after its source was "
+        "obtained and examined.",
         "",
         "## Major Unresolved Issues",
         "",
@@ -1064,10 +1067,10 @@ def render_adversarial_econometric_audit(issues: list[ReleaseIssue]) -> str:
             "",
             "- Claim threatened: forecast falsification and the policy-information split of the "
             "aggregate innovation.",
-            "- Econometric reason: the frozen training vintages and the event-level "
-            "high-frequency inputs do not exist in this repository at all, so there is no valid "
-            "holdout comparison and no decomposed shock series. This is a missing-input "
-            "blocker, not a redistribution one, and the rebuild path does not resolve it.",
+            "- Econometric reason: the decomposed shock series does not exist, because the "
+            "only source separating the components begins in 1990 and reaches 287 of the "
+            "504 baseline months, so the decomposition was retired rather than run. The "
+            "out-of-sample comparison no longer belongs in this paragraph: it is run.",
             "- Decisive diagnostic: rerun the shock and out-of-sample gates once compatible "
             "event-level and forecast inputs exist.",
             "- Repair: acquire the event-level data or retire the design, and preserve null or "

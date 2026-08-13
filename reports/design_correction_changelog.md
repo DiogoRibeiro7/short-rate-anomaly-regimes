@@ -511,3 +511,50 @@ Date: 2026-08-11. Applied after estimation. No estimate changes.
   repository root, so it exercised the blocked branch only while the event data
   were absent. That is the third test found with this flaw, after the
   audit-replication and out-of-sample ones. It now works from an empty tree.
+
+## 16. The policy-information decomposition is retired, not blocked
+
+Date: 2026-08-11. Applied after estimation, and before any estimate using these
+data existed. No estimate changes.
+
+- What it was: an appendix design, carried since the beginning, to split the
+  short-rate innovation into a monetary-policy component and a central-bank
+  information component using high-frequency FOMC announcement data. Its
+  generated report said `blocked_missing_input`.
+- Why the claim was tested. Three other gates in this project reported blocked
+  and were not: the useless-factor bootstrap, the table-level audit and the
+  out-of-sample falsification each had frozen designs and working machinery and
+  were waiting for nothing. A fourth blocked status was worth checking rather
+  than inheriting.
+- What was found. The source frozen in `research/shock_dataset_selection.csv` is
+  a public repository and was obtained. It cannot support the design. Coverage
+  begins 1990-02, so it reaches 287 of the 504 baseline months and does not see
+  the first eighteen years, which contain the Volcker disinflation and the
+  largest short-rate movements in the sample. Under the primary identification,
+  `poor_mans_sign_restriction`, the information component is nonzero in 99 of 408
+  months and the policy component in 188 of 408.
+- The condition that retires it was fixed in advance. The appendix design states
+  that monthly aggregation "can create sparse factors with many no-event months,
+  so the decomposition must pass factor-strength diagnostics before entering the
+  main pricing argument." A component that is exactly zero in three quarters of
+  months is that case. The project's own power evidence sharpens it: rate betas
+  carry a reliability ratio of 0.386 over 648 dense months, so a component
+  populated in a quarter of 408 months would be identified from far less.
+- Why this is not outcome-dependent. Both facts are properties of the source
+  rather than of any estimate, and both were read from the published file before
+  a single pricing regression used it. Nothing was tried and found wanting. The
+  design is withdrawn because the data cannot answer the question, which is a
+  different statement from a null result and is recorded as such.
+- What changed. `configs/extensions.yaml` carries `retired: true` with a reason,
+  and the config model distinguishes retired from disabled, because a disabled
+  gate might be switched back on while a retired one has a reason that must
+  travel with it. The CLI writes `retired_from_design` rather than
+  `blocked_missing_input`, since blocked and retired are different claims and a
+  reader of the first would expect a result that will never arrive. The appendix
+  section is retitled and states the counts. Evidence is in
+  `reports/shock_decomposition_feasibility.md`.
+- What it now forbids: reporting a withdrawn design as blocked, and retiring a
+  design on grounds not fixed before the data were seen.
+- What would reopen it: a source with pre-1990 coverage and a policy-information
+  split, or an identification whose components are populated in most months. No
+  such source is in the frozen candidate set.

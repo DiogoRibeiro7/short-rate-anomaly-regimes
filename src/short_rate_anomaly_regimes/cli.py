@@ -68,6 +68,7 @@ from short_rate_anomaly_regimes.reporting.release import (
 )
 from short_rate_anomaly_regimes.shocks.decomposition import (
     write_blocked_shock_report,
+    write_retired_shock_report,
     write_unfrozen_targets_shock_report,
 )
 
@@ -556,6 +557,16 @@ def shock_decomposition(
     """Run the high-frequency shock-decomposition gate."""
     validated = load_extension_config(config)
     shock_config = validated.shock_decomposition
+    if shock_config.retired:
+        write_retired_shock_report(
+            output_path=output,
+            selected_dataset=shock_config.selected_dataset_id,
+            reason=shock_config.retirement_reason or "recorded in the extension configuration",
+        )
+        raise ReplicationBlockError(
+            "Wrote retired shock decomposition report; the policy-information "
+            "decomposition was withdrawn on the pre-registered factor-strength condition"
+        )
     required_paths = [
         Path("research/shock_dataset_selection.csv"),
         Path(shock_config.raw_event_path),

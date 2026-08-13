@@ -25,7 +25,15 @@ data_freeze:
     - inventory_growth
 
 shock_decomposition:
-  enabled: true
+  # Retired 2026-08-11 on the pre-registered factor-strength condition, before
+  # any pricing estimate using these data existed. The selected source covers
+  # 1990-02 onward, so it reaches 287 of the 504 baseline months, and its
+  # information component under the primary identification is nonzero in 99 of
+  # 408 months. Both are properties of the source rather than of a result. See
+  # reports/shock_decomposition_feasibility.md and design correction 16.
+  enabled: false
+  retired: true
+  retirement_reason: source_cannot_cover_baseline_and_components_are_sparse
   selected_dataset_id: jarocinski_karadi_fed_shocks_update_202401
   selected_dataset_source: https://github.com/marekjarocinski/jkshocks_update_fed_202401
   raw_event_path: data/raw/shocks/jarocinski_karadi_fed_events.csv
