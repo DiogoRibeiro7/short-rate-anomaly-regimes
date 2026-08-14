@@ -5,12 +5,13 @@
     "artifacts/diagnostics/useless_factor_bootstrap.json": "d033af385a595e45f08d5c22a5fa68eb89055d8340751bde4abf1ed7c0edfd61",
     "artifacts/tables/cross_section/alternative_fit_metrics.csv": "e67d47551bae69ee13408d8269e2f70059963f83bc6b8053b8e3ac0d996bb84c",
     "artifacts/tables/cross_section/baseline_risk_prices.csv": "2751383f466740daa9a67b4c796cdb356d139a7ce1339b4c6bf8b6fe329d995c",
+    "artifacts/tables/cross_section/covariance_representation.csv": "743ef35c9dd47a2ce52acff2a0139494ad4458898a28a6fcd4f4e2b4d63d7f2b",
     "artifacts/tables/cross_section/risk_premium_decomposition.csv": "a0b61f561c833f3e314c8b4b5446e6d72af8bcd57bb6d27e1aa0032ed3170a70",
     "artifacts/tables/cross_section/useless_factor_bootstrap_p_values.csv": "d934e8751bd6a9b3694a8dea8386a06c547f8fa9ee3e269637ad449ebc301fa1",
-    "research/published_target_values.csv": "cad1554d12670d787f90d2c5a0925fa533bbd2571fed29477bb4c7ec00a7556f"
+    "research/published_target_values.csv": "ed4e2dfa05e2ce376852eed83c1832e0b14dcf323a34d50a03bdf1cbdd6ed9bc"
   },
   "outputs": {
-    "artifacts/audit/published_target_audit.csv": "971a07f70f20b0a7d69330b4977b25662d8a02d0b4c3ac3085a485335b6409d1",
+    "artifacts/audit/published_target_audit.csv": "b7b3e766bdf4f49f7040219e2113d74298043f263005cf7e3a0727ab34a72cea",
     "artifacts/audit/replication_layer_classification.csv": "8228deb7d840477c9b8e37d657e7d94d1d9fbd564fb814446ee5924f83d3faa0"
   },
   "replication_mode": "documented_reconstruction",

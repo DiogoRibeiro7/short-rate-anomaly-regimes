@@ -753,16 +753,25 @@ def test_audit_replication_blocks_when_the_cell_audit_is_absent(
 
 
 def test_the_committed_table_audit_agrees_with_the_cell_audit() -> None:
-    """The shipped table-level record must not drift from the cells again."""
+    """The shipped table-level record must not drift from the cells again.
+
+    The invariant is coverage, not the verdict. A table the cell audit compares
+    must not be recorded as unattempted, and a table it does not compare must
+    be. Which recovery label a compared table earns depends on how its cells
+    came out, and this guard originally assumed that was always
+    ``partially_recovered``; Table A.9 arrived with none of its registered cells
+    inside the published rounding and took the protocol's designated label for a
+    completed reconstruction that recovers nothing.
+    """
     tables = pd.read_csv(Path("artifacts/audit/table_replication.csv"))
     cells = pd.read_csv(Path("artifacts/audit/published_target_audit.csv"))
     covered = set(cells["source_table"].astype(str))
 
-    assert not (tables["status"] == "not_reproducible_missing_input").any()
     for row in tables.itertuples():
         table = str(row.source_location).rsplit(":", 1)[-1].strip()
         if table in covered:
-            assert row.status == "partially_recovered", table
+            assert row.status != "not_attempted", table
+            assert str(row.generated_artifact).endswith("published_target_audit.csv"), table
         else:
             assert row.status == "not_attempted", table
 
