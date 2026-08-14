@@ -1,6 +1,6 @@
 {
   "archive_path": "artifacts/release/source_release.zip",
-  "archive_sha256": "5ffac67059601e8e0a13dd90fd67653a2cd13c39ecf249399bd1d8f8bd625cb1",
+  "archive_sha256": "202c093e04713b7a69d518c3a379e6277e6dc9e3bcfaaf24d57cdc3c7b25c25a",
   "excluded": [
     "prompts/",
     "references/private/",
@@ -9,7 +9,7 @@
     "artifacts/environment/manifest.json",
     "data/catalog.duckdb"
   ],
-  "file_count": 389,
+  "file_count": 393,
   "members": [
     ".editorconfig",
     ".env.example",
@@ -96,6 +96,7 @@
     "artifacts/provenance/french_freeze_summary.csv",
     "artifacts/provenance/h1_materiality.json",
     "artifacts/provenance/h4c_precision.json",
+    "artifacts/provenance/hansen_jagannathan_distance.json",
     "artifacts/provenance/kenneth_french/F-F_Momentum_Factor_current_20260801.json",
     "artifacts/provenance/kenneth_french/F-F_Momentum_Factor_publication_era_20170709.json",
     "artifacts/provenance/kenneth_french/F-F_Research_Data_5_Factors_2x3_current_20260801.json",
@@ -141,6 +142,7 @@
     "artifacts/tables/cross_section/baseline_risk_prices.csv",
     "artifacts/tables/cross_section/covariance_representation.csv",
     "artifacts/tables/cross_section/first_difference_factors.csv",
+    "artifacts/tables/cross_section/hansen_jagannathan_distance.csv",
     "artifacts/tables/cross_section/restricted_sample.csv",
     "artifacts/tables/cross_section/risk_premium_decomposition.csv",
     "artifacts/tables/cross_section/useless_factor_bootstrap_p_values.csv",
@@ -296,6 +298,7 @@
     "scripts/run_first_difference_factors.py",
     "scripts/run_h1_materiality.py",
     "scripts/run_h4c_precision.py",
+    "scripts/run_hansen_jagannathan.py",
     "scripts/run_out_of_sample.py",
     "scripts/run_regime_equivalence.py",
     "scripts/run_regime_interactions.py",
@@ -374,6 +377,7 @@
     "tests/test_foundation.py",
     "tests/test_generated_reports.py",
     "tests/test_h1_materiality.py",
+    "tests/test_hansen_jagannathan.py",
     "tests/test_input_acquisition.py",
     "tests/test_manuscript.py",
     "tests/test_manuscript_numbers.py",
