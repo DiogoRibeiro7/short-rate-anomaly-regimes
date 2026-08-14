@@ -89,3 +89,5 @@ alternative_fit_metrics,artifacts/tables/cross_section/alternative_fit_metrics.c
 zero_beta_second_pass,artifacts/tables/cross_section/zero_beta_second_pass.csv,Second pass with an unrestricted zero-beta rate from Internet Appendix equation 1
 first_difference_factors,artifacts/tables/cross_section/first_difference_factors.csv,Cross-sectional pricing under first-difference short-rate factors
 restricted_sample,artifacts/tables/cross_section/restricted_sample.csv,Cross-sectional pricing on the article restricted sample ending 2006-12
+covariance_representation,artifacts/tables/cross_section/covariance_representation.csv,Expected return-covariance representation from Internet Appendix equations 3 and 4
+hansen_jagannathan_distance,artifacts/tables/cross_section/hansen_jagannathan_distance.csv,Hansen-Jagannathan distance from Internet Appendix equations 5 to 8

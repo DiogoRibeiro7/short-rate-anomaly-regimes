@@ -35,6 +35,8 @@ TABLE_ROOT = Path("paper/tables")
 AUDIT = Path("artifacts/audit/published_target_audit.csv")
 LAYERS = Path("artifacts/audit/replication_layer_classification.csv")
 FORECASTS = Path("artifacts/tables/out_of_sample/forecast_metrics.csv")
+COVARIANCE = Path("artifacts/tables/cross_section/covariance_representation.csv")
+HJ_DISTANCE = Path("artifacts/tables/cross_section/hansen_jagannathan_distance.csv")
 CELL_KEY = ["source_table", "portfolio_set", "model", "statistic"]
 
 
@@ -109,6 +111,36 @@ def _out_of_sample() -> list[str]:
     return [f"{model:.4f}", f"{abs(zero):.4f}"]
 
 
+def _hansen_jagannathan() -> list[str]:
+    """The distances the appendix section reports, and the ordering behind them."""
+    distances = {
+        str(key): float(value)
+        for key, value in pd.read_csv(HJ_DISTANCE)
+        .set_index("model")["hansen_jagannathan_distance"]
+        .items()
+    }
+    assert distances["market_plus_fedfunds_innovation"] < distances["capm"], (
+        "the manuscript states the ICAPM prices better than the CAPM under this metric"
+    )
+    return [
+        f"{distances['market_plus_fedfunds_innovation']:.4f}",
+        f"{distances['market_plus_tbill_innovation']:.4f}",
+        f"{distances['capm']:.4f}",
+    ]
+
+
+def _covariance_representation() -> list[str]:
+    """The covariance prices, and the identity the appendix predicts."""
+    frame = pd.read_csv(COVARIANCE)
+    joint = frame[frame["portfolio_set"] == "all_seven_families_joint"]
+    rate = float(joint["gamma_FFR_innovation"].dropna().iloc[0])
+    market = float(joint["gamma_RM"].dropna().iloc[0])
+    assert (frame["max_abs_price_gap_against_transform"] < 1e-8).all(), (
+        "the manuscript states both routes agree; they no longer do"
+    )
+    return [f"{abs(rate):.3f}", f"{abs(market):.3f}"]
+
+
 #: Name to the strings the manuscript must contain, recomputed from artifacts.
 FACTS: dict[str, Callable[[], list[str]]] = {
     "cell-level audit totals": _audit_totals,
@@ -116,13 +148,16 @@ FACTS: dict[str, Callable[[], list[str]]] = {
     "Table 5 recovery and signs": _table_five,
     "bootstrap inferential agreement": _bootstrap_agreement,
     "out-of-sample skill": _out_of_sample,
+    "Hansen-Jagannathan distances": _hansen_jagannathan,
+    "covariance representation prices": _covariance_representation,
 }
 
 
 @pytest.mark.parametrize("name", sorted(FACTS))
 def test_manuscript_states_the_number_its_artifact_reports(name: str) -> None:
     """A headline number must equal what the artifact behind it says."""
-    if not AUDIT.is_file() or not LAYERS.is_file() or not FORECASTS.is_file():
+    required = (AUDIT, LAYERS, FORECASTS, COVARIANCE, HJ_DISTANCE)
+    if not all(path.is_file() for path in required):
         pytest.skip("the audit artifacts are not generated in this checkout")
     manuscript = _typeset_text()
 
