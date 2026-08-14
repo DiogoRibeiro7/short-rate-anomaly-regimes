@@ -1,0 +1,14 @@
+{
+  "comparison_rule": "both factor definitions are estimated on the same window, which drops the first month because a first difference is undefined there, so the comparison is not confounded by a one-month sample difference",
+  "inputs": {
+    "data/processed/baseline_panel.parquet": "f1354c66d8983bfed626dc9dbc62204d31d236f1117b700158e3b9b04f8a1cc0",
+    "data/processed/comparator_factors.parquet": "43d96e181c25a2de895f1da5eff30f37b8a2aba0c131cd315da645fd360bfb77"
+  },
+  "outputs": {
+    "artifacts/tables/cross_section/first_difference_factors.csv": "f921d4b0e1c8448db205f051a82a6e2030c9a8248c7b3511f6096579d35b6eb3"
+  },
+  "replication_status": "documented_reconstruction",
+  "script": "scripts/run_first_difference_factors.py",
+  "specification": "internet_appendix_section_2_1_first_difference_factor",
+  "why": "the article does not state its AR(1) timing convention and it had to be recovered; a first difference has no convention to recover, so agreement shows the recovered one is not carrying the result"
+}
