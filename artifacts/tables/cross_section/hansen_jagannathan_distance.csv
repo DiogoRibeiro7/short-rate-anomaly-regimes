@@ -1,0 +1,4 @@
+model,n_payoffs,n_months,hansen_jagannathan_distance,max_abs_pricing_error,replication_status,sdf_constant,sdf_RM,sdf_FFR_innovation,sdf_TB_innovation
+capm,71,504,0.44734843505996214,0.004718483000438756,documented_reconstruction,1.0097535198976515,-0.026758326483565707,,
+market_plus_fedfunds_innovation,71,504,0.412702825483532,0.003597949130478062,documented_reconstruction,1.0029247698263797,-0.013953115484807046,0.728509799179037,
+market_plus_tbill_innovation,71,504,0.42772460923592387,0.003958194965471895,documented_reconstruction,1.0049908185270795,-0.01778380651223647,,0.6220094117977886

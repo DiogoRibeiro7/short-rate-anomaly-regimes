@@ -1,0 +1,16 @@
+{
+  "inputs": {
+    "data/processed/baseline_panel.parquet": "f1354c66d8983bfed626dc9dbc62204d31d236f1117b700158e3b9b04f8a1cc0",
+    "data/processed/comparator_factors.parquet": "43d96e181c25a2de895f1da5eff30f37b8a2aba0c131cd315da645fd360bfb77"
+  },
+  "not_produced": "the p-value for the null that the distance is zero, whose distribution the appendix does not state, and the Table A.11 SDF coefficient t-ratios, which come from the Gospodinov, Kan and Robotti (2014) sequential procedure that the appendix cites rather than defines",
+  "outputs": {
+    "artifacts/tables/cross_section/hansen_jagannathan_distance.csv": "34edbb42d6f591071710e51b78bddb48a8d1c89dc7f9c9953697c3decbdb5c4c"
+  },
+  "payoffs": "the gross returns on the seventy equity portfolios together with the gross risk-free rate, as the appendix states",
+  "pricing_errors_are_not_alphas": "these errors are E[M R] - 1 on gross payoffs, a different object from the beta-representation alphas and on a different scale",
+  "replication_status": "documented_reconstruction",
+  "script": "scripts/run_hansen_jagannathan.py",
+  "specification": "internet_appendix_equations_5_to_8_sdf_representation",
+  "units": "the panel stores returns in percent per month, so a gross return is one plus the percentage over a hundred; an error here would rescale every pricing error and still produce a plausible distance"
+}
