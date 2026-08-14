@@ -1,6 +1,6 @@
 {
   "archive_path": "artifacts/release/source_release.zip",
-  "archive_sha256": "461828b319b964b4b87f09f6d2534e5dccdf6fa30149a59f1b6a7fdca1444e75",
+  "archive_sha256": "6237cb54c1b45c67d6a92f62088e3f991510049d344ff9aaf63635898434b2d4",
   "excluded": [
     "prompts/",
     "references/private/",
@@ -9,7 +9,7 @@
     "artifacts/environment/manifest.json",
     "data/catalog.duckdb"
   ],
-  "file_count": 373,
+  "file_count": 377,
   "members": [
     ".editorconfig",
     ".env.example",
@@ -131,12 +131,14 @@
     "artifacts/provenance/temporal_extension.json",
     "artifacts/provenance/useless_factor_bootstrap.json",
     "artifacts/provenance/weak_factor_diagnostics.json",
+    "artifacts/provenance/zero_beta_second_pass.json",
     "artifacts/tables/.gitkeep",
     "artifacts/tables/cross_section/.gitkeep",
     "artifacts/tables/cross_section/alternative_fit_metrics.csv",
     "artifacts/tables/cross_section/baseline_risk_prices.csv",
     "artifacts/tables/cross_section/risk_premium_decomposition.csv",
     "artifacts/tables/cross_section/useless_factor_bootstrap_p_values.csv",
+    "artifacts/tables/cross_section/zero_beta_second_pass.csv",
     "artifacts/tables/extension/.gitkeep",
     "artifacts/tables/extension/fitted_premium_spreads.csv",
     "artifacts/tables/extension/h2_temporal_inference.csv",
@@ -293,6 +295,7 @@
     "scripts/run_temporal_extension.py",
     "scripts/run_useless_factor_bootstrap.py",
     "scripts/run_weak_factor_diagnostics.py",
+    "scripts/run_zero_beta_second_pass.py",
     "scripts/verify_manuscript.py",
     "scripts/verify_title.py",
     "src/short_rate_anomaly_regimes/__init__.py",
@@ -383,6 +386,7 @@
     "tests/test_validation.py",
     "tests/test_verify_title.py",
     "tests/test_vintage.py",
-    "tests/test_weak_factor_gates.py"
+    "tests/test_weak_factor_gates.py",
+    "tests/test_zero_beta_second_pass.py"
   ]
 }

@@ -1,0 +1,15 @@
+{
+  "inputs": {
+    "data/processed/baseline_panel.parquet": "f1354c66d8983bfed626dc9dbc62204d31d236f1117b700158e3b9b04f8a1cc0",
+    "data/processed/comparator_factors.parquet": "43d96e181c25a2de895f1da5eff30f37b8a2aba0c131cd315da645fd360bfb77"
+  },
+  "level_convention": "the article regresses total returns; total and excess returns differ by the average bill return, which is common to every asset and absorbed by the intercept, so slopes, pricing errors and fit are identical and only the intercept shifts. Both readings are reported.",
+  "mean_risk_free_return": 0.4202976190476191,
+  "outputs": {
+    "artifacts/tables/cross_section/zero_beta_second_pass.csv": "ffb18c406c97bb3ab9d0456f1e6f60c226911f6330079faed4f256e4a316abae"
+  },
+  "replication_status": "documented_reconstruction",
+  "script": "scripts/run_zero_beta_second_pass.py",
+  "specification": "internet_appendix_equation_1_unrestricted_intercept",
+  "tested_null": "the zero-beta rate in excess of the average one-month bill return is zero, which is the intercept of the excess-return regression"
+}
