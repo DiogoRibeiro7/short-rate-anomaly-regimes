@@ -1,0 +1,15 @@
+{
+  "alternative_metric": "internet_appendix_equation_2_second_moment_denominator",
+  "article_metric": "equation_6_variance_denominator",
+  "centring_convention": "the numerator variance is centred in both metrics, matching the article's equation (6); the appendix does not state the convention for its own equation (2), so the two differ only in the denominator",
+  "inputs": {
+    "artifacts/estimates/cross_section/baseline_pricing_errors.parquet": "c0587e7baf221c302f93bf4296f29df68550c09a6a8a1ab133725459bf0f88e3"
+  },
+  "outputs": {
+    "artifacts/tables/cross_section/alternative_fit_metrics.csv": "e67d47551bae69ee13408d8269e2f70059963f83bc6b8053b8e3ac0d996bb84c"
+  },
+  "reestimated": false,
+  "replication_status": "documented_reconstruction",
+  "script": "scripts/run_alternative_fit_metrics.py",
+  "why_both": "the article warns that the alternative measure can be large purely by fitting the cross-sectional mean, so it is reported beside the paper's metric rather than instead of it"
+}

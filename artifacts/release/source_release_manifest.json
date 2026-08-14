@@ -1,6 +1,6 @@
 {
   "archive_path": "artifacts/release/source_release.zip",
-  "archive_sha256": "dbf9a8dd7f7876cc54023ffabef69e87915179f16ff7006799978d52cbcdc478",
+  "archive_sha256": "461828b319b964b4b87f09f6d2534e5dccdf6fa30149a59f1b6a7fdca1444e75",
   "excluded": [
     "prompts/",
     "references/private/",
@@ -9,7 +9,7 @@
     "artifacts/environment/manifest.json",
     "data/catalog.duckdb"
   ],
-  "file_count": 369,
+  "file_count": 373,
   "members": [
     ".editorconfig",
     ".env.example",
@@ -79,6 +79,7 @@
     "artifacts/portfolios/.gitkeep",
     "artifacts/portfolios/construction_manifest.json",
     "artifacts/provenance/.gitkeep",
+    "artifacts/provenance/alternative_fit_metrics.json",
     "artifacts/provenance/anomaly_portfolio_summary.csv",
     "artifacts/provenance/baseline_panel_column_metadata.csv",
     "artifacts/provenance/baseline_replication_run.json",
@@ -132,6 +133,7 @@
     "artifacts/provenance/weak_factor_diagnostics.json",
     "artifacts/tables/.gitkeep",
     "artifacts/tables/cross_section/.gitkeep",
+    "artifacts/tables/cross_section/alternative_fit_metrics.csv",
     "artifacts/tables/cross_section/baseline_risk_prices.csv",
     "artifacts/tables/cross_section/risk_premium_decomposition.csv",
     "artifacts/tables/cross_section/useless_factor_bootstrap_p_values.csv",
@@ -280,6 +282,7 @@
     "scripts/build_manuscript_tables.py",
     "scripts/build_regime_panel.py",
     "scripts/reconstruct_rate_innovations.py",
+    "scripts/run_alternative_fit_metrics.py",
     "scripts/run_baseline_replication.py",
     "scripts/run_h1_materiality.py",
     "scripts/run_h4c_precision.py",
@@ -343,6 +346,7 @@
     "src/short_rate_anomaly_regimes/shocks/decomposition.py",
     "src/short_rate_anomaly_regimes/types.py",
     "tests/test_acquisition.py",
+    "tests/test_alternative_fit_metrics.py",
     "tests/test_article_second_pass.py",
     "tests/test_audit_provenance.py",
     "tests/test_baseline_inputs.py",

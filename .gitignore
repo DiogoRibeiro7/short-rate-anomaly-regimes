@@ -128,6 +128,8 @@ artifacts/**
 !artifacts/tables/cross_section/useless_factor_bootstrap_p_values.csv
 # The article's Table 5 decomposition, which the published-target audit reads.
 !artifacts/tables/cross_section/risk_premium_decomposition.csv
+!artifacts/tables/cross_section/alternative_fit_metrics.csv
+!artifacts/provenance/alternative_fit_metrics.json
 !artifacts/provenance/risk_premium_decomposition.json
 !artifacts/provenance/baseline_replication_run.json
 !artifacts/provenance/comparator_panel.json
