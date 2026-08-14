@@ -121,6 +121,7 @@ reproduce-estimates:
 	poetry run python scripts/run_alternative_fit_metrics.py
 	poetry run python scripts/run_zero_beta_second_pass.py
 	poetry run python scripts/run_first_difference_factors.py
+	poetry run python scripts/run_restricted_sample.py
 	poetry run python scripts/audit_published_targets.py
 	poetry run python scripts/run_h1_materiality.py
 	poetry run python scripts/run_weak_factor_diagnostics.py

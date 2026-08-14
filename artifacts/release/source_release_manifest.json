@@ -1,6 +1,6 @@
 {
   "archive_path": "artifacts/release/source_release.zip",
-  "archive_sha256": "781bbd9ad68167ea417c53db9655c9cfedd0abdf5fd5029cf7e8eab4c2212ee9",
+  "archive_sha256": "2a5a7c87b2a4f87eecf85974dc19c3f525ca118a06e9ebfb7bc8910871561a00",
   "excluded": [
     "prompts/",
     "references/private/",
@@ -9,7 +9,7 @@
     "artifacts/environment/manifest.json",
     "data/catalog.duckdb"
   ],
-  "file_count": 381,
+  "file_count": 385,
   "members": [
     ".editorconfig",
     ".env.example",
@@ -122,6 +122,7 @@
     "artifacts/provenance/regime_panel.json",
     "artifacts/provenance/regime_power_analysis.json",
     "artifacts/provenance/regime_short_sample_sensitivity.json",
+    "artifacts/provenance/restricted_sample.json",
     "artifacts/provenance/risk_premium_decomposition.json",
     "artifacts/provenance/short_rate/DFF_2026-08-01.json",
     "artifacts/provenance/short_rate/DTB3_2026-08-01.json",
@@ -138,6 +139,7 @@
     "artifacts/tables/cross_section/alternative_fit_metrics.csv",
     "artifacts/tables/cross_section/baseline_risk_prices.csv",
     "artifacts/tables/cross_section/first_difference_factors.csv",
+    "artifacts/tables/cross_section/restricted_sample.csv",
     "artifacts/tables/cross_section/risk_premium_decomposition.csv",
     "artifacts/tables/cross_section/useless_factor_bootstrap_p_values.csv",
     "artifacts/tables/cross_section/zero_beta_second_pass.csv",
@@ -294,6 +296,7 @@
     "scripts/run_out_of_sample.py",
     "scripts/run_regime_equivalence.py",
     "scripts/run_regime_interactions.py",
+    "scripts/run_restricted_sample.py",
     "scripts/run_risk_premium_decomposition.py",
     "scripts/run_temporal_extension.py",
     "scripts/run_useless_factor_bootstrap.py",
@@ -382,6 +385,7 @@
     "tests/test_regimes.py",
     "tests/test_release.py",
     "tests/test_reporting.py",
+    "tests/test_restricted_sample.py",
     "tests/test_risk_premium_decomposition.py",
     "tests/test_shocks.py",
     "tests/test_temporal_extension.py",

@@ -131,6 +131,8 @@ artifacts/**
 !artifacts/tables/cross_section/alternative_fit_metrics.csv
 !artifacts/tables/cross_section/zero_beta_second_pass.csv
 !artifacts/tables/cross_section/first_difference_factors.csv
+!artifacts/tables/cross_section/restricted_sample.csv
+!artifacts/provenance/restricted_sample.json
 !artifacts/provenance/first_difference_factors.json
 !artifacts/provenance/zero_beta_second_pass.json
 !artifacts/provenance/alternative_fit_metrics.json

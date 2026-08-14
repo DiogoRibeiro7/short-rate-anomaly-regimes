@@ -1,0 +1,15 @@
+{
+  "inputs": {
+    "data/processed/baseline_panel.parquet": "f1354c66d8983bfed626dc9dbc62204d31d236f1117b700158e3b9b04f8a1cc0",
+    "data/processed/comparator_factors.parquet": "43d96e181c25a2de895f1da5eff30f37b8a2aba0c131cd315da645fd360bfb77"
+  },
+  "outputs": {
+    "artifacts/tables/cross_section/restricted_sample.csv": "3662854a121e32ffff09d132645b41888a316e82b494adfcc74d4be035cc1134"
+  },
+  "pre_window_lag": "the re-estimated variant needs the level of the month before the window, which the panel does not carry; it is recovered from the stored level and residual, which identify the autoregression exactly",
+  "recorded_ambiguity": "the appendix does not say whether the restricted-sample AR(1) is re-estimated on 1972:01-2006:12 or carried over from the full sample, which research/publication_evidence_freeze.md already records; both are admissible and both are run rather than one being chosen silently",
+  "replication_status": "documented_reconstruction",
+  "sample_end": "2006-12",
+  "script": "scripts/run_restricted_sample.py",
+  "specification": "internet_appendix_section_2_2_restricted_sample"
+}

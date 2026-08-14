@@ -88,3 +88,4 @@ shock_decomposition_feasibility,reports/shock_decomposition_feasibility.md,Cover
 alternative_fit_metrics,artifacts/tables/cross_section/alternative_fit_metrics.csv,The article supplement second cross-sectional fit measure beside equation 6
 zero_beta_second_pass,artifacts/tables/cross_section/zero_beta_second_pass.csv,Second pass with an unrestricted zero-beta rate from Internet Appendix equation 1
 first_difference_factors,artifacts/tables/cross_section/first_difference_factors.csv,Cross-sectional pricing under first-difference short-rate factors
+restricted_sample,artifacts/tables/cross_section/restricted_sample.csv,Cross-sectional pricing on the article restricted sample ending 2006-12

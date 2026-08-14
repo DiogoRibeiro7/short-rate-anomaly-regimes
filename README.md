@@ -5,7 +5,7 @@
 
 A reproducible replication and extension of Maio and Santa-Clara (2017), *Short-Term Interest Rates and Stock Market Anomalies*, asking whether short-rate innovations still price equity anomalies after the publication sample and across monetary regimes.
 
-The paper is written and builds from this repository: [`paper/manuscript.pdf`](paper/manuscript.pdf), 30 pages.
+The paper is written and builds from this repository: [`paper/manuscript.pdf`](paper/manuscript.pdf), 31 pages.
 
 ## Status
 
