@@ -213,6 +213,15 @@ def build_missing_input_audit(
     ]
 
 
+#: Tables whose published cells were transcribed in full and re-verified cell by
+#: cell. Only these may reach a recovery label. A table outside this set has some
+#: of its cells registered and the rest unexamined, so agreement among the
+#: registered ones says nothing about the table.
+COMPLETELY_TRANSCRIBED_TABLES: frozenset[str] = frozenset(
+    {"Table 3", "Table 4", "Table 5", "Table 6", "Table A.1"}
+)
+
+
 def published_table_name(source_location: str) -> str:
     """Return the published table a manifest target refers to.
 
@@ -283,7 +292,12 @@ def build_table_audit_from_cells(
 
         recovered = int((cells["status"] == "recovered_within_published_rounding").sum())
         total = len(cells)
-        if recovered == total:
+        # "Every registered cell recovered" means "the table recovered" only when
+        # the registered cells are the table. Table A.8 exposed the difference: a
+        # single value quoted in the appendix's prose recovered, and the table was
+        # labelled approximately reproduced on the strength of one cell out of many.
+        complete = table in COMPLETELY_TRANSCRIBED_TABLES
+        if recovered == total and complete:
             status = ReplicationStatus.APPROXIMATELY_REPRODUCED
         elif recovered == 0:
             # No cell recovered. The protocol's designated label for a completed
@@ -314,9 +328,17 @@ def build_table_audit_from_cells(
                 independent_check="cell_level_comparison_against_published_rounding",
                 notes=(
                     f"{recovered} of {total} published cells fall inside the published "
-                    "rounding under documented reconstruction. No exact-replication label "
-                    "is available at any recovery rate, because the article names providers "
-                    "and people rather than files."
+                    "rounding under documented reconstruction. "
+                    + (
+                        ""
+                        if complete
+                        else (
+                            "Those cells are a subset of the table rather than all of it, "
+                            "so no recovery label is available however many of them agree. "
+                        )
+                    )
+                    + "No exact-replication label is available at any recovery rate, "
+                    "because the article names providers and people rather than files."
                 ),
             )
         )

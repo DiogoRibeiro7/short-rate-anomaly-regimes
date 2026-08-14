@@ -67,10 +67,10 @@ This report distinguishes inaccessible inputs from empirical contradiction.
 
 - `reproduced`: 0
 - `approximately_reproduced`: 0
-- `partially_recovered`: 5
+- `partially_recovered`: 6
 - `not_reproducible_missing_input`: 0
 - `contradicted`: 0
-- `not_attempted`: 18
+- `not_attempted`: 17
 
 ## Exact And Reconstructed Datasets
 
@@ -143,7 +143,7 @@ No successful baseline replication conclusion is available yet.
 | `APP_TBL_A05` | `supplement_zip:appendix_pdf:p.23:Table A.5` | `not_attempted` | Alternative statistical inference for risk premia | `not_generated` | Outside the current audit pass. The cell-level audit does not compare this table, which is a scope decision rather than an established missing input. |
 | `APP_TBL_A06` | `supplement_zip:appendix_pdf:p.23:Table A.6` | `not_attempted` | Unrestricted zero-beta-rate ICAPM | `not_generated` | Outside the current audit pass. The cell-level audit does not compare this table, which is a scope decision rather than an established missing input. |
 | `APP_TBL_A07` | `supplement_zip:appendix_pdf:p.24:Table A.7` | `not_attempted` | Double-sorted size-anomaly portfolio ICAPM | `not_generated` | Outside the current audit pass. The cell-level audit does not compare this table, which is a scope decision rather than an established missing input. |
-| `APP_TBL_A08` | `supplement_zip:appendix_pdf:p.25:Table A.8` | `not_attempted` | Additional Kan-Robotti-Shanken evaluation measures | `not_generated` | Outside the current audit pass. The cell-level audit does not compare this table, which is a scope decision rather than an established missing input. |
+| `APP_TBL_A08` | `supplement_zip:appendix_pdf:p.25:Table A.8` | `partially_recovered` | Additional Kan-Robotti-Shanken evaluation measures | `artifacts/audit/published_target_audit.csv` | 1 of 1 published cells fall inside the published rounding under documented reconstruction. Those cells are a subset of the table rather than all of it, so no recovery label is available however many of them agree. No exact-replication label is available at any recovery rate, because the article names providers and people rather than files. |
 | `APP_TBL_A09` | `supplement_zip:appendix_pdf:p.25:Table A.9` | `not_attempted` | Covariance-representation GMM risk premia | `not_generated` | Outside the current audit pass. The cell-level audit does not compare this table, which is a scope decision rather than an established missing input. |
 | `APP_TBL_A10` | `supplement_zip:appendix_pdf:p.26:Table A.10` | `not_attempted` | Hansen-Jagannathan distance for SDF representation | `not_generated` | Outside the current audit pass. The cell-level audit does not compare this table, which is a scope decision rather than an established missing input. |
 | `APP_TBL_A11` | `supplement_zip:appendix_pdf:p.27:Table A.11` | `not_attempted` | SDF representation parameter estimates | `not_generated` | Outside the current audit pass. The cell-level audit does not compare this table, which is a scope decision rather than an established missing input. |
