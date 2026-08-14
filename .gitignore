@@ -132,6 +132,8 @@ artifacts/**
 !artifacts/tables/cross_section/zero_beta_second_pass.csv
 !artifacts/tables/cross_section/first_difference_factors.csv
 !artifacts/tables/cross_section/restricted_sample.csv
+!artifacts/tables/cross_section/covariance_representation.csv
+!artifacts/provenance/covariance_representation.json
 !artifacts/provenance/restricted_sample.json
 !artifacts/provenance/first_difference_factors.json
 !artifacts/provenance/zero_beta_second_pass.json

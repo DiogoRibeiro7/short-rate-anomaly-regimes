@@ -1,6 +1,6 @@
 {
   "archive_path": "artifacts/release/source_release.zip",
-  "archive_sha256": "9d2b1cb5725a3255e1ede6b741f39ee6cd097e2499709cbcae1af3bb0d6c0734",
+  "archive_sha256": "5ffac67059601e8e0a13dd90fd67653a2cd13c39ecf249399bd1d8f8bd625cb1",
   "excluded": [
     "prompts/",
     "references/private/",
@@ -9,7 +9,7 @@
     "artifacts/environment/manifest.json",
     "data/catalog.duckdb"
   ],
-  "file_count": 385,
+  "file_count": 389,
   "members": [
     ".editorconfig",
     ".env.example",
@@ -89,6 +89,7 @@
     "artifacts/provenance/comparators/pastor_stambaugh_liquidity_current_20260802.json",
     "artifacts/provenance/comparators/pastor_stambaugh_liquidity_publication_era_20170828.json",
     "artifacts/provenance/comparators/q_factors_global_q_2025_retrieved_20260802.json",
+    "artifacts/provenance/covariance_representation.json",
     "artifacts/provenance/extension_panel_column_metadata.csv",
     "artifacts/provenance/extension_panels.json",
     "artifacts/provenance/first_difference_factors.json",
@@ -138,6 +139,7 @@
     "artifacts/tables/cross_section/.gitkeep",
     "artifacts/tables/cross_section/alternative_fit_metrics.csv",
     "artifacts/tables/cross_section/baseline_risk_prices.csv",
+    "artifacts/tables/cross_section/covariance_representation.csv",
     "artifacts/tables/cross_section/first_difference_factors.csv",
     "artifacts/tables/cross_section/restricted_sample.csv",
     "artifacts/tables/cross_section/risk_premium_decomposition.csv",
@@ -290,6 +292,7 @@
     "scripts/reconstruct_rate_innovations.py",
     "scripts/run_alternative_fit_metrics.py",
     "scripts/run_baseline_replication.py",
+    "scripts/run_covariance_representation.py",
     "scripts/run_first_difference_factors.py",
     "scripts/run_h1_materiality.py",
     "scripts/run_h4c_precision.py",
@@ -363,6 +366,7 @@
     "tests/test_catalog.py",
     "tests/test_cli.py",
     "tests/test_config.py",
+    "tests/test_covariance_representation.py",
     "tests/test_cross_section.py",
     "tests/test_diagnostics.py",
     "tests/test_evidence.py",
