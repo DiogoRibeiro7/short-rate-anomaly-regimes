@@ -87,3 +87,4 @@ out_of_sample_design,artifacts/tables/out_of_sample/design.json,Frozen out-of-sa
 shock_decomposition_feasibility,reports/shock_decomposition_feasibility.md,Coverage and component-sparsity evidence retiring the policy-information decomposition
 alternative_fit_metrics,artifacts/tables/cross_section/alternative_fit_metrics.csv,The article supplement second cross-sectional fit measure beside equation 6
 zero_beta_second_pass,artifacts/tables/cross_section/zero_beta_second_pass.csv,Second pass with an unrestricted zero-beta rate from Internet Appendix equation 1
+first_difference_factors,artifacts/tables/cross_section/first_difference_factors.csv,Cross-sectional pricing under first-difference short-rate factors

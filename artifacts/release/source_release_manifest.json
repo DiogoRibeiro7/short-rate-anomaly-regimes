@@ -1,6 +1,6 @@
 {
   "archive_path": "artifacts/release/source_release.zip",
-  "archive_sha256": "6237cb54c1b45c67d6a92f62088e3f991510049d344ff9aaf63635898434b2d4",
+  "archive_sha256": "781bbd9ad68167ea417c53db9655c9cfedd0abdf5fd5029cf7e8eab4c2212ee9",
   "excluded": [
     "prompts/",
     "references/private/",
@@ -9,7 +9,7 @@
     "artifacts/environment/manifest.json",
     "data/catalog.duckdb"
   ],
-  "file_count": 377,
+  "file_count": 381,
   "members": [
     ".editorconfig",
     ".env.example",
@@ -91,6 +91,7 @@
     "artifacts/provenance/comparators/q_factors_global_q_2025_retrieved_20260802.json",
     "artifacts/provenance/extension_panel_column_metadata.csv",
     "artifacts/provenance/extension_panels.json",
+    "artifacts/provenance/first_difference_factors.json",
     "artifacts/provenance/french_freeze_summary.csv",
     "artifacts/provenance/h1_materiality.json",
     "artifacts/provenance/h4c_precision.json",
@@ -136,6 +137,7 @@
     "artifacts/tables/cross_section/.gitkeep",
     "artifacts/tables/cross_section/alternative_fit_metrics.csv",
     "artifacts/tables/cross_section/baseline_risk_prices.csv",
+    "artifacts/tables/cross_section/first_difference_factors.csv",
     "artifacts/tables/cross_section/risk_premium_decomposition.csv",
     "artifacts/tables/cross_section/useless_factor_bootstrap_p_values.csv",
     "artifacts/tables/cross_section/zero_beta_second_pass.csv",
@@ -286,6 +288,7 @@
     "scripts/reconstruct_rate_innovations.py",
     "scripts/run_alternative_fit_metrics.py",
     "scripts/run_baseline_replication.py",
+    "scripts/run_first_difference_factors.py",
     "scripts/run_h1_materiality.py",
     "scripts/run_h4c_precision.py",
     "scripts/run_out_of_sample.py",
@@ -360,6 +363,7 @@
     "tests/test_cross_section.py",
     "tests/test_diagnostics.py",
     "tests/test_evidence.py",
+    "tests/test_first_difference_factors.py",
     "tests/test_foundation.py",
     "tests/test_generated_reports.py",
     "tests/test_h1_materiality.py",
