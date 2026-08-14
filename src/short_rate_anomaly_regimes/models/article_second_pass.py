@@ -95,6 +95,53 @@ def article_cross_sectional_fit(
     return 1.0 - numerator / denominator
 
 
+def kan_robotti_shanken_fit(
+    mean_excess_returns: pd.Series,
+    pricing_errors: pd.Series,
+) -> float:
+    """Compute the second evaluation measure, Internet Appendix equation (2).
+
+    The definition is ``1 - var_N(alpha_i) / S_N(mean_excess_return_i)`` where
+    ``S_N`` is the cross-sectional **second moment** rather than the variance.
+    It differs from :func:`article_cross_sectional_fit` in the denominator alone,
+    and the article introduces it because that metric can be negative while this
+    one is bounded.
+
+    The article's own caution is the reason this is worth computing rather than
+    reporting instead: a model "can have a large value of rho-hat squared just by
+    fitting well the cross-sectional mean despite not explaining any
+    cross-sectional dispersion in risk premia". The two metrics answer different
+    questions, and a system where they disagree is one whose fit comes from the
+    level of average returns rather than from their spread. Neither replaces the
+    other and neither is reported alone.
+
+    One convention the appendix does not state: whether ``var_N`` in the
+    numerator is centred. It is taken as centred here, matching the article's
+    equation (6), so that the two metrics differ in exactly the documented place
+    and a difference between them is attributable to the denominator.
+
+    Args:
+        mean_excess_returns: Average excess return per test asset.
+        pricing_errors: Cross-sectional pricing error per test asset.
+
+    Returns:
+        The alternative cross-sectional fit.
+
+    Raises:
+        ValueError: If the inputs are misaligned or the denominator vanishes.
+    """
+    if not mean_excess_returns.index.equals(pricing_errors.index):
+        raise ValueError("Mean returns and pricing errors must share an index")
+    if len(mean_excess_returns) < 2:
+        raise ValueError("Cross-sectional fit needs at least two test assets")
+    returns = mean_excess_returns.to_numpy(dtype=float)
+    second_moment = float(np.mean(np.square(returns)))
+    if second_moment == 0.0:
+        raise ValueError("Cross-sectional second moment of average returns is zero")
+    numerator = float(np.var(pricing_errors.to_numpy(dtype=float)))
+    return 1.0 - numerator / second_moment
+
+
 def article_constrained_fit(
     *,
     mean_excess_returns: pd.Series,

@@ -658,6 +658,21 @@ price of risk with a nominal Shanken $t$ of $-2.86$. The Treasury-bill specifica
 gives the same sign and a comparable $t$-ratio, so the finding does not hinge on
 which short rate is used. % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
 
+The article's own supplement offers a second fit measure, and computing it here
+shows why the paper reports the first. Its Internet Appendix replaces the
+variance in the denominator of equation (6) with the cross-sectional second % artifact: artifacts/tables/cross_section/alternative_fit_metrics.csv
+moment, which bounds the statistic below at zero where equation (6) can be % artifact: artifacts/tables/cross_section/alternative_fit_metrics.csv
+negative. The appendix warns in the same paragraph that the replacement buys
+that bound at a price: a model can score well on it "just by fitting well the
+cross-sectional mean despite not explaining any cross-sectional dispersion in
+risk premia". On these systems the warning is not hypothetical. Eight of the
+sixty-four price the cross-section worse than a constant does, which is what a % artifact: artifacts/tables/cross_section/alternative_fit_metrics.csv
+negative equation (6) means, and every one of the eight scores positive on the % artifact: artifacts/tables/cross_section/alternative_fit_metrics.csv
+alternative measure. The CAPM on the joint seventy portfolios moves from % artifact: artifacts/tables/cross_section/alternative_fit_metrics.csv
+$-0.6125$ to $+0.9170$. Reporting the second measure alone would describe a % artifact: artifacts/tables/cross_section/alternative_fit_metrics.csv
+model that fails as one that explains most of the cross-section, so both are
+generated and the paper's own metric is the one its claims rest on.
+
 Two features of the table qualify that reading, and both work against the
 short-rate model. First, every registered traded multi-factor comparator attains
 a lower in-sample cross-sectional RMSE and a higher fit than the short-rate
