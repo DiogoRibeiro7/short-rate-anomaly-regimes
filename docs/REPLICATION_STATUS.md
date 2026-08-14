@@ -98,4 +98,68 @@ Any result that uses substituted data, reconstructed portfolios, revised series,
 
 ## Next Evidence Gates
 
-1. Implement the GMM, Hansen-Jagannathan and Kan-Robotti-Shanken estimators the remaining appendix tables report, then extend the cell-level audit to them.
+The list is grouped by what stands in the way, because the groups are not
+comparable. Work has repeatedly moved out of the blocked groups on inspection:
+of the items once recorded as needing new estimators, all but one turned out to
+be printed in the supplement and were reconstructed. Anything below that is only
+undone rather than blocked belongs in the first group.
+
+### Reachable now
+
+1. Register the published targets for three reconstructions that exist but are
+   compared only against the supplement's prose: the first-difference factors of
+   Table A.2, the unrestricted zero-beta rate of Table A.6, and the restricted
+   sample of Section 2.2, whose table number `research/article_method_extraction.md`
+   does not record and which must be confirmed against the supplement when
+   transcribing rather than inferred from the section order. Each estimator is
+   implemented and its artifact is shipped; what is missing is the transcription
+   that would let the audit hold it to the printed cells. Tables A.8, A.9 and
+   A.10 were registered this way, and A.9 revealed a units convention that only a
+   numeric comparison could have shown.
+
+### Blocked by the source, not by effort
+
+These are not scheduled, because doing them would reconstruct a different paper.
+Each is a statistic the article reports without stating how it is computed.
+
+2. The Kan-Robotti-Shanken `Q-hat_c` statistic of Table A.8 and the asymptotic
+   p-values for `rho^2 = 1` and `rho^2 = 0`. Footnote 4 of the supplement records
+   that these came from MATLAB code supplied privately by Kan and Robotti.
+3. The null distribution of the Hansen-Jagannathan distance, which Table A.10
+   reports p-values from and the supplement does not specify. The distance itself
+   is generated and audited.
+4. The coefficient t-ratios of Table A.11, from the Gospodinov, Kan and Robotti
+   (2014) sequential procedure, cited rather than defined.
+5. The GMM standard errors behind the Table A.9 t-ratios. The point estimates and
+   fit are generated; the standard errors account for estimation error in the
+   factor means through moment conditions whose covariance the supplement does
+   not give, and the Shanken errors implemented here are a different object that
+   must not be substituted.
+6. The article's own bootstrap p-values were in this group until Internet
+   Appendix Section 4 was found to specify the algorithm in full. It is the one
+   item that moved out, and it is recorded here as the reason to check the rest
+   of this group again rather than to assume it.
+
+### Blocked by data
+
+7. Table A.12 needs innovations in six state variables this project does not
+   hold: the term spread, the default spread, the log dividend yield, the
+   smoothed log price-to-earnings ratio, the value spread, and stock market
+   variance.
+8. Tables A.4 and A.7 need portfolio sorts this project does not hold: the
+   additional CFP and IG deciles, and the double-sorted size portfolios.
+9. Equal-weighted results and security-level reconstruction remain blocked at the
+   current sources, the latter pending confirmed CRSP and Compustat access.
+
+### Out of the current pass
+
+10. Tables 7 to 9 are outside the audit scope fixed for this pass and are
+    recorded as not attempted rather than blocked.
+
+### Retired
+
+11. The high-frequency policy-information decomposition was withdrawn on its
+    pre-registered factor-strength condition after its source was obtained and
+    examined. It is not pending. See
+    [`reports/shock_decomposition_feasibility.md`](../reports/shock_decomposition_feasibility.md)
+    and design correction 16.
