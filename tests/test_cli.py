@@ -872,3 +872,66 @@ def test_no_report_command_blocks_without_rewriting_its_report() -> None:
         "these commands own a generated report and can raise without rewriting it, so a "
         f"stale verdict would survive the failure: {offenders}"
     )
+
+
+def test_a_partially_transcribed_table_cannot_earn_a_recovery_label(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Agreement among registered cells is not agreement of the table.
+
+    Table A.8 exposed this: one value quoted in the appendix's prose recovered,
+    and the table was labelled approximately reproduced on the strength of a
+    single cell out of many. A table is only eligible for a recovery label when
+    its cells were transcribed in full.
+    """
+    monkeypatch.chdir(tmp_path)
+    for directory in ("artifacts/estimates/time_series", "artifacts/estimates/cross_section"):
+        (tmp_path / directory).mkdir(parents=True)
+    innovations = tmp_path / "data/processed/factors/short_rate_innovations_baseline.parquet"
+    innovations.parent.mkdir(parents=True)
+    innovations.write_bytes(b"")
+
+    cell_audit = tmp_path / "artifacts/audit/published_target_audit.csv"
+    cell_audit.parent.mkdir(parents=True, exist_ok=True)
+    # Every registered cell recovers, in both a complete and an incomplete table.
+    cell_audit.write_text(
+        "source_table,status\n"
+        "Table 4,recovered_within_published_rounding\n"
+        "Table A.8,recovered_within_published_rounding\n",
+        encoding="utf-8",
+    )
+    target_path = tmp_path / "targets.csv"
+    target_path.write_text(
+        "target_id,source_location,description,portfolio_set,model,estimator,"
+        "tolerance_rule,status\n"
+        "TBL_004,article_pdf:p.940:Table 4,Risk premia,joint,icapm,two_pass,"
+        "published_rounding,article_extracted\n"
+        "APP_TBL_A08,supplement:p.7:Table A.8,Evaluation measures,joint,icapm,two_pass,"
+        "published_rounding,article_extracted\n",
+        encoding="utf-8",
+    )
+    audit_path = tmp_path / "audit.csv"
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "audit-replication",
+            "--targets",
+            str(target_path),
+            "--output",
+            str(audit_path),
+            "--json-output",
+            str(tmp_path / "audit.json"),
+            "--report",
+            str(tmp_path / "report.md"),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    written = pd.read_csv(audit_path).set_index("target_id")
+    # Transcribed in full, so a clean sweep is a recovery.
+    assert written.loc["TBL_004", "status"] == "approximately_reproduced"
+    # A subset of the table, so the same sweep is not.
+    assert written.loc["APP_TBL_A08", "status"] == "partially_recovered"
+    assert "subset of the table" in str(written.loc["APP_TBL_A08", "notes"])

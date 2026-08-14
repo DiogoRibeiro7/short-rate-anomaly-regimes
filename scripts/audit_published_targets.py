@@ -30,6 +30,10 @@ BOOTSTRAP_DIAGNOSTICS_JSON = Path("artifacts/diagnostics/useless_factor_bootstra
 #: the same way the bootstrap table is: without it those cells record no
 #: generated counterpart rather than being compared against something else.
 DECOMPOSITION_CSV = Path("artifacts/tables/cross_section/risk_premium_decomposition.csv")
+#: The article supplement's second fit measure. Section 2.7 states the CAPM
+#: value precisely, so that one cell is auditable even though the table it sits
+#: in is not otherwise reconstructible.
+ALTERNATIVE_FIT_CSV = Path("artifacts/tables/cross_section/alternative_fit_metrics.csv")
 
 AUDIT_CSV = Path("artifacts/audit/published_target_audit.csv")
 LAYER_CSV = Path("artifacts/audit/replication_layer_classification.csv")
@@ -114,6 +118,8 @@ def _generated_column(row: Mapping[Hashable, Any], model: str) -> str | None:
     statistic = str(row["statistic"])
     if statistic in DECOMPOSITION_STATISTICS:
         return statistic
+    if statistic == "rho_squared":
+        return "kan_robotti_shanken_fit"
     if statistic == "lambda_rate":
         if model == "market_plus_fedfunds_innovation":
             return "lambda_FFR_innovation"
@@ -236,6 +242,10 @@ def main() -> None:
         decomposition = pd.read_csv(DECOMPOSITION_CSV).set_index(["model", "portfolio_set"])
         shared = [c for c in decomposition.columns if c in lookup.columns]
         lookup = lookup.join(decomposition.drop(columns=shared), how="outer")
+    if ALTERNATIVE_FIT_CSV.is_file():
+        alternative = pd.read_csv(ALTERNATIVE_FIT_CSV).set_index(["model", "portfolio_set"])
+        shared = [c for c in alternative.columns if c in lookup.columns]
+        lookup = lookup.join(alternative.drop(columns=shared), how="outer")
     bootstrap = _load_bootstrap_p_values()
     bootstrap_replications = _load_bootstrap_replications()
 
@@ -363,6 +373,11 @@ def main() -> None:
                     **(
                         {DECOMPOSITION_CSV.as_posix(): _sha256(DECOMPOSITION_CSV)}
                         if DECOMPOSITION_CSV.is_file()
+                        else {}
+                    ),
+                    **(
+                        {ALTERNATIVE_FIT_CSV.as_posix(): _sha256(ALTERNATIVE_FIT_CSV)}
+                        if ALTERNATIVE_FIT_CSV.is_file()
                         else {}
                     ),
                     # The replication count lives here, and it decides which
