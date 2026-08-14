@@ -58,8 +58,8 @@ because the article does not state one.
 `research/published_target_values.csv` holds 296 registry rows transcribed from
 Tables 3, 4, 5, 6, and A.1 and independently re-verified cell by cell against the
 source text. After collapsing rows that repeat a point estimate under two
-printed uncertainty measures, that is **212 unique published cells**, of which
-**212 were compared** and **53 fall inside the published rounding**.
+printed uncertainty measures, that is **215 unique published cells**, of which
+**215 were compared** and **53 fall inside the published rounding**.
 
 A cell counts as recovered when it agrees with the article to the precision the
 article prints, that is within half of the last printed increment.

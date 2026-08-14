@@ -32,7 +32,7 @@ Estimated: eight models on eight asset sets, 64 systems, over the 504 baseline m
 | R1d pricing errors and fit | 7 of 79 | `partially_recovered_under_documented_reconstruction` |
 | R1e comparator models | 3 of 20 | `partially_recovered_under_documented_reconstruction` |
 
-Of 212 unique published cells, all 212 were compared, and 53 fall inside the published rounding. Recovery varies by statistic in a way the estimator predicts: market risk prices land inside the published rounding 20 times of 29 and agree in sign 29 times of 29; rate risk prices agree in sign 16 of 16 but reach printed precision less often; the specification statistic, which inverts a seventy-by-seventy pricing-error covariance through a pseudo-inverse, reaches it in none of 29. See [`reports/baseline_replication_audit.md`](../reports/baseline_replication_audit.md).
+Of 215 unique published cells, all 215 were compared, and 53 fall inside the published rounding. Recovery varies by statistic in a way the estimator predicts: market risk prices land inside the published rounding 20 times of 29 and agree in sign 29 times of 29; rate risk prices agree in sign 16 of 16 but reach printed precision less often; the specification statistic, which inverts a seventy-by-seventy pricing-error covariance through a pseudo-inverse, reaches it in none of 29. See [`reports/baseline_replication_audit.md`](../reports/baseline_replication_audit.md).
 
 Registered hypothesis outcomes are recorded in `artifacts/diagnostics/` and summarised in the repository README. H4a, H4b and H4c pass; H1, H2 and H3 are unsupported against their predeclared standards.
 

@@ -36,6 +36,9 @@ DECOMPOSITION_CSV = Path("artifacts/tables/cross_section/risk_premium_decomposit
 ALTERNATIVE_FIT_CSV = Path("artifacts/tables/cross_section/alternative_fit_metrics.csv")
 #: The covariance representation, whose fit the appendix prints in Table A.9.
 COVARIANCE_CSV = Path("artifacts/tables/cross_section/covariance_representation.csv")
+#: The Hansen-Jagannathan distances of Table A.10. The p-values beside them
+#: have no generated counterpart, so only the distances are compared.
+HJ_CSV = Path("artifacts/tables/cross_section/hansen_jagannathan_distance.csv")
 
 AUDIT_CSV = Path("artifacts/audit/published_target_audit.csv")
 LAYER_CSV = Path("artifacts/audit/replication_layer_classification.csv")
@@ -122,6 +125,8 @@ def _generated_column(row: Mapping[Hashable, Any], model: str) -> str | None:
         return statistic
     if statistic == "rho_squared":
         return "kan_robotti_shanken_fit"
+    if statistic == "hansen_jagannathan_distance":
+        return "hansen_jagannathan_distance"
     if statistic == "r2_ols_covariance":
         # The covariance representation's own fit column. It equals the beta
         # representation's by construction, which is why the appendix expects it
@@ -260,6 +265,10 @@ def main() -> None:
         )
         shared = [c for c in covariance.columns if c in lookup.columns]
         lookup = lookup.join(covariance.drop(columns=shared), how="outer")
+    if HJ_CSV.is_file():
+        distances = pd.read_csv(HJ_CSV).set_index(["model", "portfolio_set"])
+        shared = [c for c in distances.columns if c in lookup.columns]
+        lookup = lookup.join(distances.drop(columns=shared), how="outer")
     bootstrap = _load_bootstrap_p_values()
     bootstrap_replications = _load_bootstrap_replications()
 
@@ -399,6 +408,7 @@ def main() -> None:
                         if COVARIANCE_CSV.is_file()
                         else {}
                     ),
+                    **({HJ_CSV.as_posix(): _sha256(HJ_CSV)} if HJ_CSV.is_file() else {}),
                     # The replication count lives here, and it decides which
                     # cells are resolvable at all, so the classification is not
                     # reproducible without it.
