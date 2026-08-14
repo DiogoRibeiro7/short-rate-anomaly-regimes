@@ -34,6 +34,8 @@ DECOMPOSITION_CSV = Path("artifacts/tables/cross_section/risk_premium_decomposit
 #: value precisely, so that one cell is auditable even though the table it sits
 #: in is not otherwise reconstructible.
 ALTERNATIVE_FIT_CSV = Path("artifacts/tables/cross_section/alternative_fit_metrics.csv")
+#: The covariance representation, whose fit the appendix prints in Table A.9.
+COVARIANCE_CSV = Path("artifacts/tables/cross_section/covariance_representation.csv")
 
 AUDIT_CSV = Path("artifacts/audit/published_target_audit.csv")
 LAYER_CSV = Path("artifacts/audit/replication_layer_classification.csv")
@@ -120,6 +122,11 @@ def _generated_column(row: Mapping[Hashable, Any], model: str) -> str | None:
         return statistic
     if statistic == "rho_squared":
         return "kan_robotti_shanken_fit"
+    if statistic == "r2_ols_covariance":
+        # The covariance representation's own fit column. It equals the beta
+        # representation's by construction, which is why the appendix expects it
+        # to, but it is compared against the cell the appendix prints for it.
+        return "article_cross_sectional_fit_covariance"
     if statistic == "lambda_rate":
         if model == "market_plus_fedfunds_innovation":
             return "lambda_FFR_innovation"
@@ -246,6 +253,13 @@ def main() -> None:
         alternative = pd.read_csv(ALTERNATIVE_FIT_CSV).set_index(["model", "portfolio_set"])
         shared = [c for c in alternative.columns if c in lookup.columns]
         lookup = lookup.join(alternative.drop(columns=shared), how="outer")
+    if COVARIANCE_CSV.is_file():
+        covariance = pd.read_csv(COVARIANCE_CSV).set_index(["model", "portfolio_set"])
+        covariance = covariance.rename(
+            columns={"article_cross_sectional_fit": "article_cross_sectional_fit_covariance"}
+        )
+        shared = [c for c in covariance.columns if c in lookup.columns]
+        lookup = lookup.join(covariance.drop(columns=shared), how="outer")
     bootstrap = _load_bootstrap_p_values()
     bootstrap_replications = _load_bootstrap_replications()
 
@@ -378,6 +392,11 @@ def main() -> None:
                     **(
                         {ALTERNATIVE_FIT_CSV.as_posix(): _sha256(ALTERNATIVE_FIT_CSV)}
                         if ALTERNATIVE_FIT_CSV.is_file()
+                        else {}
+                    ),
+                    **(
+                        {COVARIANCE_CSV.as_posix(): _sha256(COVARIANCE_CSV)}
+                        if COVARIANCE_CSV.is_file()
                         else {}
                     ),
                     # The replication count lives here, and it decides which
