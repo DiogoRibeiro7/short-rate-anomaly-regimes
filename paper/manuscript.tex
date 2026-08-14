@@ -758,8 +758,8 @@ errors, which is why the comparison above rests on RMSE rather than on $\chi^2$.
 \subsection{What the cell-level audit recovers}
 
 Comparing the reconstruction against the published cells gives a recovery rate
-that varies sharply and informatively by statistic. Of 212 unique published cells, % artifact: artifacts/audit/published_target_audit.csv
-all 212 were compared, and 53 fall inside the published rounding. % artifact: artifacts/audit/published_target_audit.csv
+that varies sharply and informatively by statistic. Of 215 unique published cells, % artifact: artifacts/audit/published_target_audit.csv
+all 215 were compared, and 53 fall inside the published rounding. % artifact: artifacts/audit/published_target_audit.csv
 Market risk prices recover well, with 20 of 29 cells inside the published % artifact: artifacts/audit/published_target_audit.csv
 rounding and all 29 agreeing in sign. Rate risk prices recover in sign and % artifact: artifacts/audit/published_target_audit.csv
 magnitude but less often at printed precision, with all 16 cells negative as % artifact: artifacts/audit/published_target_audit.csv
@@ -1493,7 +1493,7 @@ statuses. It covers the article tables and the supplement appendix tables throug
 Table A.14. % artifact: research/table_target_manifest.csv
 Cell-level comparison was run against the statistics transcribed from Tables 3, % artifact: artifacts/audit/published_target_audit.csv
 4, 5, 6 and A.1, which after collapsing rows that repeat a point estimate under % artifact: artifacts/audit/published_target_audit.csv
-two printed uncertainty measures give 212 unique published cells. All 212 were % artifact: artifacts/audit/published_target_audit.csv
+two printed uncertainty measures give 215 unique published cells. All 215 were % artifact: artifacts/audit/published_target_audit.csv
 compared. % artifact: artifacts/audit/published_target_audit.csv
 
 \input{tables/recovery}
@@ -1528,8 +1528,12 @@ convention rather than a disagreement. The fit from the same table is a ratio of
 variances, carries no units, and reproduces the beta representation's own
 distance from its published value. Its stochastic-discount-factor form gives a Hansen-Jagannathan distance of
 0.4127 for the funds-rate model and 0.4277 for the Treasury-bill model, against % artifact: artifacts/tables/cross_section/hansen_jagannathan_distance.csv
-0.4473 for the CAPM, so the ordering behind the supplement's report of a % artifact: artifacts/tables/cross_section/hansen_jagannathan_distance.csv
-rejected CAPM and an unrejected ICAPM holds.
+0.4473 for the CAPM. The published distances are 0.419, 0.437 and 0.460, so % artifact: artifacts/tables/cross_section/hansen_jagannathan_distance.csv
+none of the three lands inside the printed rounding, every one is low by between % artifact: artifacts/tables/cross_section/hansen_jagannathan_distance.csv
+0.006 and 0.013, and the ordering the supplement's report of a rejected CAPM and % artifact: artifacts/tables/cross_section/hansen_jagannathan_distance.csv
+an unrejected ICAPM rests on is the same in both. The p-values beside them are
+not compared, because the supplement does not state the distribution they come
+from and this reconstruction generates no counterpart to it.
 
 What remains unreconstructed divides in two, and the distinction matters more
 than the count. Some statistics are not specified by the source at all. The

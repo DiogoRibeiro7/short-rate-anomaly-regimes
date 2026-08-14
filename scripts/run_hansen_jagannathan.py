@@ -147,6 +147,10 @@ def main() -> None:
         )
         record: dict[str, Any] = {
             "model": model,
+            # The audit joins on model and portfolio set. The payoffs are the
+            # joint seventy deciles plus the bill, so that is the set this row
+            # belongs to.
+            "portfolio_set": "all_seven_families_joint",
             "n_payoffs": int(gross.shape[1]),
             "n_months": len(gross),
             "hansen_jagannathan_distance": distance,

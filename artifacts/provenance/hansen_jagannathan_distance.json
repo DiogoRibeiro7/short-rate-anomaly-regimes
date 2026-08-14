@@ -5,7 +5,7 @@
   },
   "not_produced": "the p-value for the null that the distance is zero, whose distribution the appendix does not state, and the Table A.11 SDF coefficient t-ratios, which come from the Gospodinov, Kan and Robotti (2014) sequential procedure that the appendix cites rather than defines",
   "outputs": {
-    "artifacts/tables/cross_section/hansen_jagannathan_distance.csv": "34edbb42d6f591071710e51b78bddb48a8d1c89dc7f9c9953697c3decbdb5c4c"
+    "artifacts/tables/cross_section/hansen_jagannathan_distance.csv": "78d152c9ffba4062745ee9e2359ef35c234ee54013298135d470f2c4ce602daf"
   },
   "payoffs": "the gross returns on the seventy equity portfolios together with the gross risk-free rate, as the appendix states",
   "pricing_errors_are_not_alphas": "these errors are E[M R] - 1 on gross payoffs, a different object from the beta-representation alphas and on a different scale",
