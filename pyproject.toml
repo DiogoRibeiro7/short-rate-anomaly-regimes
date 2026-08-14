@@ -1,6 +1,6 @@
 [project]
 name = "short-rate-anomaly-regimes"
-version = "1.4.0"
+version = "1.5.0"
 description = "Replication and regime extension of short-rate asset-pricing anomaly models"
 authors = [{ name = "Diogo Ribeiro", email = "diogo_dj@hotmail.com" }]
 readme = "README.md"
