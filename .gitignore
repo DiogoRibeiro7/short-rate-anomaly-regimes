@@ -129,6 +129,8 @@ artifacts/**
 # The article's Table 5 decomposition, which the published-target audit reads.
 !artifacts/tables/cross_section/risk_premium_decomposition.csv
 !artifacts/tables/cross_section/alternative_fit_metrics.csv
+!artifacts/tables/cross_section/zero_beta_second_pass.csv
+!artifacts/provenance/zero_beta_second_pass.json
 !artifacts/provenance/alternative_fit_metrics.json
 !artifacts/provenance/risk_premium_decomposition.json
 !artifacts/provenance/baseline_replication_run.json

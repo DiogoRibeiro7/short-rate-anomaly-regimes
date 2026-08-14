@@ -86,3 +86,4 @@ out_of_sample_confidence_set,artifacts/tables/out_of_sample/model_confidence_set
 out_of_sample_design,artifacts/tables/out_of_sample/design.json,Frozen out-of-sample training endpoint refit schedule and benchmarks
 shock_decomposition_feasibility,reports/shock_decomposition_feasibility.md,Coverage and component-sparsity evidence retiring the policy-information decomposition
 alternative_fit_metrics,artifacts/tables/cross_section/alternative_fit_metrics.csv,The article supplement second cross-sectional fit measure beside equation 6
+zero_beta_second_pass,artifacts/tables/cross_section/zero_beta_second_pass.csv,Second pass with an unrestricted zero-beta rate from Internet Appendix equation 1

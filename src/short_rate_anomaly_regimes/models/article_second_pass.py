@@ -342,6 +342,166 @@ def estimate_article_second_pass(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class ZeroBetaSecondPassResult:
+    """Second pass with an unrestricted intercept, Internet Appendix equation (1)."""
+
+    portfolio_set: str
+    model: str
+    n_assets: int
+    n_months: int
+    n_factors: int
+    excess_zero_beta_rate: float
+    excess_zero_beta_standard_error: float
+    excess_zero_beta_t_statistic: float
+    zero_beta_rate_level: float | None
+    risk_prices: pd.Series
+    shanken_standard_errors: pd.Series
+    shanken_t_statistics: pd.Series
+    pricing_errors: pd.Series
+    article_cross_sectional_fit: float
+    chi_square_statistic: float
+    chi_square_degrees_of_freedom: int
+    chi_square_asymptotic_p_value: float
+    shanken_multiplier: float
+
+
+def estimate_zero_beta_second_pass(
+    *,
+    mean_excess_returns: pd.Series,
+    betas: pd.DataFrame,
+    residual_covariance: pd.DataFrame,
+    factor_covariance: pd.DataFrame,
+    n_months: int,
+    portfolio_set: str,
+    model: str,
+    mean_risk_free_return: float | None = None,
+    pseudo_inverse_rcond: float = PSEUDO_INVERSE_RCOND,
+) -> ZeroBetaSecondPassResult:
+    r"""Estimate the second pass with an unrestricted zero-beta rate.
+
+    Internet Appendix Section 2.5, equation (1), specifies the regression on
+    *portfolio returns* rather than excess returns, with an intercept::
+
+        mean_return_i = lambda_0 + lambda' beta_i + alpha_i
+
+    Regressing total returns is the same estimator as regressing excess returns
+    with an intercept, because total and excess returns differ by the average
+    risk-free rate, which is common to every asset and so is absorbed entirely by
+    the intercept. The slopes, the pricing errors and the fit are identical
+    either way, and only ``lambda_0`` shifts by that constant. This function
+    therefore takes excess returns, which is what the rest of the pipeline
+    stores, and reports both readings of the intercept.
+
+    The reading that carries the test is the excess one. The appendix states that
+    the ``lambda_0`` t-ratio "tests the null hypothesis that the zero-beta rate in
+    excess of the average risk-free rate (one-month T-bill rate) is equal to
+    zero", which is the intercept of the excess-return regression. The level is
+    reported when the average risk-free rate is supplied, because that is the
+    number the article prints, but nothing is tested against it.
+
+    The Shanken correction extends as usual: the intercept carries no factor, so
+    the factor covariance enters the price covariance padded with a zero row and
+    column, and the errors-in-variables multiplier uses the factor risk prices
+    alone.
+
+    Args:
+        mean_excess_returns: Average excess return per test asset.
+        betas: First-pass factor loadings, assets by factors, no intercept column.
+        residual_covariance: First-pass residual covariance across test assets.
+        factor_covariance: Covariance of the priced factors.
+        n_months: Number of months in the first-pass estimation window.
+        portfolio_set: Identifier recorded on the result.
+        model: Identifier recorded on the result.
+        mean_risk_free_return: Average one-month bill return, for the level reading.
+        pseudo_inverse_rcond: Cutoff for the pricing-error pseudo-inverse.
+
+    Returns:
+        The zero-beta second-pass result.
+
+    Raises:
+        ValueError: If the inputs are misaligned or too small.
+    """
+    assets = list(mean_excess_returns.index)
+    if list(betas.index) != assets:
+        raise ValueError("Betas must be indexed by the same assets as the mean returns")
+    if list(residual_covariance.index) != assets or list(residual_covariance.columns) != assets:
+        raise ValueError("Residual covariance must be indexed by the same assets")
+    factors = list(betas.columns)
+    if list(factor_covariance.index) != factors or list(factor_covariance.columns) != factors:
+        raise ValueError("Factor means must be indexed by the beta columns")
+    n_assets, n_factors = len(assets), len(factors)
+    if n_assets <= n_factors + 1:
+        raise ValueError("The cross-section needs more assets than intercept plus factors")
+    if n_months <= n_factors:
+        raise ValueError("n_months must exceed the number of priced factors")
+
+    returns = mean_excess_returns.to_numpy(dtype=float)
+    beta_matrix = betas.to_numpy(dtype=float)
+    residual_matrix = residual_covariance.to_numpy(dtype=float)
+    factor_matrix = factor_covariance.to_numpy(dtype=float)
+
+    design = np.column_stack([np.ones(n_assets), beta_matrix])
+    if np.linalg.matrix_rank(design) < n_factors + 1:
+        raise ValueError("The design is rank deficient; the zero-beta rate is unidentified")
+    gram_inverse = np.linalg.inv(design.T @ design)
+    coefficients = gram_inverse @ design.T @ returns
+    errors = returns - design @ coefficients
+
+    risk_prices = coefficients[1:]
+    shanken_multiplier = 1.0 + float(risk_prices.T @ np.linalg.pinv(factor_matrix) @ risk_prices)
+
+    # The intercept has no factor, so its row and column of the factor
+    # covariance are zero rather than absent.
+    padded_factor_covariance = np.zeros((n_factors + 1, n_factors + 1))
+    padded_factor_covariance[1:, 1:] = factor_matrix
+
+    bread = gram_inverse @ design.T
+    coefficient_covariance = (
+        bread @ residual_matrix @ bread.T * shanken_multiplier + padded_factor_covariance
+    ) / n_months
+    standard_errors = np.sqrt(np.diag(coefficient_covariance))
+
+    annihilator = np.eye(n_assets) - design @ gram_inverse @ design.T
+    error_covariance = (
+        annihilator @ residual_matrix @ annihilator.T * shanken_multiplier
+    ) / n_months
+    chi_square = float(
+        errors.T @ np.linalg.pinv(error_covariance, rcond=pseudo_inverse_rcond) @ errors
+    )
+    degrees_of_freedom = n_assets - n_factors - 1
+
+    error_series = pd.Series(errors, index=assets, name="pricing_error")
+    price_series = pd.Series(risk_prices, index=factors, name="risk_price")
+    price_standard_errors = pd.Series(
+        standard_errors[1:], index=factors, name="shanken_standard_error"
+    )
+    excess_zero_beta = float(coefficients[0])
+    excess_zero_beta_se = float(standard_errors[0])
+    return ZeroBetaSecondPassResult(
+        portfolio_set=portfolio_set,
+        model=model,
+        n_assets=n_assets,
+        n_months=n_months,
+        n_factors=n_factors,
+        excess_zero_beta_rate=excess_zero_beta,
+        excess_zero_beta_standard_error=excess_zero_beta_se,
+        excess_zero_beta_t_statistic=excess_zero_beta / excess_zero_beta_se,
+        zero_beta_rate_level=(
+            None if mean_risk_free_return is None else excess_zero_beta + mean_risk_free_return
+        ),
+        risk_prices=price_series,
+        shanken_standard_errors=price_standard_errors,
+        shanken_t_statistics=(price_series / price_standard_errors).rename("shanken_t_statistic"),
+        pricing_errors=error_series,
+        article_cross_sectional_fit=article_cross_sectional_fit(mean_excess_returns, error_series),
+        chi_square_statistic=chi_square,
+        chi_square_degrees_of_freedom=degrees_of_freedom,
+        chi_square_asymptotic_p_value=float(chi2_distribution.sf(chi_square, degrees_of_freedom)),
+        shanken_multiplier=shanken_multiplier,
+    )
+
+
 def residual_covariance_from_first_pass(
     residuals: pd.DataFrame,
     *,

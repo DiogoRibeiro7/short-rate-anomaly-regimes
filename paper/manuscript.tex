@@ -658,6 +658,31 @@ price of risk with a nominal Shanken $t$ of $-2.86$. The Treasury-bill specifica
 gives the same sign and a comparable $t$-ratio, so the finding does not hinge on
 which short rate is used. % artifact: artifacts/tables/cross_section/baseline_risk_prices.csv
 
+The comparators' in-sample advantage does not survive the article's own
+misspecification check, which is worth reporting because it cuts against this
+paper's headline comparison rather than for it. The Internet Appendix re-runs the
+second pass with an unrestricted intercept and reads that intercept as the
+zero-beta rate; a rate significantly above the average bill return indicates
+misspecification. The appendix reports the outcome in prose without tabulating
+it, naming the CAPM, the Fama-French three-factor model, the liquidity model and
+the q-factor model as rejected while its own model passes.
+
+That set is a prediction, and the reconstruction meets it exactly. On the joint
+seventy portfolios the excess zero-beta rate is significant for those four models
+and for no other, and the CAPM's estimate of 1.1417 per month matches the % artifact: artifacts/tables/cross_section/zero_beta_second_pass.csv
+appendix's description of values above one percent. Both versions of the % artifact: artifacts/tables/cross_section/zero_beta_second_pass.csv
+short-rate model pass, at 0.3204 with a $t$ of 0.79 for the funds rate and % artifact: artifacts/tables/cross_section/zero_beta_second_pass.csv
+0.1725 with a $t$ of 0.42 for the bill rate. The two comparators the appendix % artifact: artifacts/tables/cross_section/zero_beta_second_pass.csv
+does not name, Carhart and the five-factor model, are also insignificant here,
+which is consistent with its "in most cases" and is not a claim it makes.
+
+The reading this supports is narrow. It does not rescue the short-rate model on
+in-sample pricing error, where the comparators remain ahead, and a zero-beta rate
+indistinguishable from the bill return is a weak form of correct specification.
+What it does show is that the comparison the incremental-pricing standard turns
+on is not one-directional: the specifications that price the cross-section more
+accurately are the same ones this test rejects.
+
 The article's own supplement offers a second fit measure, and computing it here
 shows why the paper reports the first. Its Internet Appendix replaces the
 variance in the denominator of equation (6) with the cross-sectional second % artifact: artifacts/tables/cross_section/alternative_fit_metrics.csv
