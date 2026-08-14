@@ -15,7 +15,7 @@ authors:
     affiliation: School of Media Arts and Design, Polytechnic of Porto, Portugal
     email: dfr@esmad.ipp.pt
 year: 2026
-version: 1.3.0
+version: 1.4.0
 license: MIT
 # The concept DOI. It resolves to the newest version, so a citation written
 # against it does not go stale, and it needs no edit on a release. Each release
