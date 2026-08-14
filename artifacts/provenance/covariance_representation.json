@@ -1,0 +1,15 @@
+{
+  "estimator": "first-stage GMM with equally weighted moments, which the appendix states is equivalent to the OLS cross-sectional regression of average excess returns on factor covariances, and which is computed as that regression",
+  "identity_checked": "the covariance and beta designs span the same column space because C = B Sigma_f, so pricing errors and fit are identical and the prices satisfy gamma = Sigma_f^-1 lambda; both routes are computed and the artifact records the gap between them",
+  "inputs": {
+    "data/processed/baseline_panel.parquet": "f1354c66d8983bfed626dc9dbc62204d31d236f1117b700158e3b9b04f8a1cc0",
+    "data/processed/comparator_factors.parquet": "43d96e181c25a2de895f1da5eff30f37b8a2aba0c131cd315da645fd360bfb77"
+  },
+  "not_produced": "t-ratios. The appendix takes them from the GMM covariance, which accounts for estimation error in the factor means through the last two moment conditions; the Shanken standard errors implemented here are a different object and are not substituted for them",
+  "outputs": {
+    "artifacts/tables/cross_section/covariance_representation.csv": "743ef35c9dd47a2ce52acff2a0139494ad4458898a28a6fcd4f4e2b4d63d7f2b"
+  },
+  "replication_status": "documented_reconstruction",
+  "script": "scripts/run_covariance_representation.py",
+  "specification": "internet_appendix_equation_3_and_4_covariance_representation"
+}

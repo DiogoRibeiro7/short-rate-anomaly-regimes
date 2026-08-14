@@ -77,6 +77,7 @@ REQUIRED_EMPIRICAL_REBUILD_INPUTS: tuple[str, ...] = (
     "scripts/run_zero_beta_second_pass.py",
     "scripts/run_first_difference_factors.py",
     "scripts/run_restricted_sample.py",
+    "scripts/run_covariance_representation.py",
     "scripts/run_temporal_extension.py",
     "scripts/run_out_of_sample.py",
     "scripts/run_regime_equivalence.py",
