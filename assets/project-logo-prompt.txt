@@ -1,0 +1,10 @@
+Tool: built-in image generation
+
+Use case: logo-brand.
+Asset type: square project logo for short-rate-anomaly-regimes.
+Project purpose: Reproducible research repo for replicating and extending Maio and Santa-Clara on short-rate innovations, monetary regimes, and stock-market anomalies.
+Design direction: An abstract jazz-record graphic for monetary regimes: one angular acid-green rate pulse crosses three broad black-and-electric-pink vertical bands, changing its rhythm at their boundaries. Radical cropped geometry, flat screen-printed planes, asymmetrical visual tension. A sparse, bold symbol on pale pink, no gateways, no histogram, no words or numbers.
+Composition: one finished square image, visually distinctive and readable at 160 pixels, with enough margin for README display. Produce the actual artwork, not a mockup sheet or brand presentation. No watermark. Do not use a navy-and-gold metallic badge aesthetic.
+
+Final revision:
+Use case: precise-object-edit. Correct this project emblem to depict monetary interest-rate regimes rather than music. Replace the entire vinyl record with three bold adjacent rectangular regime panels, black, hot pink, black, preserving the palette, flat print texture, and pale-pink square background. Across these panels draw ONE thick acid-green stepwise time series with horizontal plateaus and abrupt upward/downward rate changes at the panel boundaries. Preserve the sparse, high-contrast graphic character. No record, no circular disc, no grooves, no audio waveform, no heartbeat trace, no letters or numbers. Keep all three panels and the rate line comfortably inside the square with visible margins.

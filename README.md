@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/project-avatar.png" alt="short-rate-anomaly-regimes project logo" width="160" height="160">
+  <img src="assets/project-logo.png" alt="short-rate-anomaly-regimes project logo" width="160" height="160">
 </p>
 
 # Short Rate Anomaly Regimes
